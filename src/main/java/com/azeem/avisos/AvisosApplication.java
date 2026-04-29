@@ -6,7 +6,6 @@
 package com.azeem.avisos;
 
 import com.azeem.avisos.controller.container.AppContainer;
-import com.azeem.avisos.controller.sim.SimulationEngine;
 
 import org.jline.reader.*;
 import org.jline.terminal.*;
@@ -62,10 +61,6 @@ public class AvisosApplication {
         AppContainer container = new AppContainer();
         container.init();
         container.applyAspects();
-
-        Thread thread = new Thread(container.get(SimulationEngine.class));
-
-        container.get(SimulationEngine.class).run();
     }
 }
 

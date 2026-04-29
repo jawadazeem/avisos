@@ -14,3 +14,9 @@ services:
       - ./data:/app/data
       - ./logs:/app/logs
     restart: unless-stopped
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf

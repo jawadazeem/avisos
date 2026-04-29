@@ -7,13 +7,14 @@ package com.azeem.avisos.controller.service.device;
 
 import com.azeem.avisos.controller.model.device.DeviceRecord;
 import com.azeem.avisos.controller.repository.DeviceRepository;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.UUID;
 
-public class DeviceServiceImpl {
-    private static final org.slf4j.Logger log = LoggerFactory.getLogger(DeviceServiceImpl.class);
+public class DeviceServiceImpl implements DeviceService {
+    private static final Logger log = LoggerFactory.getLogger(DeviceServiceImpl.class);
     DeviceRepository deviceRepository;
 
     public DeviceServiceImpl(DeviceRepository deviceRepository) {
@@ -36,5 +37,10 @@ public class DeviceServiceImpl {
     @Override
     public List<UUID> getRegisteredDevices() {
         return deviceRepository.getRegisteredDevices();
+    }
+
+    @Override
+    public void registerHeartbeat(UUID uuid) {
+        deviceRepository.updateDeviceLastSeen(uuid);
     }
 }

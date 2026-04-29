@@ -5,5 +5,14 @@
 
 package com.azeem.avisos.controller.service.device;
 
-public class DeviceService {
+import com.azeem.avisos.controller.model.device.DeviceRecord;
+
+import java.util.List;
+import java.util.UUID;
+
+public interface DeviceService {
+    void updateDeviceHeartbeat(DeviceRecord deviceRecord);
+    void checkStaleDevices();
+    List<UUID> getRegisteredDevices();
+    void registerHeartbeat(UUID uuid);
 }

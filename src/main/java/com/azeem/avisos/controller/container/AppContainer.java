@@ -5,19 +5,22 @@
 
 package com.azeem.avisos.controller.container;
 
+import com.azeem.avisos.controller.repository.AlarmRepository;
+import com.azeem.avisos.controller.repository.AuthRepository;
+import com.azeem.avisos.controller.repository.DeviceRepository;
+import com.azeem.avisos.controller.repository.TelemetryRepository;
+import com.azeem.avisos.controller.service.device.DeviceService;
+import com.azeem.avisos.controller.service.device.DeviceServiceImpl;
+import com.azeem.avisos.controller.service.mqtt.MqttService;
 import com.azeem.avisos.node.devices.api.DataAcquisitionDevice;
 import com.azeem.avisos.node.devices.impl.RFDataAcquisitionDeviceDetectorDevice;
 import com.azeem.avisos.controller.instrumentation.annotations.ServiceAudit;
 import com.azeem.avisos.controller.instrumentation.annotations.Timed;
-import com.azeem.avisos.infrastructure.logger.LogFileArchiver;
-import com.azeem.avisos.infrastructure.logger.Logger;
 import com.azeem.avisos.controller.service.alarm.AlarmService;
-import com.azeem.avisos.controller.service.controller.PerformanceHandler;
-import com.azeem.avisos.controller.service.controller.api.ControllerService;
-import com.azeem.avisos.controller.service.controller.impl.ControllerServiceImpl;
-import com.azeem.avisos.controller.service.receiver.ReceiverService;
-import com.azeem.avisos.controller.service.system.SystemHealthService;
-import com.azeem.avisos.controller.sim.SimulationEngine;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -38,92 +41,38 @@ public class AppContainer {
      * Initializes all needed objects
      */
     public void init() {
-        SecurityHub hub = SecurityHub.getInstance();
-        setupLogging(hub.getLogger());
-        hubReboot(hub);
-
-        classObjectMap.put(SecurityHub.class, hub);
-
-        // Replace with real hardware links in prod
-        SimulationEngine hardwareLink = new SimulationEngine(hub, hub.getLogger());
-        RFHardwareLinkSim rfHardwareLink = new RFHardwareLinkSim(hub, hub.getLogger());
-        DirectConnectDXHardwareLinkSim directConnectDXHardwareLink = new DirectConnectDXHardwareLinkSim(hub.getLogger());
-        RFDataAcquisitionDeviceDetectorDevice rfDataAcquisitionDeviceDetectorDevice = new RFDataAcquisitionDeviceDetectorDevice(hub, rfHardwareLink);
-        hub.setRfDataAcquisitionDeviceDetectorDevice(rfDataAcquisitionDeviceDetectorDevice);
-
-        classObjectMap.put(SimulationEngine.class, hardwareLink);
-        classObjectMap.put(RFHardwareLinkSim.class, rfHardwareLink);
-        classObjectMap.put(DirectConnectDXHardwareLinkSim.class, rfHardwareLink);
-        classObjectMap.put(RFDataAcquisitionDeviceDetectorDevice.class, rfDataAcquisitionDeviceDetectorDevice);
-
-        DatabaseManager databaseManager = DatabaseManager.getInstance();
+        Jdbi jdbi = databaseConfiguration();
 
         // Repositories
-        DeviceRepository dRepo = new DeviceRepository(hub.getLogger(), rfHardwareLink);
-        AlarmLogRepository aRepo = new AlarmLogRepository(hub.getLogger());
-        UserRepository uRepo = new UserRepository(hub.getLogger());
-        SubscriberRepository sRepo = new SubscriberRepository(hub.getLogger());
-        hub.setAlarmRepository(aRepo);
-        hub.setDeviceRepo(dRepo);
-        classObjectMap.put(DeviceRepository.class, dRepo);
-        classObjectMap.put(AlarmLogRepository.class, aRepo);
-        classObjectMap.put(UserRepository.class, uRepo);
-        classObjectMap.put(SubscriberRepository.class, sRepo);
+        AlarmRepository alarmRepo = jdbi.onDemand(AlarmRepository.class);
+        DeviceRepository deviceRepo = jdbi.onDemand(DeviceRepository.class);
+        TelemetryRepository telemetryRepository = jdbi.onDemand(TelemetryRepository.class);
+        AuthRepository authRepository = jdbi.onDemand(AuthRepository.class);
+        classObjectMap.put(AlarmRepository.class, alarmRepo);
+        classObjectMap.put(DeviceRepository.class, deviceRepo);
+        classObjectMap.put(TelemetryRepository.class, telemetryRepository);
+        classObjectMap.put(AuthRepository.class, authRepository);
 
-        rehydrateHub(hub);
-
-        // Service Layer/Business Logic
-        SystemHealthService systemHealthSvc = new SystemHealthService(hub);
-        ControllerService hubService = new ControllerServiceImpl(hub, hub.getLogger(), rfDataAcquisitionDeviceDetectorDevice, aRepo, dRepo);
-        PerformanceHandler handler = new PerformanceHandler(hubService);
-
-        ControllerService proxy = (ControllerService) Proxy.newProxyInstance(
-                ControllerService.class.getClassLoader(),
-                new Class[] { ControllerService.class },
-                handler
-        );
-
-        ReceiverService receiverService = new ReceiverService(hub, sRepo, directConnectDXHardwareLink, hub.getLogger());
-        AlarmService alarmService = new AlarmService(aRepo, hub.getLogger());
-        classObjectMap.put(SystemHealthService.class, systemHealthSvc);
-        classObjectMap.put(ControllerService.class, proxy);
-        classObjectMap.put(ReceiverService.class, receiverService);
+        // Services
+        AlarmService alarmService = new AlarmService(alarmRepo);
+        DeviceService deviceService = new DeviceServiceImpl(deviceRepo);
+        MqttService mqttService = new MqttService(deviceService, alarmService);
         classObjectMap.put(AlarmService.class, alarmService);
+        classObjectMap.put(DeviceService.class, deviceService);
+        classObjectMap.put(MqttService.class, mqttService);
+    }
 
-        // Helper methods
-        wireDependencies(hub, directConnectDXHardwareLink, receiverService);
-        addShutdownHook(dRepo, aRepo, sRepo);
+    private Jdbi databaseConfiguration() {
+        Jdbi jdbi = Jdbi.create("jdbc:sqlite:avisos.db");
+        jdbi.installPlugin(new SqlObjectPlugin());
+        return jdbi;
     }
 
     /**
      * Wires dependencies via setter injection
      */
-    private void wireDependencies(SecurityHub hub, DirectConnectDXHardwareLinkSim dXHardwareLinkSim, ReceiverService receiverService) {
-        dXHardwareLinkSim.setReceiverService(receiverService);
-    }
+    private void wireDependencies() {
 
-    private static void addShutdownHook(DeviceRepository dRepo, AlarmLogRepository aRepo, SubscriberRepository sRepo) {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("Shutting down Sentinel Application. Saving Application Data & State.");
-
-            List<DataAcquisitionDevice> currentFleet = SecurityHub.getInstance().getDevices();
-            System.out.println("Saving " + currentFleet.size() + " com.azeem.avisos.devices...");
-            for (DataAcquisitionDevice d : currentFleet) {
-                dRepo.save(d);
-            }
-
-            List<Alarm> currentActiveAlarms = SecurityHub.getInstance().getActiveAlarms();
-            for (Alarm a : currentActiveAlarms) {
-                aRepo.save(a);
-            }
-
-            List<Subscriber> subscribers = SecurityHub.getInstance().getSubscribers();
-            for (Subscriber s : subscribers) {
-                sRepo.save(s);
-            }
-
-            DatabaseManager.getInstance().closeConnection();
-        }));
     }
 
     public <T> void applyAspects() {
@@ -165,29 +114,5 @@ public class AppContainer {
                 }
             }
         }
-    }
-
-    /**
-     * Not necessary in prod, for testing.
-     */
-    private void hubReboot(SecurityHub hub) {
-        hub.armHub();
-        hub.initiateFleetCheck();
-        hub.monitorAndHandleDeviceHealth();
-        hub.processAllCommands();
-    }
-
-    /**
-     * Rehydrate the hub's com.azeem.avisos.devices in memory, looping through the DB.
-     */
-    private void rehydrateHub(SecurityHub hub) {
-        List<DataAcquisitionDevice> savedDataAcquisitionDevices = hub.getDeviceRepo().loadAll();
-        for(DataAcquisitionDevice d : savedDataAcquisitionDevices) {
-            hub.addDevice(d);
-        }
-    }
-
-    private static void setupLogging(Logger logger) {
-        logger.registerListener(new LogFileArchiver("logs.txt"));
     }
 }

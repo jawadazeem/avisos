@@ -35,8 +35,7 @@ target/
 dependency-reduced-pom.xml
 
 ### Application ###
-logs.txt
-sentinel.dblogs.txt
+avisos.dblogs.txt
 avisos.db
 avisos.iml
 target
