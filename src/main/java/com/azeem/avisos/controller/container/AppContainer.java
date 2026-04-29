@@ -5,7 +5,6 @@
 
 package com.azeem.avisos.controller.container;
 
-import com.azeem.avisos.controller.service.alarm.Alarm;
 import com.azeem.avisos.node.devices.api.DataAcquisitionDevice;
 import com.azeem.avisos.node.devices.impl.RFDataAcquisitionDeviceDetectorDevice;
 import com.azeem.avisos.controller.instrumentation.annotations.ServiceAudit;
@@ -133,7 +132,7 @@ public class AppContainer {
     }
 
     private void ServiceAuditAspect() {
-        System.out.println("\n--- [ Sentinel Security Audit Scan ] ---");
+        System.out.println("\n--- [ Avisos Audit Scan ] ---");
 
         for (Object instance : classObjectMap.values()) {
             Class<?> clazz = instance.getClass();

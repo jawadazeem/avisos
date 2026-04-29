@@ -5,7 +5,6 @@
 
 package com.azeem.avisos.controller.service.controller.api;
 
-import com.azeem.avisos.controller.service.alarm.Alarm;
 import com.azeem.avisos.controller.commands.Command;
 import com.azeem.avisos.controller.securityhubcommands.SecurityHubCommand;
 import com.azeem.avisos.node.devices.api.DataAcquisitionDevice;

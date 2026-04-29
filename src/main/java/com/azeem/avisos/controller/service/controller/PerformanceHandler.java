@@ -35,7 +35,10 @@ public class PerformanceHandler implements InvocationHandler {
                 Object result = method.invoke(securityHubServiceImpl, args);
                 long elapsedTime = System.nanoTime() - startTime;
                 if (timed.thresholdMs() < elapsedTime/(1_000_000)) {
-                    System.out.println("The operation " + method + " took longer than the set threshold indicating a performance issue.");
+                    System.out.println(
+                            "The operation " + method + " took longer than the set " +
+                            "threshold indicating a performance issue."
+                    );
                 }
                 return result;
             } else {

@@ -10,11 +10,13 @@ import com.azeem.avisos.controller.repository.AuthRepository;
 import com.azeem.avisos.controller.security.model.UserRecord;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.util.Optional;
 
 public class AuthService {
-
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
     private final AuthRepository authRepo;
     private final Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id);
 
@@ -61,6 +63,7 @@ public class AuthService {
         }
 
         authRepo.deleteUser(username);
+        log.info("Successfully removed user");
         return true;
     }
 
@@ -77,8 +80,8 @@ public class AuthService {
             return false;
         }
 
-        String newHash = hashPassword(newPass);
-        authRepo.updatePassword(username, newPass);
+        authRepo.updatePassword(username, hashPassword(newPass));
+        log.info("Successfully changed password");
         return true;
     }
 

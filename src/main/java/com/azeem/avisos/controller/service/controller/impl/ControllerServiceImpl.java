@@ -5,7 +5,6 @@
 
 package com.azeem.avisos.controller.service.controller.impl;
 
-import com.azeem.avisos.controller.service.alarm.Alarm;
 import com.azeem.avisos.controller.model.alarm.AlarmSeverity;
 import com.azeem.avisos.controller.commands.Command;
 import com.azeem.avisos.controller.commands.CommandType;
