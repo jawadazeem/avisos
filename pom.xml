@@ -14,6 +14,19 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.jdbi</groupId>
+                <artifactId>jdbi3-bom</artifactId>
+                <version>3.53.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+
     <dependencies>
 
         <!-- Google JSON Serializer -->
@@ -50,10 +63,28 @@
             <artifactId>jline</artifactId>
             <version>4.0.0</version>
         </dependency>
+
+        <!-- JDBI -->
+        <dependency>
+            <groupId>org.jdbi</groupId>
+            <artifactId>jdbi3-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jdbi</groupId>
+            <artifactId>jdbi3-sqlobject</artifactId>
+        </dependency>
+
+        <!-- Hikari -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>7.0.2</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
-        <sourceDirectory>src</sourceDirectory>
+        <sourceDirectory>src/main/java</sourceDirectory>
         <plugins>
 
             <plugin>
@@ -61,7 +92,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <mainClass>AvisosApplication</mainClass>
+                    <mainClass>com.azeem.avisos.AvisosApplication</mainClass>
                 </configuration>
             </plugin>
 
@@ -72,7 +103,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>AvisosApplication</mainClass>
+                            <mainClass>com.azeem.avisos.AvisosApplication</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -91,7 +122,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>AvisosApplication</mainClass>
+                                    <mainClass>com.azeem.avisos.AvisosApplication</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>

@@ -1,0 +1,16 @@
+services:
+  avisos-app:
+    build: .
+    image: avisos-app:latest
+    container_name: avisos_core
+
+    stdin_open: true
+    tty: true
+
+    environment:
+      - TERM=xterm-256color
+
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: unless-stopped
