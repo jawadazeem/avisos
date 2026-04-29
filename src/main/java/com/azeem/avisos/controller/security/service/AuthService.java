@@ -5,21 +5,25 @@
 
 package com.azeem.avisos.controller.security.service;
 
+import com.azeem.avisos.controller.exceptions.UserDoesNotExistException;
+import com.azeem.avisos.controller.repository.AuthRepository;
+import com.azeem.avisos.controller.security.model.UserRecord;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
-import com.azeem.avisos.controller.security.model.User;
+
+import java.util.Optional;
 
 public class AuthService {
 
-    private final UserRepository userRepo;
+    private final AuthRepository authRepo;
+    private final Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id);
 
-    public AuthService(UserRepository userRepo) {
-        this.userRepo = userRepo;
+    public AuthService(AuthRepository authRepo) {
+        this.authRepo = authRepo;
     }
 
     // Hash a plain password using Argon2id
     public String hashPassword(String password) {
-        Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id);
         return argon2.hash(
                 3,        // rounds (how many times the work is repeated)
                 65536,    // memory in KB (64 MB)
@@ -30,55 +34,59 @@ public class AuthService {
 
     // Login
     public boolean authenticate(String username, String password) {
-        User user = userRepo.load(username);
-        if (user == null) return false;
-
-        Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id);
-        return argon2.verify(user.getPasswordHash(), password);
+        Optional<UserRecord> user = authRepo.findByUsername(username);
+        if (user.isEmpty()) {
+            throw new UserDoesNotExistException("The user by the username "
+                    + username + " doesn't exist. Please try another username.");
+        }
+        return argon2.verify(user.get().passwordHash(), password);
     }
 
-    // Register new com.azeem.avisos.user
+    // Register new user (only if user has not been created before)
     public void saveUser(String username, String password) {
-        String hash = hashPassword(password);
-        User user = new User(username, hash);
-        userRepo.save(user);
+        authRepo.createUser(username, hashPassword(password), "operator");
     }
 
-    // Delete com.azeem.avisos.user (password required)
+    // Delete user (password required)
     public boolean removeUser(String username, String password) {
-        User user = userRepo.load(username);
-        if (user == null) return false;
+        Optional<UserRecord> user = authRepo.findByUsername(username);
 
-        Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id);
-        if (!argon2.verify(user.getPasswordHash(), password)) {
+        if (user.isEmpty()) {
+            throw new UserDoesNotExistException("Failed to remove user. The user by the username "
+                    + username + " doesn't exist. Please try another username.");
+        }
+
+        if (!argon2.verify(user.get().passwordHash(), password)) {
             return false;
         }
 
-        userRepo.remove(user);
+        authRepo.deleteUser(username);
         return true;
     }
 
     // Change password (old password required)
     public boolean changeUserPassword(String username, String oldPass, String newPass) {
-        User user = userRepo.load(username);
-        if (user == null) return false;
+        Optional<UserRecord> user = authRepo.findByUsername(username);
 
-        Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id);
-        if (!argon2.verify(user.getPasswordHash(), oldPass)) {
+        if (user.isEmpty()) {
+            throw new UserDoesNotExistException("Failed to remove user. The user by the username "
+                    + username + " doesn't exist. Please try another username.");
+        }
+
+        if (!argon2.verify(user.get().passwordHash(), oldPass)) {
             return false;
         }
 
         String newHash = hashPassword(newPass);
-        user.setPasswordHash(newHash);
-        userRepo.save(user);
+        authRepo.updatePassword(username, newPass);
         return true;
     }
 
     public boolean hasAnyUsers() {
-        return userRepo.countUsers() > 0;
+        return authRepo.countUsers() > 0;
     }
 
     public boolean userExists(String username) {
-        return userRepo.load(username) != null;
+        return authRepo.findByUsername(username).isPresent();
     }
 }
