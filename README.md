@@ -3,21 +3,21 @@
 
 #### Author: Jawad Azeem
 #### Project Documentation: www.jawadazeem.com/avisos
-AVISOS is an industrial-grade orchestration platform designed to secure and manage high-reliability SCADA environments. Built on a custom-engineered backbone, it integrates Generative AI for predictive threat modeling with a hardened command-bus to ensure the integrity of critical infrastructure operations.
+AVISOS is an industrial-grade orchestration platform designed to secure and manage high-reliability SCADA environments. Built on a custom-engineered backbone, it integrates Generative AI for predictive threat modeling with a hardened command-bus to ensure the integrity of critical com.azeem.avisos.infrastructure operations.
 
 ---
 ## Architectural Infrastructure
-The system focuses on "Infrastructure as Code" by implementing a micro-framework to handle service lifecycles and cross-cutting concerns.
+The system focuses on "Infrastructure as Code" by implementing a micro-framework to handle com.azeem.avisos.service lifecycles and cross-cutting concerns.
 
 ### 1. Custom IoC & Dependency Management
-The system utilizes a custom Inversion of Control (IoC) container to decouple service instantiation from business logic.
+The system utilizes a custom Inversion of Control (IoC) com.azeem.avisos.container to decouple com.azeem.avisos.service instantiation from business logic.
 - Reflection-Based Scanning: The AppContainer scans the classpath at startup to instantiate services and wire dependencies.
 - Metadata-Driven Execution: Custom annotations (e.g., @Timed, @DataSensitive) allow the system to inject behavior at runtime based on method-level metadata.
 
 ### 2. Dynamic Proxy Interception (AOP)
-To maintain the Single Responsibility Principle, Sentinel utilizes JDK Dynamic Proxies to intercept method calls without modifying core source code.
+To maintain the Single Responsibility Principle, Sentinel utilizes JDK Dynamic Proxies to intercept method calls without modifying com.azeem.avisos.core source code.
 - Latency Monitoring: Methods marked with @Timed are automatically wrapped in a PerformanceHandler via InvocationHandler.
-- Zero-Touch Instrumentation: Performance metrics and threshold violations are captured at the proxy layer, ensuring the core SecurityHub logic remains focused on security orchestration.
+- Zero-Touch Instrumentation: Performance metrics and threshold violations are captured at the proxy layer, ensuring the com.azeem.avisos.core SecurityHub logic remains focused on security orchestration.
 
 ### 3. Command-Pattern Orchestration
 - Encapsulated Actions: Every hardware interaction is a discrete Command object, allowing for audit logging, re-tries, and prioritization.
@@ -44,6 +44,6 @@ To maintain the Single Responsibility Principle, Sentinel utilizes JDK Dynamic P
 ## Technical Features
 
 * **Priority Processing**: `PanicCommand` utilizes a Double-Ended Queue (Deque) to bypass the standard processing order, ensuring life-safety events are prioritized.
-* **Defensive Programming**: The Hub implements null-safety checks and status validation to prevent runtime exceptions during command dispatching.
+* **Defensive Programming**: The Hub implements null-safety checks and status validation to prevent runtime com.azeem.avisos.exceptions during command dispatching.
 * **Subscriber Model**: Implements the Observer pattern to decouple sensors from notification services like the Police Station or Mobile Applications.
 * **Persistence Layer**: Utilizes a hand-written JDBC implementation to efficiently manage hardware state and audit logs, avoiding the overhead of heavy ORM frameworks.
