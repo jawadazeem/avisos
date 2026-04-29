@@ -6,4 +6,5 @@
 package com.azeem.avisos.controller.service.mqtt;
 
 public class MqttService {
+
 }

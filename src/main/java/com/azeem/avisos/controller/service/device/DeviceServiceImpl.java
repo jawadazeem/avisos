@@ -12,18 +12,20 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.UUID;
 
-public class DeviceService {
-    private static final org.slf4j.Logger log = LoggerFactory.getLogger(DeviceService.class);
+public class DeviceServiceImpl {
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger(DeviceServiceImpl.class);
     DeviceRepository deviceRepository;
 
-    public DeviceService(DeviceRepository deviceRepository) {
+    public DeviceServiceImpl(DeviceRepository deviceRepository) {
         this.deviceRepository = deviceRepository;
     }
 
+    @Override
     public void updateDeviceHeartbeat(DeviceRecord deviceRecord) {
         deviceRepository.updateDeviceLastSeen(deviceRecord.uuid());
     }
 
+    @Override
     public void checkStaleDevices() {
         int offlineCount = deviceRepository.markStaleDevicesOffline(60); // 60 second threshold
         if (offlineCount > 0) {
@@ -31,6 +33,7 @@ public class DeviceService {
         }
     }
 
+    @Override
     public List<UUID> getRegisteredDevices() {
         return deviceRepository.getRegisteredDevices();
     }
