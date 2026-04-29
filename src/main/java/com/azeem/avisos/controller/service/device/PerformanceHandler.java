@@ -1,4 +1,4 @@
 package com.azeem.avisos.controller.service.device;
 
-public class DeviceService {
+public class PerformanceHandler {
 }
