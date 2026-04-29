@@ -16,10 +16,20 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- JDBI BOM -->
             <dependency>
                 <groupId>org.jdbi</groupId>
                 <artifactId>jdbi3-bom</artifactId>
                 <version>3.53.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- AWS SDK BOM -->
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>2.29.29</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -34,6 +44,13 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.10.1</version>
+        </dependency>
+
+        <!-- Jackson JSON Serializer -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.18.3</version>
         </dependency>
 
         <!-- JDBC API -->
@@ -88,6 +105,23 @@
             <artifactId>lombok</artifactId>
             <version>1.18.46</version>
             <scope>provided</scope>
+        </dependency>
+
+        <!-- Paho for MQTT -->
+        <dependency>
+            <groupId>org.eclipse.paho</groupId>
+            <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
+            <version>1.2.5</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>rekognition</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sns</artifactId>
         </dependency>
     </dependencies>
 
