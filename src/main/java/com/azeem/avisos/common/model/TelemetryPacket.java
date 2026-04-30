@@ -6,7 +6,6 @@
 package com.azeem.avisos.common.model;
 
 import java.util.UUID;
-import com.azeem.avisos.common.model.PacketType;
 
 /**
  * The ONLY thing that moves from Data Acquisition Device (DAD) to the Controller.

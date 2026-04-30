@@ -5,27 +5,36 @@
 
 package com.azeem.avisos.controller.container;
 
+import com.azeem.avisos.controller.config.LabelConfig;
+import com.azeem.avisos.controller.exceptions.ConfigFileNotFoundException;
+import com.azeem.avisos.controller.instrumentation.annotations.ServiceAudit;
+import com.azeem.avisos.controller.instrumentation.annotations.Timed;
 import com.azeem.avisos.controller.repository.AlarmRepository;
 import com.azeem.avisos.controller.repository.AuthRepository;
 import com.azeem.avisos.controller.repository.DeviceRepository;
 import com.azeem.avisos.controller.repository.TelemetryRepository;
+import com.azeem.avisos.controller.security.service.AuthService;
+import com.azeem.avisos.controller.service.alarm.AlarmService;
 import com.azeem.avisos.controller.service.device.DeviceService;
 import com.azeem.avisos.controller.service.device.DeviceServiceImpl;
 import com.azeem.avisos.controller.service.mqtt.MqttService;
-import com.azeem.avisos.node.devices.api.DataAcquisitionDevice;
-import com.azeem.avisos.node.devices.impl.RFDataAcquisitionDeviceDetectorDevice;
-import com.azeem.avisos.controller.instrumentation.annotations.ServiceAudit;
-import com.azeem.avisos.controller.instrumentation.annotations.Timed;
-import com.azeem.avisos.controller.service.alarm.AlarmService;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
+import com.azeem.avisos.controller.service.notification.NotificationService;
+import com.azeem.avisos.controller.service.notification.SnsService;
+import com.azeem.avisos.controller.service.rekognition.CodeProjectVisionService;
+import com.azeem.avisos.controller.service.rekognition.VisionService;
+import com.azeem.avisos.controller.service.threat.KeywordThreatDetector;
+import com.azeem.avisos.controller.service.threat.ThreatDetector;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.*;
-
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 /**
  * <h2>IoC Container Class</h2>
  * <p>Responsible for instantiating necessary objects and wiring their dependencies</p>
@@ -54,12 +63,30 @@ public class AppContainer {
         classObjectMap.put(AuthRepository.class, authRepository);
 
         // Services
+        AuthService authService = new AuthService(authRepository);
         AlarmService alarmService = new AlarmService(alarmRepo);
         DeviceService deviceService = new DeviceServiceImpl(deviceRepo);
-        MqttService mqttService = new MqttService(deviceService, alarmService);
+        VisionService analyzer = new CodeProjectVisionService();
+
+        List<List<String>> problematicLabels = loadProblematicLabels();
+        ThreatDetector threatDetector = new KeywordThreatDetector(problematicLabels.get(0), problematicLabels.get(1));
+        classObjectMap.put(VisionService.class, analyzer);
+        classObjectMap.put(AuthService.class, authService);
         classObjectMap.put(AlarmService.class, alarmService);
         classObjectMap.put(DeviceService.class, deviceService);
+
+        MqttService mqttService = new MqttService(
+                deviceService,
+                alarmService,
+                analyzer,
+                threatDetector
+        );
         classObjectMap.put(MqttService.class, mqttService);
+
+        NotificationService service = new SnsService();
+        classObjectMap.put(NotificationService.class, service);
+
+
     }
 
     private Jdbi databaseConfiguration() {
@@ -68,11 +95,19 @@ public class AppContainer {
         return jdbi;
     }
 
-    /**
-     * Wires dependencies via setter injection
-     */
-    private void wireDependencies() {
+    private List<List<String>> loadProblematicLabels() {
+        try (InputStream is = getClass().getResourceAsStream("/config/problematic-labels.yml")) {
+            if (is == null) {
+                throw new RuntimeException("CRITICAL: Config file not found in classpath!");
+            }
 
+            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+            LabelConfig config = mapper.readValue(is, LabelConfig.class);
+
+            return List.of(config.getCritical(), config.getWarning());
+        } catch (IOException e) {
+            throw new ConfigFileNotFoundException("Failed to parse security policy", e);
+        }
     }
 
     public <T> void applyAspects() {

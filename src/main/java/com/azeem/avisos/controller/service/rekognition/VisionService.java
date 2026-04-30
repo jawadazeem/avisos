@@ -5,5 +5,8 @@
 
 package com.azeem.avisos.controller.service.rekognition;
 
-public class RekognitionService {
+import java.util.List;
+
+public interface VisionService {
+    List<String> detectLabels(byte[] imageBytes);
 }

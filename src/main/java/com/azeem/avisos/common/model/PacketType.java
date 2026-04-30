@@ -7,7 +7,6 @@ package com.azeem.avisos.common.model;
 
 public enum PacketType {
     HEARTBEAT,
-    IMAGE_FRAME,
     NETWORK_SCAN,
     SYSTEM_ERROR
 }

@@ -5,8 +5,7 @@
 package com.azeem.avisos.controller.model.alarm;
 
 public enum AlarmSeverity {
-    LOW,
-    MEDIUM,
-    HIGH,
     CRITICAL,
+    WARNING,
+    NONE
 }

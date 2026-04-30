@@ -10,8 +10,8 @@ import com.azeem.avisos.controller.repository.AuthRepository;
 import com.azeem.avisos.controller.security.model.UserRecord;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 

@@ -8,7 +8,6 @@ package com.azeem.avisos.controller.service.device;
 import com.azeem.avisos.controller.instrumentation.annotations.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.azeem.avisos.controller.service.device.DeviceService;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;

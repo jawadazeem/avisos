@@ -1,0 +1,8 @@
+critical:
+  - "weapon"
+  - "firearm"
+  - "machine gun"
+warning:
+  - "person"
+  - "crowbar"
+  - "mask"

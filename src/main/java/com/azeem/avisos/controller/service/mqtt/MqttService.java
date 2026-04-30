@@ -7,10 +7,12 @@ package com.azeem.avisos.controller.service.mqtt;
 
 import com.azeem.avisos.common.model.TelemetryPacket;
 import com.azeem.avisos.controller.model.alarm.AlarmRecord;
-import com.azeem.avisos.controller.repository.TelemetryRepository;
-import com.azeem.avisos.controller.service.device.DeviceService;
+import com.azeem.avisos.controller.model.alarm.AlarmSeverity;
+import com.azeem.avisos.controller.model.alarm.AlarmStatus;
 import com.azeem.avisos.controller.service.alarm.AlarmService;
-import com.azeem.avisos.controller.service.device.DeviceServiceImpl;
+import com.azeem.avisos.controller.service.device.DeviceService;
+import com.azeem.avisos.controller.service.rekognition.VisionService;
+import com.azeem.avisos.controller.service.threat.ThreatDetector;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -21,20 +23,30 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public class MqttService {
     private static final Logger log = LoggerFactory.getLogger(MqttService.class);
     private final DeviceService deviceService;
     private final AlarmService alarmService;
+    private final ThreatDetector threatDetector;
+    private final VisionService visionService;
     private MqttClient client;
     private final ObjectMapper mapper = new ObjectMapper();
 
     private static final String CONTROLLER_CLIENT_ID = "avisos-controller-primary";
 
-    public MqttService(DeviceService deviceService, AlarmService alarmService) {
+    public MqttService(DeviceService deviceService,
+                       AlarmService alarmService,
+                       VisionService visionService,
+                       ThreatDetector threatDetector
+    ) {
         this.deviceService = deviceService;
         this.alarmService = alarmService;
+        this.visionService = visionService;
+        this.threatDetector = threatDetector;
     }
 
     @PostConstruct
@@ -70,21 +82,38 @@ public class MqttService {
     }
 
     private void handleMessage(String topic, MqttMessage message) {
-        try {
-            byte[] payload = message.getPayload();
+        TelemetryPacket packet = null;
 
-            // Use the topic structure to route logic
-            if (topic.contains("/heartbeat")) {
-                TelemetryPacket packet = mapper.readValue(payload, TelemetryPacket.class);
-                deviceService.registerHeartbeat(packet.deviceId());
-            }
-            else if (topic.contains("/trigger")) {
-                AlarmRecord alarm = mapper.readValue(payload, AlarmRecord.class);
-                alarmService.save(alarm);
-                log.info("ALARM TRIGGERED: Node {} reported {}", alarm.deviceUuid(), alarm.reason());
-            }
+        try {
+            packet = mapper.readValue(message.getPayload(), TelemetryPacket.class);
         } catch (IOException e) {
             log.error("Discarding malformed packet from topic {}: {}", topic, e.getMessage());
+        }
+
+        if (packet == null) {
+            log.warn("Received corrupted telemetry packet. Discarding.");
+            return;
+        }
+
+        deviceService.registerHeartbeat(packet.deviceId());
+
+        if (packet.payload() != null) {
+            TelemetryPacket finalPacket = packet;
+            Thread.ofVirtual().start(() -> {
+                List<String> labels = visionService.detectLabels(finalPacket.payload());
+                AlarmSeverity severity = threatDetector.evaluate(labels);
+                if (severity != AlarmSeverity.NONE) {
+                    alarmService.save(new AlarmRecord(
+                        UUID.randomUUID(),
+                        finalPacket.deviceId(),
+                        severity,
+                        labels.toString(),
+                        AlarmStatus.ACTIVE,
+                        LocalDateTime.now(),
+                        null
+                    ));
+                }
+            });
         }
     }
 
