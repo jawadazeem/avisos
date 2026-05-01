@@ -5,7 +5,7 @@
 
 package com.azeem.avisos.controller.model.controller;
 
-public enum HubStatus {
+public enum ControllerStatus {
     DISARMED,
     ARMED
 }

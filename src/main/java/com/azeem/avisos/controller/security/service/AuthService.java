@@ -15,6 +15,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
+/**
+ * Service class responsible for handling user authentication, password hashing, and user management.
+ * It uses the Argon2 algorithm for secure password hashing and interacts with the AuthRepository for data persistence.
+ */
 public class AuthService {
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
     private final AuthRepository authRepo;
@@ -24,7 +28,10 @@ public class AuthService {
         this.authRepo = authRepo;
     }
 
-    // Hash a plain password using Argon2id
+    /**
+     * Hash the password using Argon2 algorithm with specified parameters.
+     * @return the hashed password
+     */
     public String hashPassword(String password) {
         return argon2.hash(
                 3,        // rounds (how many times the work is repeated)
@@ -34,7 +41,10 @@ public class AuthService {
         );
     }
 
-    // Login
+    /**
+     * Authenticate user by verifying the provided password against the stored hash.
+     * @return true if authentication is successful, false if password verification fails, throws exception if user doesn't exist
+     */
     public boolean authenticate(String username, String password) {
         Optional<UserRecord> user = authRepo.findByUsername(username);
         if (user.isEmpty()) {
@@ -44,12 +54,17 @@ public class AuthService {
         return argon2.verify(user.get().passwordHash(), password);
     }
 
-    // Register new user (only if user has not been created before)
+    /**
+     * Save a new user with the provided username and password. The password will be hashed before storing.
+     */
     public void saveUser(String username, String password) {
         authRepo.createUser(username, hashPassword(password), "operator");
     }
 
-    // Delete user (password required)
+    /**
+     * Remove user (only if old password is provided correctly)
+     * @return true if user was removed successfully, false if password verification failed
+     */
     public boolean removeUser(String username, String password) {
         Optional<UserRecord> user = authRepo.findByUsername(username);
 
@@ -67,7 +82,10 @@ public class AuthService {
         return true;
     }
 
-    // Change password (old password required)
+    /**
+     * Change user password (only if old password is provided correctly)
+     * @return true if password was changed successfully, false if password verification failed
+     */
     public boolean changeUserPassword(String username, String oldPass, String newPass) {
         Optional<UserRecord> user = authRepo.findByUsername(username);
 
@@ -85,10 +103,18 @@ public class AuthService {
         return true;
     }
 
+    /**
+     * Check if there are any users in the system. This can be used to determine if the initial setup is complete.
+     * @return true if at least one user exists, false otherwise
+     */
     public boolean hasAnyUsers() {
         return authRepo.countUsers() > 0;
     }
 
+    /**
+     * Check if a user with the given username exists in the system.
+     * @return true if user exists, false otherwise
+     */
     public boolean userExists(String username) {
         return authRepo.findByUsername(username).isPresent();
     }

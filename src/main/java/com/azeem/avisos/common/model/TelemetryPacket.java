@@ -5,6 +5,7 @@
 
 package com.azeem.avisos.common.model;
 
+import java.time.Instant;
 import java.util.UUID;
 
 /**
@@ -14,5 +15,5 @@ public record TelemetryPacket(
         UUID deviceId,
         PacketType type,
         byte[] payload, // Could be a JPEG frame or a JSON string
-        long timestamp
+        Instant timestamp
 ) {}

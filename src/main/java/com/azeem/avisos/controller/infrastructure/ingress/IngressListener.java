@@ -5,5 +5,8 @@
 
 package com.azeem.avisos.controller.infrastructure.ingress;
 
+
 public interface IngressListener {
+    void init();
+    void shutdown();
 }

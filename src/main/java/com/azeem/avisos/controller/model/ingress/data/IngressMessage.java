@@ -3,7 +3,7 @@
  * Apache 2.0 License
  */
 
-package com.azeem.avisos.controller.model.IngressData;
+package com.azeem.avisos.controller.model.ingress.data;
 
 import java.time.Instant;
 

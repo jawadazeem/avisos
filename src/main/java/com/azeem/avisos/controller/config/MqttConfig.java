@@ -3,7 +3,7 @@
  * Apache 2.0 License
  */
 
-package com.azeem.avisos.config;
+package com.azeem.avisos.controller.config;
 
 public class MqttConfig {
     private String controllerClientId;

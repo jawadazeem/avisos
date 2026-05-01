@@ -5,5 +5,10 @@
 
 package com.azeem.avisos.controller.service.ingress;
 
-public interface IngressDataHandler {
+/**
+ * Interface for handling incoming data from various ingress sources (e.g., MQTT, HTTP).
+ * @param <T> The type of message being handled
+ */
+public interface IngressDataHandler<T> {
+    void handle(T message);
 }

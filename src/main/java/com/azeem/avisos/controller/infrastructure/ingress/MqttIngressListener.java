@@ -5,9 +5,10 @@
 
 package com.azeem.avisos.controller.infrastructure.ingress;
 
-import com.azeem.avisos.config.MqttConfig;
+import com.azeem.avisos.controller.config.MqttConfig;
 import com.azeem.avisos.controller.exceptions.ConfigFileNotFoundException;
-import com.azeem.avisos.controller.service.ingress.IngressDataHandler;
+import com.azeem.avisos.controller.exceptions.CriticalInfrastructureException;
+import com.azeem.avisos.controller.service.ingress.MqttIngressAdapter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -23,8 +24,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class MqttIngressAdapter implements IngressListener {
-    private static final Logger log = LoggerFactory.getLogger(MqttIngressAdapter.class);
+public class MqttIngressListener implements IngressListener {
+    private static final Logger log = LoggerFactory.getLogger(MqttIngressListener.class);
+    MqttIngressAdapter mqttIngressAdapter;
     private final ExecutorService executor;
     private MqttClient client;
     private final ObjectMapper mapper;
@@ -35,9 +37,10 @@ public class MqttIngressAdapter implements IngressListener {
      *               It is recommended to use a singleton ObjectMapper instance across
      *               the application for better performance and resource management.
      */
-    public MqttIngressAdapter(IngressDataHandler ingressDataHandler,
-                              ObjectMapper mapper
+    public MqttIngressListener(MqttIngressAdapter mqttIngressAdapter,
+                               ObjectMapper mapper
     ) {
+        this.mqttIngressAdapter = mqttIngressAdapter;
         this.executor = Executors.newVirtualThreadPerTaskExecutor();
         this.mapper = mapper;
     }
@@ -91,7 +94,7 @@ public class MqttIngressAdapter implements IngressListener {
     private void startListening(MqttConfig config) {
         try {
             client.subscribe(config.getTopic(), (topic, message) -> {
-                executor.submit(() -> handleMessage(topic, message));
+                executor.submit(() -> mqttIngressAdapter.handle(topic, message));
             });
         } catch (MqttException e) {
             log.warn("MQTT subscription failed for topic avisos/telemetry/#", e);
@@ -102,7 +105,7 @@ public class MqttIngressAdapter implements IngressListener {
     private MqttConfig loadConfig() {
         try (InputStream is = getClass().getResourceAsStream("/application.yml")) {
             if (is == null) {
-                throw new RuntimeException("CRITICAL: Config file not found in classpath!");
+                throw new CriticalInfrastructureException("CRITICAL: Config file not found in classpath!");
             }
             return mapper.readValue(is, MqttConfig.class);
         } catch (IOException e) {

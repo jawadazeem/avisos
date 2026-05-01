@@ -5,7 +5,7 @@
 
 package com.azeem.avisos.controller.container;
 
-import com.azeem.avisos.config.LabelConfig;
+import com.azeem.avisos.controller.config.LabelConfig;
 import com.azeem.avisos.controller.exceptions.ConfigFileNotFoundException;
 import com.azeem.avisos.controller.instrumentation.annotations.ServiceAudit;
 import com.azeem.avisos.controller.instrumentation.annotations.Timed;
@@ -17,7 +17,8 @@ import com.azeem.avisos.controller.security.service.AuthService;
 import com.azeem.avisos.controller.service.alarm.AlarmService;
 import com.azeem.avisos.controller.service.device.DeviceService;
 import com.azeem.avisos.controller.service.device.DeviceServiceImpl;
-import com.azeem.avisos.controller.service.ingress.MqttIngressDataHandler;
+import com.azeem.avisos.controller.service.ingress.MqttIngressAdapter;
+import com.azeem.avisos.controller.service.ingress.TelemetryIngressHandler;
 import com.azeem.avisos.controller.service.notification.NotificationService;
 import com.azeem.avisos.controller.service.notification.SnsService;
 import com.azeem.avisos.controller.infrastructure.vision.CodeProjectVisionClient;
@@ -75,14 +76,17 @@ public class AppContainer {
         classObjectMap.put(AlarmService.class, alarmService);
         classObjectMap.put(DeviceService.class, deviceService);
 
-        MqttIngressDataHandler mqttIngressDataHandler = new MqttIngressDataHandler(
+        TelemetryIngressHandler telemetryIngressHandler = new TelemetryIngressHandler(
                 deviceService,
                 alarmService,
                 analyzer,
                 threatDetector,
                 new ObjectMapper()
         );
-        classObjectMap.put(MqttIngressDataHandler.class, mqttIngressDataHandler);
+        classObjectMap.put(TelemetryIngressHandler.class, telemetryIngressHandler);
+
+        MqttIngressAdapter mqttIngressAdapter = new MqttIngressAdapter(telemetryIngressHandler);
+        classObjectMap.put(MqttIngressAdapter.class, mqttIngressAdapter);
 
         NotificationService service = new SnsService();
         classObjectMap.put(NotificationService.class, service);

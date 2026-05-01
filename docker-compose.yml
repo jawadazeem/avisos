@@ -37,7 +37,7 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock"
   vision-api:
     image: codeproject/ai-server
-    container_name: avisos-vision
+    container_name: avisos-VisionRequest
     ports:
       - "32168:32168"
     environment:
