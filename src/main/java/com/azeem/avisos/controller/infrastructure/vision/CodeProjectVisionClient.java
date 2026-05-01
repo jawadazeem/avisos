@@ -3,7 +3,7 @@
  * Apache 2.0 License
  */
 
-package com.azeem.avisos.controller.service.rekognition;
+package com.azeem.avisos.controller.infrastructure.vision;
 
 import com.azeem.avisos.controller.exceptions.CannotDetectLabelsException;
 import org.slf4j.Logger;
@@ -16,19 +16,19 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 
-public class CodeProjectVisionService implements VisionService {
-    private static final Logger log = LoggerFactory.getLogger(CodeProjectVisionService.class);
+public class CodeProjectVisionClient implements VisionClient {
+    private static final Logger log = LoggerFactory.getLogger(CodeProjectVisionClient.class);
     private final HttpClient httpClient;
     private final String apiUrl;
 
-    public CodeProjectVisionService(String apiUrl) {
+    public CodeProjectVisionClient(String apiUrl) {
         this.httpClient = HttpClient.newHttpClient();
         this.apiUrl = apiUrl;
     }
 
     @Override
     public List<String> detectLabels(byte[] imageBytes) {
-        // Create a multipart/form-data body (standard for CodeProject.AI)
+
         // Note: For simplicity, you can use a library or a helper to build the multipart body
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(apiUrl))
@@ -45,10 +45,18 @@ public class CodeProjectVisionService implements VisionService {
         }
     }
 
+    /**
+     * Creates a multipart/form-data body
+     */
     private HttpRequest.BodyPublisher buildMultipartBody(byte[] imageBytes) {
 
     }
 
+    /**
+     * Parses the API response and extracts labels
+     * @param response API response as a string
+     * @return List of detected labels
+     */
     private List<String> parseResponse(HttpResponse<String> response) {
 
     }

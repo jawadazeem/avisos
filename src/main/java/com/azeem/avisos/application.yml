@@ -1,0 +1,8 @@
+mqtt:
+  controller-client-id: "avisos-controller"
+  broker: "tcp://localhost:1883"
+  topic: "avisos/alerts"
+  connection-timeout: 10
+  clean-session: false
+  automatic-reconnect: true
+

@@ -5,7 +5,7 @@
 
 package com.azeem.avisos.controller.container;
 
-import com.azeem.avisos.controller.config.LabelConfig;
+import com.azeem.avisos.config.LabelConfig;
 import com.azeem.avisos.controller.exceptions.ConfigFileNotFoundException;
 import com.azeem.avisos.controller.instrumentation.annotations.ServiceAudit;
 import com.azeem.avisos.controller.instrumentation.annotations.Timed;
@@ -17,11 +17,11 @@ import com.azeem.avisos.controller.security.service.AuthService;
 import com.azeem.avisos.controller.service.alarm.AlarmService;
 import com.azeem.avisos.controller.service.device.DeviceService;
 import com.azeem.avisos.controller.service.device.DeviceServiceImpl;
-import com.azeem.avisos.controller.service.mqtt.MqttService;
+import com.azeem.avisos.controller.service.ingress.MqttIngressDataHandler;
 import com.azeem.avisos.controller.service.notification.NotificationService;
 import com.azeem.avisos.controller.service.notification.SnsService;
-import com.azeem.avisos.controller.service.rekognition.CodeProjectVisionService;
-import com.azeem.avisos.controller.service.rekognition.VisionService;
+import com.azeem.avisos.controller.infrastructure.vision.CodeProjectVisionClient;
+import com.azeem.avisos.controller.infrastructure.vision.VisionClient;
 import com.azeem.avisos.controller.service.threat.KeywordThreatDetector;
 import com.azeem.avisos.controller.service.threat.ThreatDetector;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -66,22 +66,23 @@ public class AppContainer {
         AuthService authService = new AuthService(authRepository);
         AlarmService alarmService = new AlarmService(alarmRepo);
         DeviceService deviceService = new DeviceServiceImpl(deviceRepo);
-        VisionService analyzer = new CodeProjectVisionService();
+        VisionClient analyzer = new CodeProjectVisionClient();
 
         List<List<String>> problematicLabels = loadProblematicLabels();
         ThreatDetector threatDetector = new KeywordThreatDetector(problematicLabels.get(0), problematicLabels.get(1));
-        classObjectMap.put(VisionService.class, analyzer);
+        classObjectMap.put(VisionClient.class, analyzer);
         classObjectMap.put(AuthService.class, authService);
         classObjectMap.put(AlarmService.class, alarmService);
         classObjectMap.put(DeviceService.class, deviceService);
 
-        MqttService mqttService = new MqttService(
+        MqttIngressDataHandler mqttIngressDataHandler = new MqttIngressDataHandler(
                 deviceService,
                 alarmService,
                 analyzer,
-                threatDetector
+                threatDetector,
+                new ObjectMapper()
         );
-        classObjectMap.put(MqttService.class, mqttService);
+        classObjectMap.put(MqttIngressDataHandler.class, mqttIngressDataHandler);
 
         NotificationService service = new SnsService();
         classObjectMap.put(NotificationService.class, service);
