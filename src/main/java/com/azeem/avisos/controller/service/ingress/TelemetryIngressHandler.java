@@ -6,11 +6,14 @@
 package com.azeem.avisos.controller.service.ingress;
 
 import com.azeem.avisos.common.model.TelemetryPacket;
-import com.azeem.avisos.controller.infrastructure.vision.VisionClient;
+import com.azeem.avisos.controller.config.VisionConfig;
 import com.azeem.avisos.controller.model.ingress.data.IngressMessage;
 import com.azeem.avisos.controller.model.alarm.AlarmRecord;
 import com.azeem.avisos.controller.model.alarm.AlarmSeverity;
 import com.azeem.avisos.controller.model.alarm.AlarmStatus;
+import com.azeem.avisos.controller.model.vision.Prediction;
+import com.azeem.avisos.controller.model.vision.VisionRequest;
+import com.azeem.avisos.controller.model.vision.VisionResponse;
 import com.azeem.avisos.controller.service.alarm.AlarmService;
 import com.azeem.avisos.controller.service.device.DeviceService;
 import com.azeem.avisos.controller.service.threat.ThreatDetector;
@@ -30,25 +33,24 @@ public class TelemetryIngressHandler implements IngressDataHandler<IngressMessag
     private final AlarmService alarmService;
     private final ThreatDetector threatDetector;
     private final VisionService visionService;
+    private final VisionConfig visionConfig;
     private final ObjectMapper mapper;
 
     public TelemetryIngressHandler(DeviceService deviceService,
                                   AlarmService alarmService,
-                                   VisionService visionService,
+                                  VisionService visionService,
+                                  VisionConfig visionConfig,
                                   ThreatDetector threatDetector,
                                   ObjectMapper mapper
     ) {
         this.deviceService = deviceService;
         this.alarmService = alarmService;
+        this.visionConfig = visionConfig;
         this.visionService = visionService;
         this.threatDetector = threatDetector;
         this.mapper = mapper;
     }
 
-    // TODO: Form a VisionRequest object instead of passing raw payload to vision client.
-    //  Accept a VisionResponse, then decide to create the Alarm.
-    //  Use VisionService as an abstraction layer over VisionClient to handle this transformation
-    //  and any future logic related to vision processing.
     @Override
     public void handle(IngressMessage message) {
         TelemetryPacket packet = null;
@@ -69,7 +71,21 @@ public class TelemetryIngressHandler implements IngressDataHandler<IngressMessag
 
         if (packet.payload() != null) {
             try {
-                List<String> labels = visionService.analyze(packet.payload());
+                VisionResponse visionResponse = visionService.analyze(
+                        new VisionRequest(
+                                packet.payload(),
+                                UUID.randomUUID().toString(),
+                                visionConfig.minConfidence(),
+                                packet.deviceId().toString()
+                        )
+                );
+
+                List<String> labels = visionResponse.predictions() != null
+                        ? visionResponse.predictions().stream()
+                        .map(Prediction::label)
+                        .toList()
+                        : List.of();
+
                 AlarmSeverity severity = threatDetector.evaluate(labels);
 
                 String formattedLabels = formatLabelsForAlarm(labels);

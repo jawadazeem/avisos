@@ -10,4 +10,5 @@ import com.azeem.avisos.controller.model.vision.VisionResponse;
 
 public interface VisionService {
     VisionResponse analyze(VisionRequest visionRequest);
+    boolean isAvailable();
 }

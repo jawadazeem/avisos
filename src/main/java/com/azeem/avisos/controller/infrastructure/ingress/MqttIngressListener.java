@@ -25,27 +25,21 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Listens to the configured MQTT broker and forwards incoming messages to the MqttIngressAdapter.
+ */
 public class MqttIngressListener implements IngressListener {
     private static final Logger log = LoggerFactory.getLogger(MqttIngressListener.class);
     MqttIngressAdapter mqttIngressAdapter;
     private final ExecutorService executor;
     private MqttClient client;
-    private final ObjectMapper ymlMapper;
     private final MqttConfig config;
 
-    /**
-     *
-     * @param ymlMapper must be configured with YAMLFactory to read application.yml file.
-     *               It is recommended to use a singleton ObjectMapper instance across
-     *               the application for better performance and resource management.
-     */
     public MqttIngressListener(MqttIngressAdapter mqttIngressAdapter,
-                               ObjectMapper ymlMapper,
                                MqttConfig config
     ) {
         this.mqttIngressAdapter = mqttIngressAdapter;
         this.executor = Executors.newVirtualThreadPerTaskExecutor();
-        this.ymlMapper = ymlMapper;
         this.config = config;
     }
 

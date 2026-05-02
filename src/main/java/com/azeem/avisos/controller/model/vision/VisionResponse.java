@@ -18,12 +18,3 @@ public record VisionResponse(
         int inferenceMs,
         String executionProvider
 ) {}
-
-record Prediction(
-        String label,
-        double confidence,
-        int x_min,
-        int y_min,
-        int x_max,
-        int y_max
-) {}

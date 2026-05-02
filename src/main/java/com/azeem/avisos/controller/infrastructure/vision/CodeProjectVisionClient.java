@@ -7,8 +7,6 @@ package com.azeem.avisos.controller.infrastructure.vision;
 
 import com.azeem.avisos.controller.config.VisionConfig;
 import com.azeem.avisos.controller.exceptions.CannotDetectLabelsException;
-import com.azeem.avisos.controller.exceptions.ConfigFileMisconfiguredException;
-import com.azeem.avisos.controller.exceptions.CriticalInfrastructureException;
 import com.azeem.avisos.controller.model.vision.VisionRequest;
 import com.azeem.avisos.controller.model.vision.VisionResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -26,18 +23,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * <p>
+ *     Implementation of VisionClient that interacts with the CodeProject.AI vision API.
+ *     It sends multipart/form-data requests containing the image and minimum confidence,
+ *     and parses the JSON response to extract detected labels.
+ * </p>
+ * <p>
+ *     Building a multipart/form-data by hand is largely unnecessary, I have done it here for
+ *     learning purposes (RFC 7578).
+ * </p>
+ */
 public class CodeProjectVisionClient implements VisionClient {
     private static final Logger log = LoggerFactory.getLogger(CodeProjectVisionClient.class);
-    private final ObjectMapper ymlMapper;
     private final ObjectMapper jsonMapper;
     private final HttpClient httpClient;
     private final String apiUrl;
 
-    public CodeProjectVisionClient(ObjectMapper ymlMapper,
-                                   ObjectMapper jsonMapper,
+    public CodeProjectVisionClient(ObjectMapper jsonMapper,
                                    VisionConfig visionConfig
     ) {
-        this.ymlMapper = ymlMapper;
         this.jsonMapper = jsonMapper;
         this.httpClient = HttpClient.newHttpClient();
         this.apiUrl = visionConfig.apiUrl();
@@ -45,11 +50,11 @@ public class CodeProjectVisionClient implements VisionClient {
 
     @Override
     public VisionResponse sendRequest(VisionRequest visionRequest) {
-
+        String boundary = "AvisosBoundary" + UUID.randomUUID();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(apiUrl))
-                .header("Content-Type", "multipart/form-data; boundary=boundary")
-                .POST(buildMultipartBody(visionRequest, "boundary" + UUID.randomUUID()))
+                .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+                .POST(buildMultipartBody(visionRequest, boundary))
                 .build();
 
         try {
@@ -71,19 +76,16 @@ public class CodeProjectVisionClient implements VisionClient {
     @Override
     public boolean isAvailable() {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(apiUrl))
+                .uri(URI.create("http://localhost:32168/v1/module/status/vision"))
                 .GET()
                 .build();
         try {
-            HttpResponse<String> response = httpClient.send(
-                    request,
-                    HttpResponse.BodyHandlers.ofString()
-            );
-
+            HttpResponse<String> response = httpClient.send(request,
+                    HttpResponse.BodyHandlers.ofString());
             return response.statusCode() == 200;
-        } catch (IllegalArgumentException | IOException | InterruptedException e) {
-            log.error("Vision API health check failed: {}", e.getMessage());
-            throw new CannotDetectLabelsException("Failed to connect to vision API for health check.", e);
+        } catch (Exception e) {
+            log.warn("Vision AI Node is unreachable.");
+            return false;
         }
     }
 
