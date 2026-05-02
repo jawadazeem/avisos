@@ -31,6 +31,7 @@ public class MqttIngressListener implements IngressListener {
     private final ExecutorService executor;
     private MqttClient client;
     private final ObjectMapper ymlMapper;
+    private final MqttConfig config;
 
     /**
      *
@@ -39,17 +40,18 @@ public class MqttIngressListener implements IngressListener {
      *               the application for better performance and resource management.
      */
     public MqttIngressListener(MqttIngressAdapter mqttIngressAdapter,
-                               ObjectMapper ymlMapper
+                               ObjectMapper ymlMapper,
+                               MqttConfig config
     ) {
         this.mqttIngressAdapter = mqttIngressAdapter;
         this.executor = Executors.newVirtualThreadPerTaskExecutor();
         this.ymlMapper = ymlMapper;
+        this.config = config;
     }
 
     @PostConstruct
     @Override
     public void init() {
-        MqttConfig config = loadConfig();
         MqttConnectOptions options = new MqttConnectOptions();
 
         options.setAutomaticReconnect(config.automaticReconnect());
@@ -100,17 +102,6 @@ public class MqttIngressListener implements IngressListener {
         } catch (MqttException e) {
             log.warn("MQTT subscription failed for topic avisos/telemetry/#", e);
             throw new IllegalStateException("Cannot start MQTT subscription", e);
-        }
-    }
-
-    private MqttConfig loadConfig() {
-        try (InputStream is = getClass().getResourceAsStream("/application.yml")) {
-            if (is == null) {
-                throw new CriticalInfrastructureException("CRITICAL: Config file not found in classpath!");
-            }
-            return ymlMapper.readValue(is, MqttConfig.class);
-        } catch (IOException e) {
-            throw new ConfigFileMisconfiguredException("Failed to parse security policy", e);
         }
     }
 }

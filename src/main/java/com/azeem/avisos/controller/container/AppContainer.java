@@ -6,7 +6,11 @@
 package com.azeem.avisos.controller.container;
 
 import com.azeem.avisos.controller.config.LabelConfig;
+import com.azeem.avisos.controller.config.MqttConfig;
+import com.azeem.avisos.controller.config.VisionConfig;
+import com.azeem.avisos.controller.exceptions.ConfigFileMisconfiguredException;
 import com.azeem.avisos.controller.exceptions.ConfigFileNotFoundException;
+import com.azeem.avisos.controller.exceptions.CriticalInfrastructureException;
 import com.azeem.avisos.controller.instrumentation.annotations.ServiceAudit;
 import com.azeem.avisos.controller.instrumentation.annotations.Timed;
 import com.azeem.avisos.controller.repository.AlarmRepository;
@@ -52,6 +56,8 @@ public class AppContainer {
      */
     public void init() {
         Jdbi jdbi = databaseConfiguration();
+        ObjectMapper ymlMapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper jsonMapper = new ObjectMapper();
 
         // Repositories
         AlarmRepository alarmRepo = jdbi.onDemand(AlarmRepository.class);
@@ -98,18 +104,41 @@ public class AppContainer {
         return jdbi;
     }
 
-    private List<List<String>> loadProblematicLabels() {
+    private List<List<String>> loadProblematicLabels(ObjectMapper ymlMapper) {
         try (InputStream is = getClass().getResourceAsStream("/config/problematic-labels.yml")) {
             if (is == null) {
                 throw new RuntimeException("CRITICAL: Config file not found in classpath!");
             }
 
-            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-            LabelConfig config = mapper.readValue(is, LabelConfig.class);
+            LabelConfig config = ymlMapper.readValue(is, LabelConfig.class);
 
             return List.of(config.critical(), config.warning());
         } catch (IOException e) {
             throw new ConfigFileNotFoundException("Failed to parse security policy", e);
+        }
+    }
+
+    private VisionConfig loadVisionConfig(ObjectMapper ymlMapper) {
+        try (InputStream is = getClass().getResourceAsStream("/application.yml")) {
+            if (is == null) {
+                throw new CriticalInfrastructureException(
+                        "CRITICAL: Config file not found in classpath!"
+                );
+            }
+            return ymlMapper.readValue(is, VisionConfig.class);
+        } catch (IOException e) {
+            throw new ConfigFileMisconfiguredException("Failed to parse security policy", e);
+        }
+    }
+
+    private MqttConfig loadMqttConfig(ObjectMapper ymlMapper) {
+        try (InputStream is = getClass().getResourceAsStream("/application.yml")) {
+            if (is == null) {
+                throw new CriticalInfrastructureException("CRITICAL: Config file not found in classpath!");
+            }
+            return ymlMapper.readValue(is, MqttConfig.class);
+        } catch (IOException e) {
+            throw new ConfigFileMisconfiguredException("Failed to parse security policy", e);
         }
     }
 
