@@ -90,8 +90,6 @@ public class AppContainer {
 
         NotificationService service = new SnsService();
         classObjectMap.put(NotificationService.class, service);
-
-
     }
 
     private Jdbi databaseConfiguration() {
@@ -109,7 +107,7 @@ public class AppContainer {
             ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
             LabelConfig config = mapper.readValue(is, LabelConfig.class);
 
-            return List.of(config.getCritical(), config.getWarning());
+            return List.of(config.critical(), config.warning());
         } catch (IOException e) {
             throw new ConfigFileNotFoundException("Failed to parse security policy", e);
         }

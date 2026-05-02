@@ -6,6 +6,7 @@
 package com.azeem.avisos.controller.infrastructure.ingress;
 
 import com.azeem.avisos.controller.config.MqttConfig;
+import com.azeem.avisos.controller.exceptions.ConfigFileMisconfiguredException;
 import com.azeem.avisos.controller.exceptions.ConfigFileNotFoundException;
 import com.azeem.avisos.controller.exceptions.CriticalInfrastructureException;
 import com.azeem.avisos.controller.service.ingress.MqttIngressAdapter;
@@ -29,20 +30,20 @@ public class MqttIngressListener implements IngressListener {
     MqttIngressAdapter mqttIngressAdapter;
     private final ExecutorService executor;
     private MqttClient client;
-    private final ObjectMapper mapper;
+    private final ObjectMapper ymlMapper;
 
     /**
      *
-     * @param mapper must be configured with YAMLFactory to read application.yml file.
+     * @param ymlMapper must be configured with YAMLFactory to read application.yml file.
      *               It is recommended to use a singleton ObjectMapper instance across
      *               the application for better performance and resource management.
      */
     public MqttIngressListener(MqttIngressAdapter mqttIngressAdapter,
-                               ObjectMapper mapper
+                               ObjectMapper ymlMapper
     ) {
         this.mqttIngressAdapter = mqttIngressAdapter;
         this.executor = Executors.newVirtualThreadPerTaskExecutor();
-        this.mapper = mapper;
+        this.ymlMapper = ymlMapper;
     }
 
     @PostConstruct
@@ -51,15 +52,15 @@ public class MqttIngressListener implements IngressListener {
         MqttConfig config = loadConfig();
         MqttConnectOptions options = new MqttConnectOptions();
 
-        options.setAutomaticReconnect(config.isAutomaticReconnect());
-        options.setCleanSession(config.isCleanSession());
-        options.setConnectionTimeout(config.getConnectionTimeout());
+        options.setAutomaticReconnect(config.automaticReconnect());
+        options.setCleanSession(config.cleanSession());
+        options.setConnectionTimeout(config.connectionTimeout());
 
         try {
-            client = new MqttClient(config.getBroker(), config.getControllerClientId());
+            client = new MqttClient(config.broker(), config.controllerClientId());
             client.connect(options);
 
-            log.info("Avisos Hub successfully peered with MQTT Broker at {}", config.getBroker());
+            log.info("Avisos Hub successfully peered with MQTT Broker at {}", config.broker());
             startListening(config);
 
         } catch (MqttException e) {
@@ -93,7 +94,7 @@ public class MqttIngressListener implements IngressListener {
 
     private void startListening(MqttConfig config) {
         try {
-            client.subscribe(config.getTopic(), (topic, message) -> {
+            client.subscribe(config.topic(), (topic, message) -> {
                 executor.submit(() -> mqttIngressAdapter.handle(topic, message));
             });
         } catch (MqttException e) {
@@ -107,9 +108,9 @@ public class MqttIngressListener implements IngressListener {
             if (is == null) {
                 throw new CriticalInfrastructureException("CRITICAL: Config file not found in classpath!");
             }
-            return mapper.readValue(is, MqttConfig.class);
+            return ymlMapper.readValue(is, MqttConfig.class);
         } catch (IOException e) {
-            throw new ConfigFileNotFoundException("Failed to parse security policy", e);
+            throw new ConfigFileMisconfiguredException("Failed to parse security policy", e);
         }
     }
 }

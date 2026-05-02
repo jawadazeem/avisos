@@ -9,9 +9,21 @@ import java.util.List;
 
 /**
  * Response model for vision processing results. Can be extended in the future to include
- * additional metadata such as confidence scores, bounding boxes, etc.
- * @param labels List of labels detected in the image.
+ * additional metadata such as bounding boxes.
+ * executionProvider indicates whether GPU or CPU was used for inference
  */
 public record VisionResponse(
-        List<String> labels
+        boolean success,
+        List<Prediction> predictions,
+        int inferenceMs,
+        String executionProvider
+) {}
+
+record Prediction(
+        String label,
+        double confidence,
+        int x_min,
+        int y_min,
+        int x_max,
+        int y_max
 ) {}

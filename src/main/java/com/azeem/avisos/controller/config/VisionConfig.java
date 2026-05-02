@@ -5,9 +5,8 @@
 
 package com.azeem.avisos.controller.config;
 
-import java.util.List;
-
-public record LabelConfig (
-    List<String> critical,
-    List<String> warning
+public record VisionConfig(
+        String apiUrl,
+        double minConfidence,
+        int timeoutSeconds
 ) {}

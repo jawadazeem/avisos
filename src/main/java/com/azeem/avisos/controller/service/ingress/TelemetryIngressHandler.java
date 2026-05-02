@@ -14,6 +14,7 @@ import com.azeem.avisos.controller.model.alarm.AlarmStatus;
 import com.azeem.avisos.controller.service.alarm.AlarmService;
 import com.azeem.avisos.controller.service.device.DeviceService;
 import com.azeem.avisos.controller.service.threat.ThreatDetector;
+import com.azeem.avisos.controller.service.vision.VisionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,24 +29,26 @@ public class TelemetryIngressHandler implements IngressDataHandler<IngressMessag
     private final DeviceService deviceService;
     private final AlarmService alarmService;
     private final ThreatDetector threatDetector;
-    private final VisionClient visionClient;
+    private final VisionService visionService;
     private final ObjectMapper mapper;
 
     public TelemetryIngressHandler(DeviceService deviceService,
                                   AlarmService alarmService,
-                                  VisionClient visionClient,
+                                   VisionService visionService,
                                   ThreatDetector threatDetector,
                                   ObjectMapper mapper
     ) {
         this.deviceService = deviceService;
         this.alarmService = alarmService;
-        this.visionClient = visionClient;
+        this.visionService = visionService;
         this.threatDetector = threatDetector;
         this.mapper = mapper;
     }
 
     // TODO: Form a VisionRequest object instead of passing raw payload to vision client.
     //  Accept a VisionResponse, then decide to create the Alarm.
+    //  Use VisionService as an abstraction layer over VisionClient to handle this transformation
+    //  and any future logic related to vision processing.
     @Override
     public void handle(IngressMessage message) {
         TelemetryPacket packet = null;
@@ -66,7 +69,7 @@ public class TelemetryIngressHandler implements IngressDataHandler<IngressMessag
 
         if (packet.payload() != null) {
             try {
-                List<String> labels = visionClient.detectLabels(packet.payload());
+                List<String> labels = visionService.analyze(packet.payload());
                 AlarmSeverity severity = threatDetector.evaluate(labels);
 
                 String formattedLabels = formatLabelsForAlarm(labels);

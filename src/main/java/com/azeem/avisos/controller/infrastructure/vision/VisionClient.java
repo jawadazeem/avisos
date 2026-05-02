@@ -9,8 +9,19 @@ import com.azeem.avisos.controller.model.vision.VisionRequest;
 import com.azeem.avisos.controller.model.vision.VisionResponse;
 
 /**
- * Can be implemented using AWS Rekognition or any other image recognition service.
+ * Core Service Contract for Computer Vision Orchestration.
+ * Designed for asynchronous, non-blocking execution at the edge.
  */
 public interface VisionClient {
-    VisionResponse detectLabels(VisionRequest visionRequest);
+    /**
+     * Standard synchronous-style call (blocking the virtual thread, not the platform).
+     * Used for real-time telemetry processing.
+     */
+    VisionResponse sendRequest(VisionRequest request);
+
+    /**
+     * Health check to support Circuit Breaker state transitions.
+     * Essential for "Operational Excellence" and monitoring.
+     */
+    boolean isAvailable();
 }

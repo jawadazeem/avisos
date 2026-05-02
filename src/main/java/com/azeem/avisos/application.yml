@@ -5,4 +5,7 @@ mqtt:
   connection-timeout: 10
   clean-session: false
   automatic-reconnect: true
-
+vision:
+  api-url: "http://localhost:32168/v1/vision/detection"
+  min-confidence: 0.70
+  timeout-seconds: 5
