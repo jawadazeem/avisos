@@ -3,8 +3,8 @@
  * Apache 2.0 License
  */
 
-package com.azeem.avisos.controller.service.command;
+package com.azeem.avisos.controller.service.cli;
 
 public interface CliService {
-    void run();
+    void runCommand();
 }

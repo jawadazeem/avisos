@@ -43,7 +43,6 @@ public class MqttIngressListener implements IngressListener {
         this.config = config;
     }
 
-    @PostConstruct
     @Override
     public void init() {
         MqttConnectOptions options = new MqttConnectOptions();
@@ -64,7 +63,6 @@ public class MqttIngressListener implements IngressListener {
         }
     }
 
-    @PreDestroy
     @Override
     public void shutdown() {
         try {

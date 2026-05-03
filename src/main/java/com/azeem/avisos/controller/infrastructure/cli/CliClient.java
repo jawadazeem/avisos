@@ -8,6 +8,7 @@ package com.azeem.avisos.controller.infrastructure.cli;
 public interface CliClient {
     void init();
     void shutdown();
+    boolean isRunning();
     void println(String msg);
     String readLn();
 }
