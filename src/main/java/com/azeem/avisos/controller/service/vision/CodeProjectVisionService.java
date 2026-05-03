@@ -5,7 +5,6 @@
 
 package com.azeem.avisos.controller.service.vision;
 
-import com.azeem.avisos.controller.config.VisionConfig;
 import com.azeem.avisos.controller.infrastructure.vision.VisionClient;
 import com.azeem.avisos.controller.model.vision.VisionRequest;
 import com.azeem.avisos.controller.model.vision.VisionResponse;

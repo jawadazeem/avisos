@@ -24,7 +24,7 @@ services:
       - ./mosquitto/data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
   localstack:
-    image: localstack/localstack:latest
+    image: localstack/localstack:3
     container_name: avisos-cloud
     ports:
       - "4566:4566"
@@ -32,10 +32,14 @@ services:
       - SERVICES=sns
       - DEFAULT_REGION=us-east-1
       - DOCKER_HOST=unix:///var/run/docker.sock
+      - LOCALSTACK_AUTH_TOKEN=
+      - LOCALSTACK_API_KEY=
+      - LOCALSTACK_SKIP_LICENSE_CHECK=1
     volumes:
       - "./localstack:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
   vision-api:
+    platform: linux/amd64
     image: codeproject/ai-server
     container_name: avisos-VisionRequest
     ports:

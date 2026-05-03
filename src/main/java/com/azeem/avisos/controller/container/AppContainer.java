@@ -5,13 +5,12 @@
 
 package com.azeem.avisos.controller.container;
 
-import com.azeem.avisos.controller.config.DatabaseConfig;
-import com.azeem.avisos.controller.config.LabelConfig;
-import com.azeem.avisos.controller.config.MqttConfig;
-import com.azeem.avisos.controller.config.VisionConfig;
+import com.azeem.avisos.controller.config.*;
 import com.azeem.avisos.controller.exceptions.ConfigFileMisconfiguredException;
 import com.azeem.avisos.controller.exceptions.ConfigFileNotFoundException;
 import com.azeem.avisos.controller.exceptions.CriticalInfrastructureException;
+import com.azeem.avisos.controller.infrastructure.cli.CliClient;
+import com.azeem.avisos.controller.infrastructure.cli.JLineCliClient;
 import com.azeem.avisos.controller.instrumentation.annotations.*;
 import com.azeem.avisos.controller.repository.AlarmRepository;
 import com.azeem.avisos.controller.repository.AuthRepository;
@@ -19,6 +18,8 @@ import com.azeem.avisos.controller.repository.DeviceRepository;
 import com.azeem.avisos.controller.repository.TelemetryRepository;
 import com.azeem.avisos.controller.security.service.AuthService;
 import com.azeem.avisos.controller.service.alarm.AlarmService;
+import com.azeem.avisos.controller.service.command.CliService;
+import com.azeem.avisos.controller.service.command.JLineCliService;
 import com.azeem.avisos.controller.service.device.DeviceService;
 import com.azeem.avisos.controller.service.device.SimpleDeviceService;
 import com.azeem.avisos.controller.service.ingress.MqttIngressAdapter;
@@ -49,7 +50,7 @@ import static com.azeem.avisos.controller.repository.JdbiProvider.getJdbi;
  * <p>Responsible for instantiating necessary objects and wiring their dependencies</p>
  */
 public class AppContainer {
-    Map<Class<?>, Object> classObjectMap = new HashMap<>();
+    public Map<Class<?>, Object> classObjectMap = new HashMap<>();
 
     public <T> T get(Class<T> type) {
         return type.cast(classObjectMap.get(type));
@@ -82,7 +83,7 @@ public class AppContainer {
         VisionClient visionClient = new CodeProjectVisionClient(jsonMapper, loadVisionConfig(ymlMapper));
         VisionService visionService = new CodeProjectVisionService(visionClient);
 
-        List<List<String>> problematicLabels = loadProblematicLabels(ymlMapper);
+        List<List<String>> problematicLabels = loadProblematicLabelsConfig(ymlMapper);
         ThreatDetector threatDetector = new KeywordThreatDetector(problematicLabels.get(0), problematicLabels.get(1));
         classObjectMap.put(VisionClient.class, visionService);
         classObjectMap.put(AuthService.class, authService);
@@ -102,12 +103,19 @@ public class AppContainer {
         MqttIngressAdapter mqttIngressAdapter = new MqttIngressAdapter(telemetryIngressHandler);
         classObjectMap.put(MqttIngressAdapter.class, mqttIngressAdapter);
 
-        NotificationService service = new SnsService();
-        classObjectMap.put(NotificationService.class, service);
+        NotificationService notificationService = new SnsService();
+        classObjectMap.put(NotificationService.class, notificationService);
+
+        // Terminal
+        CliClient cliClient = new JLineCliClient();
+        CliService cliService = new JLineCliService(cliClient);
+        classObjectMap.put(CliClient.class, cliClient);
+        classObjectMap.put(CliService.class, cliService);
+        applyAspects();
     }
 
-    private List<List<String>> loadProblematicLabels(ObjectMapper ymlMapper) {
-        try (InputStream is = getClass().getResourceAsStream("/config/problematic-labels.yml")) {
+    private List<List<String>> loadProblematicLabelsConfig(ObjectMapper ymlMapper) {
+        try (InputStream is = getClass().getResourceAsStream("/application.yml")) {
             if (is == null) {
                 throw new CriticalInfrastructureException
                         ("CRITICAL: Config file not found in classpath!" +
@@ -131,7 +139,8 @@ public class AppContainer {
                                 + "application without vision service connection details."
                 );
             }
-            return ymlMapper.readValue(is, VisionConfig.class);
+            AppConfig config = ymlMapper.readValue(is, AppConfig.class);
+            return config.getVision();
         } catch (IOException e) {
             throw new ConfigFileMisconfiguredException("Failed to parse vision policy", e);
         }
@@ -145,7 +154,8 @@ public class AppContainer {
                         " Cannot start application without MQTT connection details."
                 );
             }
-            return ymlMapper.readValue(is, MqttConfig.class);
+            AppConfig config = ymlMapper.readValue(is, AppConfig.class);
+            return config.getMqtt();
         } catch (IOException e) {
             throw new ConfigFileMisconfiguredException("Failed to parse mqtt policy", e);
         }
@@ -159,17 +169,19 @@ public class AppContainer {
                         "Cannot start application without DB connection details."
                 );
             }
-            return ymlMapper.readValue(is, DatabaseConfig.class);
+            AppConfig config = ymlMapper.readValue(is, AppConfig.class);
+            return config.getDatabase();
         } catch (IOException e) {
             throw new ConfigFileMisconfiguredException("Failed to parse database policy", e);
         }
     }
 
-    public <T> void applyAspects() {
+    private <T> void applyAspects() {
         ServiceAuditAspect();
         TimedAspect();
     }
 
+    // TODO: Use terminal logging instead of System.out.println and make it more elegant
     private void ServiceAuditAspect() {
         System.out.println("\n--- [ Avisos Audit Scan ] ---");
 
