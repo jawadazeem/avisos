@@ -5,14 +5,14 @@
 
 package com.azeem.avisos.controller.container;
 
+import com.azeem.avisos.controller.config.DatabaseConfig;
 import com.azeem.avisos.controller.config.LabelConfig;
 import com.azeem.avisos.controller.config.MqttConfig;
 import com.azeem.avisos.controller.config.VisionConfig;
 import com.azeem.avisos.controller.exceptions.ConfigFileMisconfiguredException;
 import com.azeem.avisos.controller.exceptions.ConfigFileNotFoundException;
 import com.azeem.avisos.controller.exceptions.CriticalInfrastructureException;
-import com.azeem.avisos.controller.instrumentation.annotations.ServiceAudit;
-import com.azeem.avisos.controller.instrumentation.annotations.Timed;
+import com.azeem.avisos.controller.instrumentation.annotations.*;
 import com.azeem.avisos.controller.repository.AlarmRepository;
 import com.azeem.avisos.controller.repository.AuthRepository;
 import com.azeem.avisos.controller.repository.DeviceRepository;
@@ -20,7 +20,7 @@ import com.azeem.avisos.controller.repository.TelemetryRepository;
 import com.azeem.avisos.controller.security.service.AuthService;
 import com.azeem.avisos.controller.service.alarm.AlarmService;
 import com.azeem.avisos.controller.service.device.DeviceService;
-import com.azeem.avisos.controller.service.device.DeviceServiceImpl;
+import com.azeem.avisos.controller.service.device.SimpleDeviceService;
 import com.azeem.avisos.controller.service.ingress.MqttIngressAdapter;
 import com.azeem.avisos.controller.service.ingress.TelemetryIngressHandler;
 import com.azeem.avisos.controller.service.notification.NotificationService;
@@ -29,10 +29,11 @@ import com.azeem.avisos.controller.infrastructure.vision.CodeProjectVisionClient
 import com.azeem.avisos.controller.infrastructure.vision.VisionClient;
 import com.azeem.avisos.controller.service.threat.KeywordThreatDetector;
 import com.azeem.avisos.controller.service.threat.ThreatDetector;
+import com.azeem.avisos.controller.service.vision.CodeProjectVisionService;
+import com.azeem.avisos.controller.service.vision.VisionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.jdbi.v3.core.Jdbi;
-import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,8 +41,11 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.azeem.avisos.controller.repository.JdbiProvider.getJdbi;
+
 /**
- * <h2>IoC Container Class</h2>
+ * <p>IoC Container Class</p>
  * <p>Responsible for instantiating necessary objects and wiring their dependencies</p>
  */
 public class AppContainer {
@@ -55,9 +59,11 @@ public class AppContainer {
      * Initializes all needed objects
      */
     public void init() {
-        Jdbi jdbi = databaseConfiguration();
+        // ObjectMappers for loading all configs and for vision client
         ObjectMapper ymlMapper = new ObjectMapper(new YAMLFactory());
         ObjectMapper jsonMapper = new ObjectMapper();
+
+        Jdbi jdbi = getJdbi(loadDBConfig(ymlMapper));
 
         // Repositories
         AlarmRepository alarmRepo = jdbi.onDemand(AlarmRepository.class);
@@ -72,12 +78,13 @@ public class AppContainer {
         // Services
         AuthService authService = new AuthService(authRepository);
         AlarmService alarmService = new AlarmService(alarmRepo);
-        DeviceService deviceService = new DeviceServiceImpl(deviceRepo);
-        VisionClient analyzer = new CodeProjectVisionClient();
+        DeviceService deviceService = new SimpleDeviceService(deviceRepo);
+        VisionClient visionClient = new CodeProjectVisionClient(jsonMapper, loadVisionConfig(ymlMapper));
+        VisionService visionService = new CodeProjectVisionService(visionClient);
 
-        List<List<String>> problematicLabels = loadProblematicLabels();
+        List<List<String>> problematicLabels = loadProblematicLabels(ymlMapper);
         ThreatDetector threatDetector = new KeywordThreatDetector(problematicLabels.get(0), problematicLabels.get(1));
-        classObjectMap.put(VisionClient.class, analyzer);
+        classObjectMap.put(VisionClient.class, visionService);
         classObjectMap.put(AuthService.class, authService);
         classObjectMap.put(AlarmService.class, alarmService);
         classObjectMap.put(DeviceService.class, deviceService);
@@ -85,7 +92,8 @@ public class AppContainer {
         TelemetryIngressHandler telemetryIngressHandler = new TelemetryIngressHandler(
                 deviceService,
                 alarmService,
-                analyzer,
+                visionService,
+                loadVisionConfig(ymlMapper),
                 threatDetector,
                 new ObjectMapper()
         );
@@ -98,16 +106,13 @@ public class AppContainer {
         classObjectMap.put(NotificationService.class, service);
     }
 
-    private Jdbi databaseConfiguration() {
-        Jdbi jdbi = Jdbi.create("jdbc:sqlite:avisos.db");
-        jdbi.installPlugin(new SqlObjectPlugin());
-        return jdbi;
-    }
-
     private List<List<String>> loadProblematicLabels(ObjectMapper ymlMapper) {
         try (InputStream is = getClass().getResourceAsStream("/config/problematic-labels.yml")) {
             if (is == null) {
-                throw new RuntimeException("CRITICAL: Config file not found in classpath!");
+                throw new CriticalInfrastructureException
+                        ("CRITICAL: Config file not found in classpath!" +
+                        " Cannot start application without security policy details."
+                );
             }
 
             LabelConfig config = ymlMapper.readValue(is, LabelConfig.class);
@@ -122,23 +127,41 @@ public class AppContainer {
         try (InputStream is = getClass().getResourceAsStream("/application.yml")) {
             if (is == null) {
                 throw new CriticalInfrastructureException(
-                        "CRITICAL: Config file not found in classpath!"
+                        "CRITICAL: Config file not found in classpath! Cannot start "
+                                + "application without vision service connection details."
                 );
             }
             return ymlMapper.readValue(is, VisionConfig.class);
         } catch (IOException e) {
-            throw new ConfigFileMisconfiguredException("Failed to parse security policy", e);
+            throw new ConfigFileMisconfiguredException("Failed to parse vision policy", e);
         }
     }
 
     private MqttConfig loadMqttConfig(ObjectMapper ymlMapper) {
         try (InputStream is = getClass().getResourceAsStream("/application.yml")) {
             if (is == null) {
-                throw new CriticalInfrastructureException("CRITICAL: Config file not found in classpath!");
+                throw new CriticalInfrastructureException(
+                        "CRITICAL: Config file not found in classpath!" +
+                        " Cannot start application without MQTT connection details."
+                );
             }
             return ymlMapper.readValue(is, MqttConfig.class);
         } catch (IOException e) {
-            throw new ConfigFileMisconfiguredException("Failed to parse security policy", e);
+            throw new ConfigFileMisconfiguredException("Failed to parse mqtt policy", e);
+        }
+    }
+
+    private DatabaseConfig loadDBConfig(ObjectMapper ymlMapper) {
+        try (InputStream is = getClass().getResourceAsStream("/application.yml")) {
+            if (is == null) {
+                throw new CriticalInfrastructureException(
+                        "CRITICAL: Config file not found in classpath! " +
+                        "Cannot start application without DB connection details."
+                );
+            }
+            return ymlMapper.readValue(is, DatabaseConfig.class);
+        } catch (IOException e) {
+            throw new ConfigFileMisconfiguredException("Failed to parse database policy", e);
         }
     }
 

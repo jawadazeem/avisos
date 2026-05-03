@@ -13,11 +13,11 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.UUID;
 
-public class DeviceServiceImpl implements DeviceService {
-    private static final Logger log = LoggerFactory.getLogger(DeviceServiceImpl.class);
+public class SimpleDeviceService implements DeviceService {
+    private static final Logger log = LoggerFactory.getLogger(SimpleDeviceService.class);
     DeviceRepository deviceRepository;
 
-    public DeviceServiceImpl(DeviceRepository deviceRepository) {
+    public SimpleDeviceService(DeviceRepository deviceRepository) {
         this.deviceRepository = deviceRepository;
     }
 

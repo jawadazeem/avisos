@@ -5,25 +5,49 @@
 
 package com.azeem.avisos.controller.repository;
 
+import com.azeem.avisos.controller.config.DatabaseConfig;
+import com.azeem.avisos.controller.exceptions.CriticalInfrastructureException;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
+import io.github.cdimascio.dotenv.Dotenv;
+
+import javax.sql.DataSource;
 
 public class JdbiProvider {
-    private static Jdbi jdbi;
 
-    public static Jdbi getJdbi() {
-        if (jdbi == null) {
-            HikariConfig config = new HikariConfig();
-            config.setJdbcUrl("jdbc:sqlite:avisos_core.db");
-            config.setMaximumPoolSize(10); // Perfect for local Docker env
-            config.setPoolName("Avisos-Pool");
+    private static volatile Jdbi jdbi;
 
-            HikariDataSource ds = new HikariDataSource(config);
-            jdbi = Jdbi.create(ds);
-            jdbi.installPlugin(new SqlObjectPlugin()); // Enables the Interface-style Repos
+    public static synchronized Jdbi getJdbi(DatabaseConfig config) {
+        if (jdbi != null) {
+            return jdbi;
         }
-        return jdbi;
+
+        try {
+            Dotenv dotenv = Dotenv.load();
+            String key = dotenv.get("DATABASE_ENCRYPTION_KEY");
+
+            HikariConfig hikariConfig = new HikariConfig();
+            hikariConfig.setJdbcUrl(config.url());
+
+            hikariConfig.setMaximumPoolSize(5);
+            hikariConfig.setMinimumIdle(1);
+            hikariConfig.setPoolName("avisos-sqlite-pool");
+
+            HikariDataSource hikari = new HikariDataSource(hikariConfig);
+
+            DataSource encryptingDataSource = new EncryptingDataSource(hikari, key);
+
+            jdbi = Jdbi.create(encryptingDataSource);
+            jdbi.installPlugin(new SqlObjectPlugin());
+
+            return jdbi;
+
+        } catch (Exception e) {
+            throw new CriticalInfrastructureException(
+                    "Failed to initialize database: " + e.getMessage()
+            );
+        }
     }
 }
