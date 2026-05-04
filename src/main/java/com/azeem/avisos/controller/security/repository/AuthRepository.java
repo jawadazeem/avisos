@@ -3,8 +3,10 @@
  * Apache 2.0 License
  */
 
-package com.azeem.avisos.controller.repository;
+package com.azeem.avisos.controller.security.repository;
 
+import com.azeem.avisos.controller.security.entity.UserEntity;
+import com.azeem.avisos.controller.security.mapper.UserMapper;
 import com.azeem.avisos.controller.security.model.UserRecord;
 import org.jdbi.v3.sqlobject.config.RegisterConstructorMapper;
 import org.jdbi.v3.sqlobject.customizer.Bind;
@@ -26,9 +28,17 @@ public interface AuthRepository {
     """)
     void initUserTable();
 
-    @SqlQuery("SELECT * FROM users WHERE username = :username")
-    @RegisterConstructorMapper(UserRecord.class)
-    Optional<UserRecord> findByUsername(@Bind("username") String username);
+    @SqlQuery("""
+        SELECT username, password_hash AS passwordHash, role, created_at AS createdAt, last_login AS lastLogin
+        FROM users 
+        WHERE username = :username
+    """)
+    @RegisterConstructorMapper(UserEntity.class)
+    Optional<UserEntity> findByUsernameEntity(@Bind("username") String username);
+
+    default Optional<UserRecord> findByUsername(String username) {
+        return findByUsernameEntity(username).map(UserMapper::toDomain);
+    }
 
     @SqlUpdate("UPDATE users SET password_hash = :newHash WHERE username = :username")
     void updatePassword(@Bind("username") String username, @Bind("newHash") String newHash);
@@ -36,7 +46,7 @@ public interface AuthRepository {
     @SqlUpdate("INSERT INTO users (username, password_hash, role) VALUES (:username, :hash, :role)")
     void createUser(@Bind("username") String username, @Bind("hash") String hash, @Bind("role") String role);
 
-    @SqlUpdate("DELETE FROM users (username, password_hash, role) VALUES (:username, :hash, :role)")
+    @SqlUpdate("DELETE FROM users WHERE username = :username")
     void deleteUser(@Bind("username") String username);
 
     @SqlQuery("SELECT COUNT(*) FROM users")

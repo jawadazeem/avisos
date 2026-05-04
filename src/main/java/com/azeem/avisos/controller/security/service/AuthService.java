@@ -6,7 +6,7 @@
 package com.azeem.avisos.controller.security.service;
 
 import com.azeem.avisos.controller.exceptions.UserDoesNotExistException;
-import com.azeem.avisos.controller.repository.AuthRepository;
+import com.azeem.avisos.controller.security.repository.AuthRepository;
 import com.azeem.avisos.controller.security.model.UserRecord;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
