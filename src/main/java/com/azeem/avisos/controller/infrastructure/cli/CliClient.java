@@ -11,4 +11,5 @@ public interface CliClient {
     boolean isRunning();
     void println(String msg);
     String readLn();
+    String readLn(String prompt);
 }

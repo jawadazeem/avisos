@@ -6,6 +6,8 @@
 package com.azeem.avisos.controller.security.service;
 
 import com.azeem.avisos.controller.exceptions.UserDoesNotExistException;
+import com.azeem.avisos.controller.security.entity.UserEntity;
+import com.azeem.avisos.controller.security.mapper.UserMapper;
 import com.azeem.avisos.controller.security.repository.AuthRepository;
 import com.azeem.avisos.controller.security.model.UserRecord;
 import de.mkammerer.argon2.Argon2;
@@ -14,6 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
+
+import static com.azeem.avisos.controller.security.mapper.UserMapper.toDomain;
 
 /**
  * Service class responsible for handling user authentication, password hashing, and user management.
@@ -39,6 +43,10 @@ public class AuthService {
                 1,        // threads
                 password
         );
+    }
+
+    public UserRecord getUser(String username) {
+        return authRepo.findByUsername(username).orElse(null);
     }
 
     /**

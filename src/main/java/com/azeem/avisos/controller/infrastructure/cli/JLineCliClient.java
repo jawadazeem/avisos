@@ -45,9 +45,14 @@ public class JLineCliClient implements CliClient {
     }
 
     @Override
-    public void println(String msg) {
+    public synchronized void println(String msg) {
         terminal.writer().println(msg);
         terminal.writer().flush();
+    }
+
+    @Override
+    public String readLn(String prompt) {
+        return reader.readLine("prompt");
     }
 
     @Override

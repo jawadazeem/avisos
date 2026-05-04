@@ -8,15 +8,14 @@ package com.azeem.avisos.controller.framework;
 import com.azeem.avisos.controller.infrastructure.cli.*;
 import com.azeem.avisos.controller.infrastructure.ingress.MqttIngressListener;
 import com.azeem.avisos.controller.repository.*;
+import com.azeem.avisos.controller.security.model.SecurityContext;
 import com.azeem.avisos.controller.security.repository.AuthRepository;
 import com.azeem.avisos.controller.security.service.AuthService;
 import com.azeem.avisos.controller.service.alarm.AlarmService;
 import com.azeem.avisos.controller.service.cli.CliService;
 import com.azeem.avisos.controller.service.cli.*;
 import com.azeem.avisos.controller.service.cli.command.api.CommandRegistry;
-import com.azeem.avisos.controller.service.cli.command.impl.AlarmsCommand;
-import com.azeem.avisos.controller.service.cli.command.impl.ExitCommand;
-import com.azeem.avisos.controller.service.cli.command.impl.InMemoryCommandRegistry;
+import com.azeem.avisos.controller.service.cli.command.impl.*;
 import com.azeem.avisos.controller.service.device.DeviceService;
 import com.azeem.avisos.controller.service.device.SimpleDeviceService;
 import com.azeem.avisos.controller.service.ingress.MqttIngressAdapter;
@@ -129,6 +128,8 @@ public class AppContainer {
         classObjectMap.put(CommandRegistry.class, commandRegistry);
         commandRegistry.register(new ExitCommand(cliClient));
         commandRegistry.register(new AlarmsCommand(cliClient, alarmService));
+        commandRegistry.register(new LoginCommand(cliClient, authService, new SecurityContext()));
+        // commandRegistry.register(new SecureCommand(cliClient, authService));
 
         CliService cliService = new JLineCliService(cliClient, commandRegistry);
         Thread cliThread = new Thread(cliService::runCommand);
