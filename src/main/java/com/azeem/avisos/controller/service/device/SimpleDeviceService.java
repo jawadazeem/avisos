@@ -5,6 +5,7 @@
 
 package com.azeem.avisos.controller.service.device;
 
+import com.azeem.avisos.controller.mapper.device.DeviceMapper;
 import com.azeem.avisos.controller.model.device.DeviceRecord;
 import com.azeem.avisos.controller.repository.DeviceRepository;
 import org.slf4j.Logger;
@@ -23,7 +24,7 @@ public class SimpleDeviceService implements DeviceService {
 
     @Override
     public void updateDeviceHeartbeat(DeviceRecord deviceRecord) {
-        deviceRepository.updateDeviceLastSeen(deviceRecord.uuid());
+        deviceRepository.updateDeviceLastSeen(deviceRecord.uuid().toString());
     }
 
     @Override
@@ -36,11 +37,12 @@ public class SimpleDeviceService implements DeviceService {
 
     @Override
     public List<UUID> getRegisteredDevices() {
-        return deviceRepository.getRegisteredDevices();
+        List<String> strings  = deviceRepository.getRegisteredDeviceUuids();
+        return strings.stream().map(UUID::fromString).toList();
     }
 
     @Override
     public void registerHeartbeat(UUID uuid) {
-        deviceRepository.updateDeviceLastSeen(uuid);
+        deviceRepository.updateDeviceLastSeen(uuid.toString());
     }
 }
