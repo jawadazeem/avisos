@@ -130,9 +130,11 @@ public class AppContainer {
         commandRegistry.register(new ExitCommand(cliClient));
         commandRegistry.register(new AlarmsCommand(cliClient, alarmService));
 
-        ExecutorService cliExecutor = Executors.newVirtualThreadPerTaskExecutor();
-        CliService cliService = new JLineCliService(cliClient, commandRegistry, cliExecutor);
-        cliExecutor.submit(cliService::runCommand);
+        CliService cliService = new JLineCliService(cliClient, commandRegistry);
+        Thread cliThread = new Thread(cliService::runCommand);
+        cliThread.setDaemon(false);  // Non-daemon keeps JVM alive
+        cliThread.setName("CLI-Thread");
+        cliThread.start();
         classObjectMap.put(CliService.class, cliService);
     }
 }
