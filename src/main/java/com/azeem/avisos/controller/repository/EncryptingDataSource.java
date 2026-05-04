@@ -26,6 +26,7 @@ public class EncryptingDataSource implements DataSource {
     public Connection getConnection() throws SQLException {
         Connection conn = delegate.getConnection();
         applyKey(conn);
+        enableWal(conn);
         return conn;
     }
 
@@ -33,12 +34,19 @@ public class EncryptingDataSource implements DataSource {
     public Connection getConnection(String username, String password) throws SQLException {
         Connection conn = delegate.getConnection(username, password);
         applyKey(conn);
+        enableWal(conn);
         return conn;
     }
 
     private void applyKey(Connection conn) throws SQLException {
         try (Statement stmt = conn.createStatement()) {
             stmt.execute("PRAGMA key = '" + key.replace("'", "''") + "'");
+        }
+    }
+
+    private void enableWal(Connection conn) throws SQLException {
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute("PRAGMA journal_mode=WAL;");
         }
     }
 

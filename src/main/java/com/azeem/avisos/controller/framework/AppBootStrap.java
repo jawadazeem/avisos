@@ -5,14 +5,13 @@
 
 package com.azeem.avisos.controller.framework;
 
+
 public class AppBootStrap {
     public void init() {
         AppContainer container = new AppContainer();
-        container.init();
-
         AspectProcessor aspectProcessor = new AspectProcessor(container.classObjectMap);
         aspectProcessor.applyAspects();
-
+        container.init();
         ConfigLoader configLoader = new ConfigLoader();
     }
 }

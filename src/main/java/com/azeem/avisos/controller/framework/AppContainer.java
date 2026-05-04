@@ -7,6 +7,7 @@ package com.azeem.avisos.controller.framework;
 
 import com.azeem.avisos.controller.config.*;
 import com.azeem.avisos.controller.infrastructure.cli.*;
+import com.azeem.avisos.controller.infrastructure.ingress.MqttIngressListener;
 import com.azeem.avisos.controller.instrumentation.annotations.*;
 import com.azeem.avisos.controller.repository.*;
 import com.azeem.avisos.controller.security.service.AuthService;
@@ -14,6 +15,7 @@ import com.azeem.avisos.controller.service.alarm.AlarmService;
 import com.azeem.avisos.controller.service.cli.CliService;
 import com.azeem.avisos.controller.service.cli.*;
 import com.azeem.avisos.controller.service.cli.command.api.CommandRegistry;
+import com.azeem.avisos.controller.service.cli.command.impl.AlarmsCommand;
 import com.azeem.avisos.controller.service.cli.command.impl.ExitCommand;
 import com.azeem.avisos.controller.service.cli.command.impl.InMemoryCommandRegistry;
 import com.azeem.avisos.controller.service.device.DeviceService;
@@ -36,6 +38,8 @@ import org.jdbi.v3.core.Jdbi;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.azeem.avisos.controller.repository.JdbiProvider.getJdbi;
 
@@ -57,14 +61,10 @@ public class AppContainer {
      * Initializes all needed objects
      */
     public void init() {
-        // ObjectMappers for loading all configs and for vision client
-        ObjectMapper jsonMapper = new ObjectMapper();
-        ObjectMapper ymlMapper = new ObjectMapper(new YAMLFactory());
-        ymlMapper.setPropertyNamingStrategy(PropertyNamingStrategies.KEBAB_CASE);
 
         ConfigLoader configLoader = new ConfigLoader();
 
-        Jdbi jdbi = getJdbi(configLoader.loadDBConfig(ymlMapper));
+        Jdbi jdbi = getJdbi(configLoader.loadDBConfig());
 
         // Repositories
         AlarmRepository alarmRepo = jdbi.onDemand(AlarmRepository.class);
@@ -76,14 +76,22 @@ public class AppContainer {
         classObjectMap.put(TelemetryRepository.class, telemetryRepository);
         classObjectMap.put(AuthRepository.class, authRepository);
 
+        alarmRepo.initAlarmTable();
+        deviceRepo.initDeviceTable();
+        telemetryRepository.initAuditTable();
+        authRepository.initUserTable();
+
         // Services
         AuthService authService = new AuthService(authRepository);
         AlarmService alarmService = new AlarmService(alarmRepo);
         DeviceService deviceService = new SimpleDeviceService(deviceRepo);
-        VisionClient visionClient = new CodeProjectVisionClient(jsonMapper, configLoader.loadVisionConfig(ymlMapper));
+        VisionClient visionClient = new CodeProjectVisionClient(
+                new ObjectMapper(),
+                configLoader.loadVisionConfig()
+        );
         VisionService visionService = new CodeProjectVisionService(visionClient);
 
-        List<List<String>> problematicLabels = configLoader.loadProblematicLabelsConfig(ymlMapper);
+        List<List<String>> problematicLabels = configLoader.loadProblematicLabelsConfig();
         ThreatDetector threatDetector = new KeywordThreatDetector(problematicLabels.get(0), problematicLabels.get(1));
         classObjectMap.put(VisionClient.class, visionService);
         classObjectMap.put(AuthService.class, authService);
@@ -94,7 +102,7 @@ public class AppContainer {
                 deviceService,
                 alarmService,
                 visionService,
-                configLoader.loadVisionConfig(ymlMapper),
+                configLoader.loadVisionConfig(),
                 threatDetector,
                 new ObjectMapper()
         );
@@ -103,14 +111,13 @@ public class AppContainer {
         MqttIngressAdapter mqttIngressAdapter = new MqttIngressAdapter(telemetryIngressHandler);
         classObjectMap.put(MqttIngressAdapter.class, mqttIngressAdapter);
 
-        // TODO: Uncomment for actual use, commented out for testing.
-//        MqttIngressListener mqttIngressListener = new MqttIngressListener(
-//                mqttIngressAdapter,
-//                loadMqttConfig(ymlMapper)
-//        );
-//
+        MqttIngressListener mqttIngressListener = new MqttIngressListener(
+                mqttIngressAdapter,
+                configLoader.loadMqttConfig()
+        );
+        // TODO: Uncomment
 //        mqttIngressListener.init();
-//        classObjectMap.put(MqttIngressListener.class, mqttIngressListener);
+        classObjectMap.put(MqttIngressListener.class, mqttIngressListener);
 
         NotificationService notificationService = new SnsService();
         classObjectMap.put(NotificationService.class, notificationService);
@@ -122,15 +129,13 @@ public class AppContainer {
 
         // Register Commands
         CommandRegistry commandRegistry = new InMemoryCommandRegistry();
-        registerCommands(commandRegistry, cliClient);
         classObjectMap.put(CommandRegistry.class, commandRegistry);
-
-        CliService cliService = new JLineCliService(cliClient, commandRegistry);
-        cliService.runCommand();
-        classObjectMap.put(CliService.class, cliService);
-    }
-
-    private void registerCommands(CommandRegistry commandRegistry, CliClient cliClient) {
         commandRegistry.register(new ExitCommand(cliClient));
+        commandRegistry.register(new AlarmsCommand(cliClient, alarmService));
+
+        ExecutorService cliExecutor = Executors.newVirtualThreadPerTaskExecutor();
+        CliService cliService = new JLineCliService(cliClient, commandRegistry, cliExecutor);
+        cliExecutor.submit(cliService::runCommand);
+        classObjectMap.put(CliService.class, cliService);
     }
 }

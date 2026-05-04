@@ -19,10 +19,13 @@ public class JLineCliService implements CliService {
     private final CommandRegistry commandRegistry;
     private final ExecutorService executor;
 
-    public JLineCliService(CliClient cliClient, CommandRegistry commandRegistry) {
+    public JLineCliService(CliClient cliClient,
+                           CommandRegistry commandRegistry,
+                           ExecutorService executor
+    ) {
         this.cliClient = cliClient;
         this.commandRegistry = commandRegistry;
-        executor = Executors.newVirtualThreadPerTaskExecutor();
+        this.executor = executor;
     }
 
     @Override

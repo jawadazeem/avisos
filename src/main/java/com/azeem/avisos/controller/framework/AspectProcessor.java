@@ -9,7 +9,6 @@ import com.azeem.avisos.controller.instrumentation.annotations.ServiceAudit;
 import com.azeem.avisos.controller.instrumentation.annotations.Timed;
 
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.Map;
 
 public class AspectProcessor {

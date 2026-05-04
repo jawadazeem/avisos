@@ -28,7 +28,7 @@ public class ConfigLoader {
         ymlMapper.setPropertyNamingStrategy(PropertyNamingStrategies.KEBAB_CASE);
     }
 
-    public List<List<String>> loadProblematicLabelsConfig(ObjectMapper ymlMapper) {
+    public List<List<String>> loadProblematicLabelsConfig() {
         try (InputStream is = getClass().getResourceAsStream("/problematic-labels.yml")) {
             if (is == null) {
                 throw new CriticalInfrastructureException
@@ -45,7 +45,7 @@ public class ConfigLoader {
         }
     }
 
-    public VisionConfig loadVisionConfig(ObjectMapper ymlMapper) {
+    public VisionConfig loadVisionConfig() {
         try (InputStream is = getClass().getResourceAsStream("/application.yml")) {
             if (is == null) {
                 throw new CriticalInfrastructureException(
@@ -60,7 +60,7 @@ public class ConfigLoader {
         }
     }
 
-    public MqttConfig loadMqttConfig(ObjectMapper ymlMapper) {
+    public MqttConfig loadMqttConfig() {
         try (InputStream is = getClass().getResourceAsStream("/application.yml")) {
             if (is == null) {
                 throw new CriticalInfrastructureException(
@@ -75,7 +75,7 @@ public class ConfigLoader {
         }
     }
 
-    public DatabaseConfig loadDBConfig(ObjectMapper ymlMapper) {
+    public DatabaseConfig loadDBConfig() {
         try (InputStream is = getClass().getResourceAsStream("/application.yml")) {
             if (is == null) {
                 throw new CriticalInfrastructureException(
