@@ -34,7 +34,7 @@ public class PerformanceHandler implements InvocationHandler {
                 Object result = method.invoke(deviceService, args);
                 long elapsedTime = System.nanoTime() - startTime;
                 if (timed.thresholdMs() < elapsedTime/(1_000_000)) {
-                    System.out.println(
+                    IO.println(
                             "The operation " + method + " took longer than the set " +
                                     "threshold indicating a performance issue."
                     );

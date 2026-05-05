@@ -34,7 +34,7 @@ public class AspectProcessor {
                     ServiceAudit audit = m.getAnnotation(ServiceAudit.class);
 
                     String actionName = audit.value().isEmpty() ? m.getName() : audit.value();
-                    System.out.println("[AUDIT POINT] Verified: " + clazz.getSimpleName()
+                    IO.println("[AUDIT POINT] Verified: " + clazz.getSimpleName()
                             + " -> " + m.getName()
                             + " (Context: " + actionName + ")");
                 }
@@ -51,7 +51,7 @@ public class AspectProcessor {
                 if (m.isAnnotationPresent(Timed.class)) {
                     Timed timed = m.getAnnotation(Timed.class);
 
-                    System.out.println("[PERFORMANCE MONITOR]: Watching: "
+                    IO.println("[PERFORMANCE MONITOR]: Watching: "
                             + clazz.getSimpleName()
                             + " -> " + m.getName() + " Threshold (50 ms)");
                 }
