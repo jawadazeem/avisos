@@ -95,10 +95,9 @@ public class JLineCliService implements CliService {
                         );
             } catch (IllegalStateException | UserInterruptException | EndOfFileException e) {
                 log.info("CLI Session closed by user. Background services remain active.");
+                shutdownCli();
             }
         }
-
-        shutdownCli();
     }
 
     private void bootstrapCheck() {

@@ -38,4 +38,8 @@ dependency-reduced-pom.xml
 avisos.dblogs.txt
 avisos.db
 avisos.iml
+avisos.db-shm
+avisos.db-wal
 target
+localstack/cache
+.env
