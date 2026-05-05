@@ -42,4 +42,7 @@ avisos.db-shm
 avisos.db-wal
 target
 localstack/cache
+logs
+mosquitto
+data
 .env
