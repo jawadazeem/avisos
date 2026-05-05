@@ -16,6 +16,15 @@ public class ExitCommand implements Command {
     }
 
     @Override
+    public String description() {
+        return """
+                Initiates a graceful shutdown of the AVISOS shell. This triggers the cleanup of 
+                terminal resources and safely disconnects active background listeners before 
+                terminating the process.
+                """;
+    }
+
+    @Override
     public String name() {
         return "exit";
     }

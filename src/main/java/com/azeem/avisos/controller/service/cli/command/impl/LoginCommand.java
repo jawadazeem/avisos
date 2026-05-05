@@ -27,6 +27,15 @@ public class LoginCommand implements Command {
         return "login";
     }
 
+    @Override
+    public String description() {
+        return """
+                Begins the authentication handshake. Prompts the user for credentials to 
+                establish a secure session context, enabling access to restricted operational 
+                commands.
+                """;
+    }
+
     // TODO: debug and fix!
     @Override
     public void execute(String input) {

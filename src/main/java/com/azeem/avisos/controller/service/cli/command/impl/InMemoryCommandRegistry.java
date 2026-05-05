@@ -8,9 +8,7 @@ package com.azeem.avisos.controller.service.cli.command.impl;
 import com.azeem.avisos.controller.service.cli.command.api.Command;
 import com.azeem.avisos.controller.service.cli.command.api.CommandRegistry;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public class InMemoryCommandRegistry implements CommandRegistry {
 
@@ -24,5 +22,10 @@ public class InMemoryCommandRegistry implements CommandRegistry {
     @Override
     public Optional<Command> find(String name) {
         return Optional.ofNullable(commands.get(name.toLowerCase()));
+    }
+
+    @Override
+    public List<Command> getAllCommands() {
+        return commands.values().stream().toList();
     }
 }

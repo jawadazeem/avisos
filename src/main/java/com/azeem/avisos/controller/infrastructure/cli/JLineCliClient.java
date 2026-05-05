@@ -29,7 +29,7 @@ public class JLineCliClient implements CliClient {
     @Override
     public void init() {
         isRunning = true;
-        println("Welcome to AVISOS Shell! Type 'exit' to quit.");
+        println("Welcome to AVISOS Shell! Type 'help' for help. Type 'exit' to quit.");
     }
 
     @Override

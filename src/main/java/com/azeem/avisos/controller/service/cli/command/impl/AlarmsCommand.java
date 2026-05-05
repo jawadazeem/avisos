@@ -30,6 +30,15 @@ public class AlarmsCommand implements Command {
     }
 
     @Override
+    public String description() {
+        return """
+                Retrieves and displays a real-time list of all active security alerts, 
+                including severity levels and timestamps. Used for immediate situational
+                awareness of the infrastructure.
+                """;
+    }
+
+    @Override
     public void execute(String input) {
         List<AlarmRecord> alarms = alarmService.loadAllActiveAlarms();
 

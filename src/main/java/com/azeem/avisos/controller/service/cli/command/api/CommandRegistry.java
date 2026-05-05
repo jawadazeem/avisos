@@ -5,9 +5,11 @@
 
 package com.azeem.avisos.controller.service.cli.command.api;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface CommandRegistry {
     void register(Command command);
     Optional<Command> find(String name);
+    List<Command> getAllCommands();
 }

@@ -28,6 +28,15 @@ public class SecureCommand implements Command {
         return "secure";
     }
 
+    @Override
+    public String description() {
+        return """
+                A meta-command (decorator) that wraps sensitive operations. It validates the 
+                current session's claims against the required security policy before delegating 
+                execution to the underlying command.
+                """;
+    }
+
     public void execute(String input) {
         if (context.isAuthenticated()) {
             delegate.execute(input);
