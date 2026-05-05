@@ -12,5 +12,6 @@ public interface CliClient {
     void println(String msg);
     String readLn();
     String readPassword();
+    String readPassword(String prompt);
     String readLn(String prompt);
 }

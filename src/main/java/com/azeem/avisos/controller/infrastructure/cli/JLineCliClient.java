@@ -65,6 +65,11 @@ public class JLineCliClient implements CliClient {
         return reader.readLine("Password: ", '*');
     }
 
+    @Override
+    public String readPassword(String prompt) {
+        return reader.readLine(prompt, '*');
+    }
+
     private Terminal getTerminal() {
         try {
             return TerminalBuilder.builder()

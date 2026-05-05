@@ -11,6 +11,7 @@ import com.azeem.avisos.controller.security.model.SecurityContext;
 import com.azeem.avisos.controller.security.model.UserRecord;
 import com.azeem.avisos.controller.security.service.AuthService;
 import com.azeem.avisos.controller.service.cli.command.api.CommandRegistry;
+import org.jline.reader.EndOfFileException;
 import org.jline.reader.UserInterruptException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,13 +50,12 @@ public class JLineCliService implements CliService {
             enterCommandLoop();
         } catch (Exception e) {
             log.error("Fatal system error in CLI supervisor", e);
-        } finally {
-            cliClient.shutdown();
         }
     }
 
     private void performAuthenticationBlocking() {
         cliClient.init();
+        bootstrapCheck();
 
         while (cliClient.isRunning() && !securityContext.isAuthenticated()) {
             try {
@@ -63,8 +63,11 @@ public class JLineCliService implements CliService {
                 String password = cliClient.readPassword(); // Masked
 
                 if (authService.authenticate(username, password)) {
-                    UserRecord user = authService.getUser(username).get();
-                    securityContext.setAuthenticatedUser(user);
+                    Optional<UserRecord> user = authService.getUser(username);
+                    if (user.isEmpty()) {
+                        continue;
+                    }
+                    securityContext.setAuthenticatedUser(user.get());
                     cliClient.println("Login successful.");
                 } else {
                     cliClient.println("Error: Invalid password.");
@@ -72,8 +75,8 @@ public class JLineCliService implements CliService {
             } catch (UserDoesNotExistException e) {
                 log.warn("Auth failure: no such user exists");
                 cliClient.println("Error: " + e.getMessage());
-            } catch (UserInterruptException e) {
-                break; // external shutdown
+            } catch (IllegalStateException | UserInterruptException | EndOfFileException e) {
+                shutdownCli();
             } catch (Exception e) {
                 log.error("Critical Auth Error");
                 cliClient.println("A system error occurred. Please contact an administrator.");
@@ -90,9 +93,32 @@ public class JLineCliService implements CliService {
                                 cmd -> executor.submit(() -> cmd.execute(input)),
                                 () -> cliClient.println("Unknown command: " + input)
                         );
-            } catch (IllegalStateException e) {
-                break; // terminal closed externally;
+            } catch (IllegalStateException | UserInterruptException | EndOfFileException e) {
+                log.info("CLI Session closed by user. Background services remain active.");
             }
         }
+
+        shutdownCli();
+    }
+
+    private void bootstrapCheck() {
+        if (!authService.hasAnyUsers()) {
+            cliClient.println("There are no users in this system.");
+            cliClient.println("Initializing AVISOS Administrative Bootstrap...");
+
+            String username = cliClient.readLn("Create Admin Username: ");
+            String password = cliClient.readPassword("Create Admin Password: ");
+
+            authService.saveUser(username, password);
+            cliClient.println("Admin account created successfully. Proceeding to login...");
+        }
+    }
+
+    /**
+     * Only shuts down the CLI, not the entire application.
+     */
+    private void shutdownCli() {
+        cliClient.shutdown();
+        executor.shutdown();
     }
 }
