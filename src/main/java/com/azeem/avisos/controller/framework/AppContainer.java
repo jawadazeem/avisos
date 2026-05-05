@@ -14,6 +14,7 @@ import com.azeem.avisos.controller.security.service.AuthService;
 import com.azeem.avisos.controller.service.alarm.AlarmService;
 import com.azeem.avisos.controller.service.cli.CliService;
 import com.azeem.avisos.controller.service.cli.*;
+import com.azeem.avisos.controller.service.cli.command.api.Command;
 import com.azeem.avisos.controller.service.cli.command.api.CommandRegistry;
 import com.azeem.avisos.controller.service.cli.command.impl.*;
 import com.azeem.avisos.controller.service.device.DeviceService;
@@ -118,21 +119,45 @@ public class AppContainer {
         NotificationService notificationService = new SnsService();
         classObjectMap.put(NotificationService.class, notificationService);
 
+        // Auth context (must be singleton)
+        SecurityContext securityContext = new SecurityContext();
 
         // Terminal
         CliClient cliClient = new JLineCliClient();
         classObjectMap.put(CliClient.class, cliClient);
 
-        // Register Commands
+        // Register Commands (Secure)
         CommandRegistry commandRegistry = new InMemoryCommandRegistry();
         classObjectMap.put(CommandRegistry.class, commandRegistry);
         commandRegistry.register(new ExitCommand(cliClient));
-        commandRegistry.register(new AlarmsCommand(cliClient, alarmService));
-        commandRegistry.register(new LoginCommand(cliClient, authService, new SecurityContext()));
-        // commandRegistry.register(new SecureCommand(cliClient, authService));
 
-        CliService cliService = new JLineCliService(cliClient, commandRegistry);
-        Thread cliThread = new Thread(cliService::runCommand);
+        Command alarmCmd = new AlarmsCommand(cliClient, alarmService);
+        Command secureAlarmCmd = new SecureCommand(
+                cliClient,
+                alarmCmd,
+                authService,
+                securityContext
+        );
+
+        commandRegistry.register(alarmCmd);
+        classObjectMap.put(AlarmsCommand.class, alarmCmd);
+        commandRegistry.register(secureAlarmCmd);
+        classObjectMap.put(SecureCommand.class, secureAlarmCmd);
+
+        // Register Commands (Non-Secure)
+
+        Command helpCmd = new HelpCommand(cliClient, commandRegistry);
+        commandRegistry.register(helpCmd);
+        classObjectMap.put(HelpCommand.class, helpCmd);
+
+        // Rest of the terminal
+        CliService cliService = new JLineCliService(
+                cliClient,
+                commandRegistry,
+                authService,
+                securityContext);
+
+        Thread cliThread = new Thread(cliService::start);
         cliThread.setDaemon(false);  // Non-daemon keeps JVM alive
         cliThread.setName("CLI-Thread");
         cliThread.start();

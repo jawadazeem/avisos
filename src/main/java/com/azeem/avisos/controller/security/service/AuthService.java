@@ -6,8 +6,6 @@
 package com.azeem.avisos.controller.security.service;
 
 import com.azeem.avisos.controller.exceptions.UserDoesNotExistException;
-import com.azeem.avisos.controller.security.entity.UserEntity;
-import com.azeem.avisos.controller.security.mapper.UserMapper;
 import com.azeem.avisos.controller.security.repository.AuthRepository;
 import com.azeem.avisos.controller.security.model.UserRecord;
 import de.mkammerer.argon2.Argon2;
@@ -17,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
-import static com.azeem.avisos.controller.security.mapper.UserMapper.toDomain;
 
 /**
  * Service class responsible for handling user authentication, password hashing, and user management.
@@ -27,6 +24,9 @@ public class AuthService {
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
     private final AuthRepository authRepo;
     private final Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id);
+    private static final int ARGON2_ITERATIONS = 3;
+    private static final int ARGON2_MEMORY = 65536;
+    private static final int ARGON2_THREADS = 1;
 
     public AuthService(AuthRepository authRepo) {
         this.authRepo = authRepo;
@@ -38,15 +38,15 @@ public class AuthService {
      */
     public String hashPassword(String password) {
         return argon2.hash(
-                3,        // rounds (how many times the work is repeated)
-                65536,    // memory in KB (64 MB)
-                1,        // threads
+                ARGON2_ITERATIONS,        // rounds (how many times the work is repeated)
+                ARGON2_MEMORY,    // memory in KB (64 MB)
+                ARGON2_THREADS,        // threads
                 password
         );
     }
 
-    public UserRecord getUser(String username) {
-        return authRepo.findByUsername(username).orElse(null);
+    public Optional<UserRecord> getUser(String username) {
+        return authRepo.findByUsername(username);
     }
 
     /**

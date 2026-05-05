@@ -29,7 +29,7 @@ public class JLineCliClient implements CliClient {
     @Override
     public void init() {
         isRunning = true;
-        println("Welcome to AVISOS Shell! Type 'help' for help. Type 'exit' to quit.");
+        println("Welcome to AVISOS Shell! Please login.");
     }
 
     @Override
@@ -52,12 +52,17 @@ public class JLineCliClient implements CliClient {
 
     @Override
     public String readLn(String prompt) {
-        return reader.readLine("prompt");
+        return reader.readLine(prompt);
     }
 
     @Override
     public String readLn() {
         return reader.readLine("Avisos> ");
+    }
+
+    @Override
+    public String readPassword() {
+        return reader.readLine("Password: ", '*');
     }
 
     private Terminal getTerminal() {

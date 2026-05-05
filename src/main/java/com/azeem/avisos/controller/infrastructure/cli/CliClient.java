@@ -11,5 +11,6 @@ public interface CliClient {
     boolean isRunning();
     void println(String msg);
     String readLn();
+    String readPassword();
     String readLn(String prompt);
 }
