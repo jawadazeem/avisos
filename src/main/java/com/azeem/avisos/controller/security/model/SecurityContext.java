@@ -5,22 +5,26 @@
 
 package com.azeem.avisos.controller.security.model;
 
+/**
+ * Each thread gets its own isolated "currentUser"
+ */
 public class SecurityContext {
-    private UserRecord currentUser; // Null if guest
+    private static final ThreadLocal<UserRecord> userThreadLocal = new ThreadLocal<>(); // Null if guest
 
     public void setAuthenticatedUser(UserRecord user) {
-        this.currentUser = user;
+        userThreadLocal.set(user); // Stores it in the current thread's "pocket"
     }
 
     public void clear() {
-        this.currentUser = null;
+        userThreadLocal.remove(); // Essential to prevent memory leaks
     }
 
     public boolean isAuthenticated() {
-        return currentUser != null;
+        return userThreadLocal.get() != null;
     }
 
     public String getCurrentUsername() {
-        return currentUser != null ? currentUser.username() : "guest";
+        UserRecord user = userThreadLocal.get();
+        return user != null ? user.username() : "guest";
     }
 }
