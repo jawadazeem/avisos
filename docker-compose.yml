@@ -1,6 +1,6 @@
 services:
-  avisos-app:
-    build: .
+  avisos-controller-service:
+    build: avisos-controller-service
     image: avisos-app:latest
     container_name: avisos_core
 

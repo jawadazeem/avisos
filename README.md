@@ -9,4 +9,4 @@ predictive threat modeling with a hardened MQTT command-bus to ensure the integr
 operations.
 
 ### Architecture Overview
-![Architecture](images/architecture-diagram.svg)
+![Architecture](avisos-controller-service/images/architecture-diagram.svg)

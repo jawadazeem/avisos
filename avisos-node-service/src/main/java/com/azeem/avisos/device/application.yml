@@ -1,0 +1,15 @@
+# AVISOS Node Device Configuration
+
+device:
+  # Unique name for the dashboard (e.g., North-Gate-Camera)
+  name: "unassigned-node"
+
+  # Type of hardware: e.g CAMERA
+  type: "CAMERA"
+
+network:
+  # The IP of the Main Controller
+  broker-url: "tcp://192.168.1.50:1883"
+
+  # How often to report battery (in seconds)
+  heartbeat-interval: 60

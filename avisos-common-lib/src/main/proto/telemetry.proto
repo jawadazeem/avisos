@@ -1,0 +1,26 @@
+/*
+ * (C) Copyright 2026 Jawad Azeem
+ * Apache 2.0 License
+ */
+
+syntax = "proto3";
+
+package com.azeem.avisos.common;
+
+option java_package = "com.azeem.avisos.common.proto";
+option java_multiple_files = true;
+
+enum PacketType {
+  HEARTBEAT = 0;
+  NETWORK_SCAN = 1;
+  SYSTEM_ERROR = 2;
+}
+
+message TelemetryPacket {
+  string device_id = 1;
+  PacketType type = 2;
+  double battery_level = 3;
+  int64 timestamp = 4;
+  bytes payload = 5;
+  string device_name = 6;
+}

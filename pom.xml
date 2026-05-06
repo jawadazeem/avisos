@@ -1,227 +1,35 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>com.azeem.avisos</groupId>
-    <artifactId>avisos</artifactId>
+    <artifactId>avisos-parent</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
     <properties>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <protobuf.version>3.25.1</protobuf.version>
     </properties>
+
+    <modules>
+        <module>avisos-common-lib</module>
+        <module>avisos-controller-service</module>
+        <module>avisos-node-service</module>
+    </modules>
 
     <dependencyManagement>
         <dependencies>
-            <!-- JDBI BOM -->
+            <!-- This ensures all children use the same version of Common Lib -->
             <dependency>
-                <groupId>org.jdbi</groupId>
-                <artifactId>jdbi3-bom</artifactId>
-                <version>3.53.0</version>
-                <type>pom</type>
-                <scope>import</scope>
+                <groupId>com.azeem.avisos</groupId>
+                <artifactId>avisos-common-lib</artifactId>
+                <version>${project.version}</version>
             </dependency>
-
-            <!-- AWS SDK BOM -->
             <dependency>
-                <groupId>software.amazon.awssdk</groupId>
-                <artifactId>bom</artifactId>
-                <version>2.29.29</version>
-                <type>pom</type>
-                <scope>import</scope>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>${protobuf.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
-
-
-    <dependencies>
-
-        <!-- Google JSON Serializer -->
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.10.1</version>
-        </dependency>
-
-        <!-- Jackson JSON Serializer -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.21.2</version>
-        </dependency>
-
-        <!-- Jackson YAML Serializer -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-yaml</artifactId>
-            <version>2.17.0</version>
-        </dependency>
-
-        <!-- JDBC API -->
-        <dependency>
-            <groupId>org.xerial</groupId>
-            <artifactId>sqlite-jdbc</artifactId>
-            <version>3.44.1.0</version>
-        </dependency>
-
-        <!-- Logback Logger -->
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.5.32</version>
-        </dependency>
-
-        <!-- SLF4J -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>2.0.16</version>
-        </dependency>
-
-        <!-- Argon2 Password Hashing -->
-        <dependency>
-            <groupId>de.mkammerer</groupId>
-            <artifactId>argon2-jvm</artifactId>
-            <version>2.11</version>
-        </dependency>
-
-        <!-- JLine for REPL -->
-        <dependency>
-            <groupId>org.jline</groupId>
-            <artifactId>jline</artifactId>
-            <version>4.0.0</version>
-        </dependency>
-
-        <!-- JDBI -->
-        <dependency>
-            <groupId>org.jdbi</groupId>
-            <artifactId>jdbi3-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jdbi</groupId>
-            <artifactId>jdbi3-sqlobject</artifactId>
-        </dependency>
-
-        <!-- Hikari -->
-        <dependency>
-            <groupId>com.zaxxer</groupId>
-            <artifactId>HikariCP</artifactId>
-            <version>7.0.2</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <!-- Lombok -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.46</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- Paho for MQTT -->
-        <dependency>
-            <groupId>org.eclipse.paho</groupId>
-            <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
-            <version>1.2.5</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <!-- AWS SDK for Rekognition and SNS -->
-        <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>rekognition</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>sns</artifactId>
-        </dependency>
-
-        <!-- Jakarta Annotations -->
-        <dependency>
-            <groupId>jakarta.annotation</groupId>
-            <artifactId>jakarta.annotation-api</artifactId>
-            <version>2.1.1</version>
-        </dependency>
-
-        <!-- Dotenv for environment variable management -->
-        <dependency>
-            <groupId>io.github.cdimascio</groupId>
-            <artifactId>dotenv-java</artifactId>
-            <version>2.3.2</version>
-        </dependency>
-
-        <!-- Mockito -->
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>5.23.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-junit-jupiter</artifactId>
-            <version>5.23.0</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- JUnit 5 -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>6.1.0-RC1</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
-    <build>
-        <sourceDirectory>src/main/java</sourceDirectory>
-        <plugins>
-
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.1.0</version>
-                <configuration>
-                    <mainClass>com.azeem.avisos.AvisosApplication</mainClass>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.3.0</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>com.azeem.avisos.AvisosApplication</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.5.1</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.azeem.avisos.AvisosApplication</mainClass>
-                                </transformer>
-                            </transformers>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>
