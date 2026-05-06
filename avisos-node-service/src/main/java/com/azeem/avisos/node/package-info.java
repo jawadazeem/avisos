@@ -5,6 +5,6 @@
 
 /**
  * <p>Hardware interaction and data transmission. This package should stay "thin."</p>
- * <p>Deploy a single instance of this microservice per data acquisition device.</p>
+ * <p>Deploy a single instance of this microservice per data acquisition device/node.</p>
  */
 package com.azeem.avisos.device;
