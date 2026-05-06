@@ -18,12 +18,10 @@ import java.io.InputStream;
 import java.util.List;
 
 public class ConfigLoader {
-    // ObjectMappers for loading all configs
-    private ObjectMapper jsonMapper;
-    private ObjectMapper ymlMapper;
+    // ObjectMapper for loading all configs
+    private final ObjectMapper ymlMapper;
 
     public ConfigLoader() {
-        jsonMapper = new ObjectMapper();
         ymlMapper = new ObjectMapper(new YAMLFactory());
         ymlMapper.setPropertyNamingStrategy(PropertyNamingStrategies.KEBAB_CASE);
     }
