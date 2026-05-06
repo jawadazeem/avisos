@@ -117,6 +117,7 @@ public class JLineCliService implements CliService {
      * Only shuts down the CLI, not the entire application.
      */
     private void shutdownCli() {
+        securityContext.clear();
         cliClient.shutdown();
         executor.shutdown();
     }

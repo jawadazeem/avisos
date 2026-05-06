@@ -9,12 +9,11 @@ import com.azeem.avisos.controller.framework.AppBootStrap;
 
 
 /**
- * Uses the AppContainer to initialize and run the Sentinel Application
+ * Uses the AppBootStrap from DIY framework to initialize and run the Avisos Application
  */
 public class AvisosApplication {
-    public static void main(String[] args) {
+    void main() {
         AppBootStrap bootStrap = new AppBootStrap();
-
         bootStrap.init();
     }
 }
