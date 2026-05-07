@@ -82,6 +82,10 @@ public final class ConfigLoader {
                 ConfigResolver.env(
                         "MQTT_BROKER_URL",
                         config.mqtt().brokerUrl()
+                ),
+                ConfigResolver.env(
+                        "MQTT_TOPIC",
+                        config.mqtt().topic()
                 )
         );
 

@@ -11,5 +11,6 @@ package com.azeem.avisos.node.config;
  * @param brokerUrl The MQTT broker connection URL.
  */
 public record MqttConfig(
-        String brokerUrl
+        String brokerUrl,
+        String topic
 ) {}

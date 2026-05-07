@@ -5,5 +5,5 @@
 
 package com.azeem.avisos.node.service;
 
-public class DeviceService {
+public class NodeRuntime {
 }

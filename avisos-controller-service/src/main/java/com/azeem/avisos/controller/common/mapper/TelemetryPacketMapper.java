@@ -17,13 +17,15 @@ public class TelemetryPacketMapper {
     public TelemetryPacketDto mapToDomain(TelemetryPacket packet) {
         return new TelemetryPacketDto(
                 UUID.fromString(packet.getDeviceId()),
-                mapToDomain(packet.getType()),
+                packet.getBatteryLevel(),
+                packet.getDeviceName(),
+                mapTypeToDomain(packet.getType()),
                 packet.getPayload().toByteArray(),
                 Instant.ofEpochMilli(packet.getTimestamp())
         );
     }
 
-    private PacketTypeDto mapToDomain(PacketType type) {
+    private PacketTypeDto mapTypeToDomain(PacketType type) {
         return switch (type) {
             case HEARTBEAT -> PacketTypeDto.HEARTBEAT;
             case NETWORK_SCAN -> PacketTypeDto.NETWORK_SCAN;

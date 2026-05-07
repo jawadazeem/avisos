@@ -19,7 +19,7 @@ enum PacketType {
 message TelemetryPacket {
   string device_id = 1;
   PacketType type = 2;
-  double battery_level = 3;
+  uint32 battery_level = 3;
   int64 timestamp = 4;
   bytes payload = 5;
   string device_name = 6;
