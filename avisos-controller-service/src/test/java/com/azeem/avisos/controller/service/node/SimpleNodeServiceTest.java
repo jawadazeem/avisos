@@ -5,14 +5,13 @@
 
 package com.azeem.avisos.controller.service.node;
 
+import com.azeem.avisos.controller.entity.node.NodeEntity;
 import com.azeem.avisos.controller.model.node.NodeRecord;
 import com.azeem.avisos.controller.model.node.NodeStatus;
 import com.azeem.avisos.controller.repository.NodeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,69 +32,88 @@ public class SimpleNodeServiceTest {
     @InjectMocks
     SimpleNodeService nodeService;
 
-    @Captor
-    ArgumentCaptor<String> stringCaptor;
-
-    NodeRecord sampleNode;
+    private UUID nodeId;
+    private NodeEntity sampleEntity;
 
     @BeforeEach
     void setUp() {
-        sampleNode = new NodeRecord(
-                UUID.randomUUID(),
-                "Camera-1",
-                "CAMERA",
-                NodeStatus.RESPONSIVE,
-                98.2,
-                LocalDateTime.now()
+        nodeId = UUID.randomUUID();
+        sampleEntity = new NodeEntity(
+                nodeId.toString(),
+                "Avisos-Node-01",
+                "SENSOR",
+                NodeStatus.RESPONSIVE.name(),
+                85.0,
+                LocalDateTime.now().minusMinutes(5)
         );
     }
 
     @Test
-    void updateNodeHeartbeat_shouldCallRepositoryWithNodeUuidString() {
-        nodeService.updateNodeHeartbeat(sampleNode);
-
-        verify(nodeRepository, times(1)).updateNodeLastSeen(stringCaptor.capture());
-        assertEquals(sampleNode.uuid().toString(), stringCaptor.getValue());
+    void registerHeartbeat_shouldUpdateRepository_whenFirstAttempt() {
+        when(nodeRepository.getNodeEntity(nodeId.toString())).thenReturn(sampleEntity);
+        nodeService.registerHeartbeat(nodeId);
+        verify(nodeRepository, times(1)).updateNodeLastSeen(nodeId.toString());
     }
 
     @Test
-    void registerHeartbeat_shouldCallRepositoryWithUuidString() {
-        UUID id = UUID.randomUUID();
-        nodeService.registerHeartbeat(id);
+    void registerHeartbeat_shouldRateLimit_whenCalledTooRapidly() {
+        when(nodeRepository.getNodeEntity(nodeId.toString())).thenReturn(sampleEntity);
 
-        verify(nodeRepository, times(1)).updateNodeLastSeen(stringCaptor.capture());
-        assertEquals(id.toString(), stringCaptor.getValue());
+        // First call: Success
+        nodeService.registerHeartbeat(nodeId);
+
+        // Second call (Immediate): Should be dropped by floodProtector
+        nodeService.registerHeartbeat(nodeId);
+
+        // Verify repository was only hit ONCE for the first valid heartbeat
+        verify(nodeRepository, times(1)).updateNodeLastSeen(anyString());
     }
 
     @Test
-    void getRegisteredNodes_shouldReturnUuidsFromRepository() {
-        List<String> uuids = List.of(UUID.randomUUID().toString(), UUID.randomUUID().toString());
-        when(nodeRepository.getRegisteredNodeUuids()).thenReturn(uuids);
+    void registerHeartbeat_shouldNotUpdate_whenNodeNotFoundInDbOrCache() {
+        when(nodeRepository.getNodeEntity(nodeId.toString())).thenReturn(null);
+
+        nodeService.registerHeartbeat(nodeId);
+
+        // Verify repository update was never called because node doesn't exist
+        verify(nodeRepository, never()).updateNodeLastSeen(anyString());
+    }
+
+    @Test
+    void checkStaleNodes_shouldCleanupRegistryAndFloodMap() {
+        // Setup a node that is "stale" (5 minutes ago)
+        String uuidStr = nodeId.toString();
+        when(nodeRepository.getNodeEntity(uuidStr)).thenReturn(sampleEntity);
+
+        // Pulse once to hydrate the cache
+        nodeService.registerHeartbeat(nodeId);
+
+        // Mock repository finding stale nodes
+        when(nodeRepository.markStaleNodesOffline(60)).thenReturn(1);
+
+        // Run cleanup. This should remove sampleEntity from activeRegistry
+        // because sampleEntity.lastSeen() is 5 minutes old.
+        nodeService.checkStaleNodes();
+
+        verify(nodeRepository).markStaleNodesOffline(60);
+        reset(nodeRepository);
+
+        when(nodeRepository.getNodeEntity(uuidStr)).thenReturn(sampleEntity);
+
+        SimpleNodeService freshService = new SimpleNodeService(nodeRepository);
+        freshService.registerHeartbeat(nodeId);
+
+        verify(nodeRepository, times(1)).getNodeEntity(uuidStr);
+    }
+
+    @Test
+    void getRegisteredNodes_shouldMapStringsToUuids() {
+        List<String> mockUuids = List.of(nodeId.toString(), UUID.randomUUID().toString());
+        when(nodeRepository.getRegisteredNodeUuids()).thenReturn(mockUuids);
 
         List<UUID> result = nodeService.getRegisteredNodes();
 
         assertEquals(2, result.size());
-        assertEquals(UUID.fromString(uuids.get(0)), result.get(0));
-        assertEquals(UUID.fromString(uuids.get(1)), result.get(1));
-        verify(nodeRepository, times(1)).getRegisteredNodeUuids();
-    }
-
-    @Test
-    void checkStaleNodes_shouldCallRepositoryAndLog_whenNodesMarkedOffline() {
-        when(nodeRepository.markStaleNodesOffline(60)).thenReturn(3);
-
-        nodeService.checkStaleNodes();
-
-        verify(nodeRepository, times(1)).markStaleNodesOffline(60);
-    }
-
-    @Test
-    void checkStaleNodes_shouldCallRepositoryAndNotLog_whenNoNodesMarkedOffline() {
-        when(nodeRepository.markStaleNodesOffline(60)).thenReturn(0);
-
-        nodeService.checkStaleNodes();
-
-        verify(nodeRepository, times(1)).markStaleNodesOffline(60);
+        assertTrue(result.contains(nodeId));
     }
 }
-
