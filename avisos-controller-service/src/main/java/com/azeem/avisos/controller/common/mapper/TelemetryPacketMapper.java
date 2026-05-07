@@ -16,9 +16,9 @@ import java.util.UUID;
 public class TelemetryPacketMapper {
     public TelemetryPacketDto mapToDomain(TelemetryPacket packet) {
         return new TelemetryPacketDto(
-                UUID.fromString(packet.getDeviceId()),
+                UUID.fromString(packet.getNodeId()),
                 packet.getBatteryLevel(),
-                packet.getDeviceName(),
+                packet.getNodeName(),
                 mapTypeToDomain(packet.getType()),
                 packet.getPayload().toByteArray(),
                 Instant.ofEpochMilli(packet.getTimestamp())

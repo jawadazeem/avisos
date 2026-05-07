@@ -3,28 +3,28 @@
  * Apache 2.0 License
  */
 
-package com.azeem.avisos.controller.mapper.device;
+package com.azeem.avisos.controller.mapper.node;
 
-import com.azeem.avisos.controller.entity.device.DeviceEntity;
-import com.azeem.avisos.controller.model.device.DeviceRecord;
-import com.azeem.avisos.controller.model.device.DeviceStatus;
+import com.azeem.avisos.controller.entity.node.NodeEntity;
+import com.azeem.avisos.controller.model.node.NodeRecord;
+import com.azeem.avisos.controller.model.node.NodeStatus;
 
 import java.util.UUID;
 
-public class DeviceMapper {
-    public static DeviceRecord toDomain(DeviceEntity entity) {
-        return new DeviceRecord(
+public class NodeMapper {
+    public static NodeRecord toDomain(NodeEntity entity) {
+        return new NodeRecord(
                 UUID.fromString(entity.uuid()),
                 entity.name(),
                 entity.type(),
-                DeviceStatus.valueOf(entity.status()),
+                NodeStatus.valueOf(entity.status()),
                 entity.batteryLevel(),
                 entity.lastSeen()
         );
     }
 
-    public static DeviceEntity toEntity(DeviceRecord record) {
-        return new DeviceEntity(
+    public static NodeEntity toEntity(NodeRecord record) {
+        return new NodeEntity(
                 record.uuid().toString(),
                 record.name(),
                 record.type(),

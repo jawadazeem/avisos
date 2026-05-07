@@ -24,17 +24,17 @@ import java.util.UUID;
  * by Jackson during deserialization.
  * </p>
  *
- * @param deviceId      unique identifier of the node that sent this telemetry
+ * @param nodeId      unique identifier of the node that sent this telemetry
  * @param batteryLevel  current battery percentage reported by the node
- * @param deviceName    human-readable name of the sending node
+ * @param nodeName    human-readable name of the sending node
  * @param type          telemetry packet category (e.g., HEARTBEAT, NETWORK_SCAN)
  * @param payload       raw sensor or image data sent from the node
  * @param timestamp     UTC timestamp indicating when the telemetry was generated on the node
  */
 public record TelemetryPacketDto(
-        UUID deviceId,
+        UUID nodeId,
         int batteryLevel,
-        String deviceName,
+        String nodeName,
         PacketTypeDto type,
         byte[] payload,
         Instant timestamp

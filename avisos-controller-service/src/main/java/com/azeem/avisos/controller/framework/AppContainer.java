@@ -17,8 +17,8 @@ import com.azeem.avisos.controller.service.cli.*;
 import com.azeem.avisos.controller.service.cli.command.api.Command;
 import com.azeem.avisos.controller.service.cli.command.api.CommandRegistry;
 import com.azeem.avisos.controller.service.cli.command.impl.*;
-import com.azeem.avisos.controller.service.device.DeviceService;
-import com.azeem.avisos.controller.service.device.SimpleDeviceService;
+import com.azeem.avisos.controller.service.node.NodeService;
+import com.azeem.avisos.controller.service.node.SimpleNodeService;
 import com.azeem.avisos.controller.service.ingress.MqttIngressAdapter;
 import com.azeem.avisos.controller.service.ingress.TelemetryIngressHandler;
 import com.azeem.avisos.controller.service.notification.NotificationService;
@@ -65,23 +65,23 @@ public class AppContainer {
 
         // Repositories
         AlarmRepository alarmRepo = jdbi.onDemand(AlarmRepository.class);
-        DeviceRepository deviceRepo = jdbi.onDemand(DeviceRepository.class);
+        NodeRepository nodeRepo = jdbi.onDemand(NodeRepository.class);
         TelemetryRepository telemetryRepository = jdbi.onDemand(TelemetryRepository.class);
         AuthRepository authRepository = jdbi.onDemand(AuthRepository.class);
         classObjectMap.put(AlarmRepository.class, alarmRepo);
-        classObjectMap.put(DeviceRepository.class, deviceRepo);
+        classObjectMap.put(NodeRepository.class, nodeRepo);
         classObjectMap.put(TelemetryRepository.class, telemetryRepository);
         classObjectMap.put(AuthRepository.class, authRepository);
 
         alarmRepo.initAlarmTable();
-        deviceRepo.initDeviceTable();
+        nodeRepo.initNodeTable();
         telemetryRepository.initAuditTable();
         authRepository.initUserTable();
 
         // Services
         AuthService authService = new AuthService(authRepository);
         AlarmService alarmService = new AlarmService(alarmRepo);
-        DeviceService deviceService = new SimpleDeviceService(deviceRepo);
+        NodeService nodeService = new SimpleNodeService(nodeRepo);
         VisionClient visionClient = new CodeProjectVisionClient(
                 new ObjectMapper(),
                 configLoader.loadVisionConfig()
@@ -93,10 +93,10 @@ public class AppContainer {
         classObjectMap.put(VisionClient.class, visionService);
         classObjectMap.put(AuthService.class, authService);
         classObjectMap.put(AlarmService.class, alarmService);
-        classObjectMap.put(DeviceService.class, deviceService);
+        classObjectMap.put(NodeService.class, nodeService);
 
         TelemetryIngressHandler telemetryIngressHandler = new TelemetryIngressHandler(
-                deviceService,
+                nodeService,
                 alarmService,
                 visionService,
                 configLoader.loadVisionConfig(),

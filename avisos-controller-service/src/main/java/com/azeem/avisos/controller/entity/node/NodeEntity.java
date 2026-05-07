@@ -3,16 +3,15 @@
  * Apache 2.0 License
  */
 
-package com.azeem.avisos.controller.model.device;
+package com.azeem.avisos.controller.entity.node;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
-public record DeviceRecord(
-        UUID uuid,
+public record NodeEntity(
+        String uuid,
         String name,
         String type,
-        DeviceStatus status,
+        String status,
         double batteryLevel,
         LocalDateTime lastSeen
 ) {}

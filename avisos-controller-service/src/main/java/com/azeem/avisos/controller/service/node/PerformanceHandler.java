@@ -3,7 +3,7 @@
  * Apache 2.0 License
  */
 
-package com.azeem.avisos.controller.service.device;
+package com.azeem.avisos.controller.service.node;
 
 import com.azeem.avisos.controller.instrumentation.annotations.Timed;
 import org.slf4j.Logger;
@@ -19,9 +19,9 @@ import java.lang.reflect.Method;
  */
 public class PerformanceHandler implements InvocationHandler {
     private static final Logger log = LoggerFactory.getLogger(PerformanceHandler.class);
-    private final DeviceService deviceService;
+    private final NodeService deviceService;
 
-    public PerformanceHandler(DeviceService deviceService) {
+    public PerformanceHandler(NodeService deviceService) {
         this.deviceService = deviceService;
     }
 

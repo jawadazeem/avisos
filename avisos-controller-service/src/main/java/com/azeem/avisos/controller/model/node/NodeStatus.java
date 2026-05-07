@@ -3,9 +3,9 @@
  * Apache 2.0 License
  */
 
-package com.azeem.avisos.controller.model.device;
+package com.azeem.avisos.controller.model.node;
 
-public enum DeviceStatus {
+public enum NodeStatus {
     RESPONSIVE,
     UNRESPONSIVE
 }

@@ -25,17 +25,17 @@ import java.util.UUID;
  * during JSON serialization.
  * </p>
  *
- * @param deviceId     unique identifier of the node that generated this telemetry
+ * @param nodeId     unique identifier of the node that generated this telemetry
  * @param batteryLevel  current battery percentage of the node device
- * @param deviceName    human-readable name of the node
+ * @param nodeName    human-readable name of the node
  * @param type         category of telemetry packet (e.g., HEARTBEAT, NETWORK_SCAN)
  * @param payload      raw sensor or image data produced by the node
  * @param timestamp    UTC timestamp indicating when the telemetry was generated
  */
 public record TelemetryPacketDto(
-        UUID deviceId,
+        UUID nodeId,
         int batteryLevel,
-        String deviceName,
+        String nodeName,
         PacketTypeDto type,
         byte[] payload,
         Instant timestamp

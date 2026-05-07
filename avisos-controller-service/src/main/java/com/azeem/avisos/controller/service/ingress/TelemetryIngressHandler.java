@@ -15,7 +15,7 @@ import com.azeem.avisos.controller.model.vision.Prediction;
 import com.azeem.avisos.controller.model.vision.VisionRequest;
 import com.azeem.avisos.controller.model.vision.VisionResponse;
 import com.azeem.avisos.controller.service.alarm.AlarmService;
-import com.azeem.avisos.controller.service.device.DeviceService;
+import com.azeem.avisos.controller.service.node.NodeService;
 import com.azeem.avisos.controller.service.threat.ThreatDetector;
 import com.azeem.avisos.controller.service.vision.VisionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,14 +33,14 @@ import java.util.UUID;
  */
 public class TelemetryIngressHandler implements IngressDataHandler<IngressMessage> {
     private static final Logger log = LoggerFactory.getLogger(TelemetryIngressHandler.class);
-    private final DeviceService deviceService;
+    private final NodeService deviceService;
     private final AlarmService alarmService;
     private final ThreatDetector threatDetector;
     private final VisionService visionService;
     private final VisionConfig visionConfig;
     private final ObjectMapper objectMapper;
 
-    public TelemetryIngressHandler(DeviceService deviceService,
+    public TelemetryIngressHandler(NodeService deviceService,
                                    AlarmService alarmService,
                                    VisionService visionService,
                                    VisionConfig visionConfig,
@@ -71,7 +71,7 @@ public class TelemetryIngressHandler implements IngressDataHandler<IngressMessag
             return;
         }
 
-        deviceService.registerHeartbeat(packet.deviceId());
+        deviceService.registerHeartbeat(packet.nodeId());
 
         try {
             VisionResponse visionResponse = visionService.analyze(
@@ -79,7 +79,7 @@ public class TelemetryIngressHandler implements IngressDataHandler<IngressMessag
                             packet.payload(),
                             UUID.randomUUID().toString(),
                             visionConfig.minConfidence(),
-                            packet.deviceId().toString()
+                            packet.nodeId().toString()
                     )
             );
 
@@ -96,7 +96,7 @@ public class TelemetryIngressHandler implements IngressDataHandler<IngressMessag
                 alarmService.save(
                         new AlarmRecord(
                                 UUID.randomUUID(),
-                                packet.deviceId(),
+                                packet.nodeId(),
                                 severity,
                                 formattedLabels,
                                 AlarmStatus.ACTIVE,
@@ -107,11 +107,11 @@ public class TelemetryIngressHandler implements IngressDataHandler<IngressMessag
             }
 
             log.info("Alarm saved for device {} severity={} labelsCount={}",
-                    packet.deviceId(), severity, labels.size());
+                    packet.nodeId(), severity, labels.size());
 
         } catch (Exception e) {
             log.error("Error processing telemetry for device {}: {}",
-                    packet.deviceId(), e.getMessage(), e);
+                    packet.nodeId(), e.getMessage(), e);
         }
     }
 
