@@ -17,99 +17,165 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class SimpleNodeService implements NodeService {
+
     private static final Logger log = LoggerFactory.getLogger(SimpleNodeService.class);
 
     private final NodeRepository nodeRepository;
 
-    // Memory Registry
+    // In-memory state
     private final Map<UUID, NodeEntity> activeRegistry = new ConcurrentHashMap<>();
-
-    // Flood Protection: Enforces a 2-second cooldown per node heartbeat
     private final Map<UUID, Long> floodProtector = new ConcurrentHashMap<>();
+
+    // Metrics
+    private final AtomicLong acceptedHeartbeats = new AtomicLong();
+    private final AtomicLong rejectedHeartbeats = new AtomicLong();
+    private final AtomicLong dbFailures = new AtomicLong();
+
     private static final long MIN_HEARTBEAT_INTERVAL_MS = 2000;
 
     public SimpleNodeService(NodeRepository nodeRepository) {
         this.nodeRepository = nodeRepository;
     }
 
-    /**
-     * Updates node status based on a received heartbeat pulse.
-     * Uses a functional approach to update the Immutable NodeEntity.
-     */
     @Override
     public void registerHeartbeat(UUID uuid) {
         long now = System.currentTimeMillis();
 
-        // DOS Protection
         if (isFlooding(uuid, now)) {
+            rejectedHeartbeats.incrementAndGet();
             return;
         }
 
-        // Update memory and persist to DB
-        activeRegistry.compute(uuid, (id, existing) -> {
-            if (existing == null) {
-                // If not in cache, try to pull from DB to hydrate memory
-                existing = nodeRepository.getNodeEntity(id.toString());
-            }
+        try {
+            activeRegistry.compute(uuid, (id, existing) -> {
 
-            if (existing != null) {
-                // Use the Record's "with" pattern to generate a new state snapshot
+                if (existing == null) {
+                    try {
+                        existing = nodeRepository.getNodeEntity(id.toString());
+                    } catch (Exception e) {
+                        log.error("DB fetch failed for node={}", id, e);
+                        dbFailures.incrementAndGet();
+                        return null;
+                    }
+                }
+
+                if (existing == null) {
+                    log.warn("Heartbeat from unknown node={}", id);
+                    return null;
+                }
+
                 NodeEntity updated = existing.withHeartbeat(
                         existing.batteryLevel(),
                         NodeStatus.RESPONSIVE.name()
                 );
 
-                // Write-through to database
-                nodeRepository.updateNodeLastSeen(id.toString());
-                return updated;
-            }
+                safeDbUpdate(id);
 
-            log.warn("Pulse received from unregistered node: {}", id);
-            return null;
-        });
+                acceptedHeartbeats.incrementAndGet();
+
+                log.debug("Heartbeat accepted node={}", id);
+
+                return updated;
+            });
+
+        } catch (Exception e) {
+            log.error("Unexpected error processing heartbeat for node={}", uuid, e);
+            dbFailures.incrementAndGet();
+        }
     }
 
-    /**
-     * Performs a system-wide health check. Marks nodes as OFFLINE in DB
-     * and clears stale cache entries.
-     */
     @Override
     public void checkStaleNodes() {
-        int threshold = 60; // 60 seconds
-        int affected = nodeRepository.markStaleNodesOffline(threshold);
+        try {
+            int threshold = 60;
+            int affected = nodeRepository.markStaleNodesOffline(threshold);
 
-        if (affected > 0) {
-            log.info("Cleanup Task: Marked {} nodes as OFFLINE in persistence.", affected);
+            log.info("Stale cleanup: marked {} nodes OFFLINE", affected);
 
-            // Clean up memory registry and flood protector for consistency
             LocalDateTime cutoff = LocalDateTime.now().minusSeconds(threshold);
 
             activeRegistry.entrySet().removeIf(entry ->
-                    entry.getValue().lastSeen().isBefore(cutoff));
+                    entry.getValue() != null &&
+                            entry.getValue().lastSeen().isBefore(cutoff)
+            );
 
             floodProtector.keySet().removeIf(uuid ->
-                    !activeRegistry.containsKey(uuid));
+                    !activeRegistry.containsKey(uuid)
+            );
+
+        } catch (Exception e) {
+            log.error("Failed during stale node cleanup", e);
+            dbFailures.incrementAndGet();
         }
     }
 
     @Override
     public void updateNodeHeartbeat(NodeRecord nodeRecord) {
-        // Implementation for processing a full Data Object
-        nodeRepository.saveNode(nodeRecord);
-        activeRegistry.put(nodeRecord.uuid(), nodeRepository.getNodeEntity(nodeRecord.uuid().toString()));
+        try {
+            nodeRepository.saveNode(nodeRecord);
+
+            NodeEntity entity =
+                    nodeRepository.getNodeEntity(nodeRecord.uuid().toString());
+
+            if (entity != null) {
+                activeRegistry.put(nodeRecord.uuid(), entity);
+            }
+
+        } catch (Exception e) {
+            log.error("Failed updating full node record uuid={}", nodeRecord.uuid(), e);
+            dbFailures.incrementAndGet();
+        }
     }
 
     @Override
     public List<UUID> getRegisteredNodes() {
-        return nodeRepository.getRegisteredNodeUuids().stream()
-                .map(UUID::fromString)
-                .toList();
+        try {
+            return nodeRepository.getRegisteredNodeUuids().stream()
+                    .map(UUID::fromString)
+                    .toList();
+        } catch (Exception e) {
+            log.error("Failed fetching registered nodes", e);
+            return List.of();
+        }
     }
 
     private boolean isFlooding(UUID uuid, long now) {
         Long lastSeen = floodProtector.put(uuid, now);
-        return lastSeen != null && (now - lastSeen) < MIN_HEARTBEAT_INTERVAL_MS;
+
+        if (lastSeen != null && (now - lastSeen) < MIN_HEARTBEAT_INTERVAL_MS) {
+            log.warn(
+                    "Flood detected node={} intervalMs={}",
+                    uuid,
+                    (now - lastSeen)
+            );
+            return true;
+        }
+
+        return false;
+    }
+
+    private void safeDbUpdate(UUID id) {
+        try {
+            nodeRepository.updateNodeLastSeen(id.toString());
+        } catch (Exception e) {
+            log.error("DB update failed node={}", id, e);
+            dbFailures.incrementAndGet();
+        }
+    }
+
+    // Expose metrics for monitoring systems
+    public long getAcceptedHeartbeats() {
+        return acceptedHeartbeats.get();
+    }
+
+    public long getRejectedHeartbeats() {
+        return rejectedHeartbeats.get();
+    }
+
+    public long getDbFailures() {
+        return dbFailures.get();
     }
 }
