@@ -47,3 +47,4 @@ mosquitto
 data
 .env
 /.idea/
+/docs/

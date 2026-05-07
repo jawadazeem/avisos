@@ -3,14 +3,32 @@
  * Apache 2.0 License
  */
 
-package com.azeem.avisos.controller.common.domain;
+package com.azeem.avisos.controller.common.mapper;
+
+import com.azeem.avisos.common.proto.PacketType;
+import com.azeem.avisos.controller.common.telemetry.PacketTypeDto;
+import com.azeem.avisos.controller.common.telemetry.TelemetryPacketDto;
+import com.azeem.avisos.common.proto.TelemetryPacket;
 
 import java.time.Instant;
 import java.util.UUID;
 
-public record TelemetryPacket(
-        UUID deviceId,
-        PacketTypeMapper type,
-        byte[] payload, // Could be a JPEG frame or a JSON string
-        Instant timestamp
-) {}
+public class TelemetryPacketMapper {
+    public TelemetryPacketDto mapToDomain(TelemetryPacket packet) {
+        return new TelemetryPacketDto(
+                UUID.fromString(packet.getDeviceId()),
+                mapToDomain(packet.getType()),
+                packet.getPayload().toByteArray(),
+                Instant.ofEpochMilli(packet.getTimestamp())
+        );
+    }
+
+    private PacketTypeDto mapToDomain(PacketType type) {
+        return switch (type) {
+            case HEARTBEAT -> PacketTypeDto.HEARTBEAT;
+            case NETWORK_SCAN -> PacketTypeDto.NETWORK_SCAN;
+            case SYSTEM_ERROR -> PacketTypeDto.SYSTEM_ERROR;
+            default -> PacketTypeDto.UNRECOGNIZED;
+        };
+    }
+}

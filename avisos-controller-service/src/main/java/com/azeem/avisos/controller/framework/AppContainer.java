@@ -30,6 +30,8 @@ import com.azeem.avisos.controller.service.threat.ThreatDetector;
 import com.azeem.avisos.controller.service.vision.CodeProjectVisionService;
 import com.azeem.avisos.controller.service.vision.VisionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import org.jdbi.v3.core.Jdbi;
 
 import java.util.HashMap;
@@ -100,6 +102,8 @@ public class AppContainer {
                 configLoader.loadVisionConfig(),
                 threatDetector,
                 new ObjectMapper()
+                        .registerModule(new JavaTimeModule())
+                        .registerModule(new ParameterNamesModule())
         );
         classObjectMap.put(TelemetryIngressHandler.class, telemetryIngressHandler);
 

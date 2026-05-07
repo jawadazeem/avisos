@@ -3,9 +3,9 @@
  * Apache 2.0 License
  */
 
-package com.azeem.avisos.device.model.device;
+package com.azeem.avisos.node.model.node;
 
-public enum DeviceStatus {
+public enum NodeStatus {
     OPERATIONAL,
     AWAY
 }

@@ -1,19 +1,29 @@
 services:
-  avisos-controller-service:
-    build: avisos-controller-service
-    image: avisos-app:latest
-    container_name: avisos_core
-
+  controller:
+    build:
+      context: .
+      dockerfile: controller.Dockerfile
+    image: avisos-controller:latest
+    container_name: avisos-controller
+    networks:
+      - avisos-net
     stdin_open: true
     tty: true
-
     environment:
       - TERM=xterm-256color
-
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
     restart: unless-stopped
+
+  node-01:
+    build:
+      context: .
+      dockerfile: node.Dockerfile
+    container_name: avisos-node-01
+    networks:
+      - avisos-net
+
   mosquitto:
     image: eclipse-mosquitto:latest
     container_name: avisos-broker
@@ -23,6 +33,7 @@ services:
       - ./mosquitto/config:/mosquitto/config
       - ./mosquitto/data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
+
   localstack:
     image: localstack/localstack:3
     container_name: avisos-cloud
@@ -38,6 +49,7 @@ services:
     volumes:
       - "./localstack:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+
   vision-api:
     platform: linux/amd64
     image: codeproject/ai-server
@@ -46,3 +58,7 @@ services:
       - "32168:32168"
     environment:
       - VISION-DETECTION=True
+
+networks:
+  avisos-net:
+    driver: bridge

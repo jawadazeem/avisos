@@ -1,0 +1,9 @@
+# Node Configuration (Static Defaults)
+
+node:
+  node-id: 00000000-0000-0000-0000-000000000000
+  name: unassigned-node
+  type: data-acquisition-device
+
+network:
+  broker-url: tcp://localhost:1883

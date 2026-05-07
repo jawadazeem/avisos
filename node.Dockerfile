@@ -7,5 +7,5 @@ RUN mvn clean install
 # Only take the Node Service into the final container
 FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
-COPY --from=builder /app/avisos-node-service/target/*.jar node-service.jar
+COPY --from=builder /app/avisos-node-service/target/node-service.jar node-service.jar
 ENTRYPOINT ["java", "-jar", "node-service.jar"]

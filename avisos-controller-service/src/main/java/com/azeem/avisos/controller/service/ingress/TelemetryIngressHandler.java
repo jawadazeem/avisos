@@ -5,13 +5,12 @@
 
 package com.azeem.avisos.controller.service.ingress;
 
-import com.azeem.avisos.common.proto.TelemetryPacket;
-
+import com.azeem.avisos.controller.common.telemetry.TelemetryPacketDto;
 import com.azeem.avisos.controller.config.VisionConfig;
-import com.azeem.avisos.controller.model.ingress.data.IngressMessage;
 import com.azeem.avisos.controller.model.alarm.AlarmRecord;
 import com.azeem.avisos.controller.model.alarm.AlarmSeverity;
 import com.azeem.avisos.controller.model.alarm.AlarmStatus;
+import com.azeem.avisos.controller.model.ingress.data.IngressMessage;
 import com.azeem.avisos.controller.model.vision.Prediction;
 import com.azeem.avisos.controller.model.vision.VisionRequest;
 import com.azeem.avisos.controller.model.vision.VisionResponse;
@@ -28,6 +27,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Handles raw MQTT data (IngressMessage) and deserializes it into
+ * TelemetryPacketDto for processing by the Vision and Alarm services.
+ */
 public class TelemetryIngressHandler implements IngressDataHandler<IngressMessage> {
     private static final Logger log = LoggerFactory.getLogger(TelemetryIngressHandler.class);
     private final DeviceService deviceService;
@@ -35,29 +38,29 @@ public class TelemetryIngressHandler implements IngressDataHandler<IngressMessag
     private final ThreatDetector threatDetector;
     private final VisionService visionService;
     private final VisionConfig visionConfig;
-    private final ObjectMapper mapper;
+    private final ObjectMapper objectMapper;
 
     public TelemetryIngressHandler(DeviceService deviceService,
-                                  AlarmService alarmService,
-                                  VisionService visionService,
-                                  VisionConfig visionConfig,
-                                  ThreatDetector threatDetector,
-                                  ObjectMapper mapper
+                                   AlarmService alarmService,
+                                   VisionService visionService,
+                                   VisionConfig visionConfig,
+                                   ThreatDetector threatDetector,
+                                   ObjectMapper objectMapper
     ) {
         this.deviceService = deviceService;
         this.alarmService = alarmService;
         this.visionConfig = visionConfig;
         this.visionService = visionService;
         this.threatDetector = threatDetector;
-        this.mapper = mapper;
+        this.objectMapper = objectMapper;
     }
 
     @Override
     public void handle(IngressMessage message) {
-        TelemetryPacket packet = null;
+        TelemetryPacketDto packet = null;
 
         try {
-            packet = mapper.readValue(message.payload(), TelemetryPacket.class);
+            packet = objectMapper.readValue(message.payload(), TelemetryPacketDto.class);
         } catch (IOException e) {
             log.error("Discarding malformed packet from source {} (payloadLen={}): {}",
                     message.source(), safePayloadLength(message), e.getMessage());
@@ -68,49 +71,47 @@ public class TelemetryIngressHandler implements IngressDataHandler<IngressMessag
             return;
         }
 
-        deviceService.registerHeartbeat(UUID.fromString(packet.getDeviceId()));
+        deviceService.registerHeartbeat(packet.deviceId());
 
-        if (packet.getPayload() != null) {
-            try {
-                VisionResponse visionResponse = visionService.analyze(
-                        new VisionRequest(
-                                packet.getPayload().toByteArray(),
-                                UUID.randomUUID().toString(),
-                                visionConfig.minConfidence(),
-                                packet.getDeviceId()
+        try {
+            VisionResponse visionResponse = visionService.analyze(
+                    new VisionRequest(
+                            packet.payload(),
+                            UUID.randomUUID().toString(),
+                            visionConfig.minConfidence(),
+                            packet.deviceId().toString()
+                    )
+            );
+
+            List<String> labels = visionResponse.predictions() != null
+                    ? visionResponse.predictions().stream()
+                    .map(Prediction::label)
+                    .toList()
+                    : List.of();
+
+            AlarmSeverity severity = threatDetector.evaluate(labels);
+
+            String formattedLabels = formatLabelsForAlarm(labels);
+            if (severity != AlarmSeverity.NONE) {
+                alarmService.save(
+                        new AlarmRecord(
+                                UUID.randomUUID(),
+                                packet.deviceId(),
+                                severity,
+                                formattedLabels,
+                                AlarmStatus.ACTIVE,
+                                LocalDateTime.now(),
+                                null
                         )
                 );
-
-                List<String> labels = visionResponse.predictions() != null
-                        ? visionResponse.predictions().stream()
-                        .map(Prediction::label)
-                        .toList()
-                        : List.of();
-
-                AlarmSeverity severity = threatDetector.evaluate(labels);
-
-                String formattedLabels = formatLabelsForAlarm(labels);
-                if (severity != AlarmSeverity.NONE) {
-                    alarmService.save(
-                            new AlarmRecord(
-                                    UUID.randomUUID(),
-                                    UUID.fromString(packet.getDeviceId()),
-                                    severity,
-                                    formattedLabels,
-                                    AlarmStatus.ACTIVE,
-                                    LocalDateTime.now(),
-                                    null
-                            )
-                    );
-                }
-
-                log.info("Alarm saved for device {} severity={} labelsCount={}",
-                        packet.getDeviceId(), severity, labels.size());
-
-            } catch (Exception e) {
-                log.error("Error processing telemetry for device {}: {}",
-                        packet.getDeviceId(), e.getMessage(), e);
             }
+
+            log.info("Alarm saved for device {} severity={} labelsCount={}",
+                    packet.deviceId(), severity, labels.size());
+
+        } catch (Exception e) {
+            log.error("Error processing telemetry for device {}: {}",
+                    packet.deviceId(), e.getMessage(), e);
         }
     }
 

@@ -3,7 +3,7 @@
  * Apache 2.0 License
  */
 
-package com.azeem.avisos.controller.common.domain;
+package com.azeem.avisos.controller.common.telemetry;
 
 import java.time.Instant;
 import java.util.UUID;

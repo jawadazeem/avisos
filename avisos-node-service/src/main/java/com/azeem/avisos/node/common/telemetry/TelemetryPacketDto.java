@@ -3,7 +3,7 @@
  * Apache 2.0 License
  */
 
-package com.azeem.avisos.device.model.telemetry;
+package com.azeem.avisos.node.common.telemetry;
 
 import java.time.Instant;
 import java.util.UUID;

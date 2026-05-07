@@ -3,7 +3,7 @@
  * Apache 2.0 License
  */
 
-package com.azeem.avisos.device.service;
+package com.azeem.avisos.node.service;
 
 public class DeviceService {
 }

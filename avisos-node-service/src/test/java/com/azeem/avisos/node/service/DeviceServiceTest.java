@@ -1,4 +1,4 @@
-package com.azeem.avisos.device.service;
+package com.azeem.avisos.node.service;
 
 public class DeviceServiceTest {
 }
