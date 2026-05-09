@@ -6,6 +6,7 @@
 package com.azeem.avisos.controller.service.node;
 
 import com.azeem.avisos.controller.entity.node.NodeEntity;
+import com.azeem.avisos.controller.mapper.node.NodeMapper;
 import com.azeem.avisos.controller.model.node.NodeRecord;
 import com.azeem.avisos.controller.model.node.NodeStatus;
 import com.azeem.avisos.controller.repository.NodeRepository;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -140,6 +142,30 @@ public class SimpleNodeService implements NodeService {
             log.error("Failed fetching registered nodes", e);
             return List.of();
         }
+    }
+
+    @Override
+    public Optional<NodeRecord> getNode(UUID nodeId) {
+        // Tier 1: Check Memory (Active State)
+        NodeEntity entity = activeRegistry.get(nodeId);
+
+        if (entity != null) {
+            return Optional.of(NodeMapper.toDomain(entity));
+        }
+
+        // Tier 2: Check Database (Persistent State)
+        try {
+            NodeRecord record = nodeRepository.getNode(nodeId);
+            if (record != null) {
+                // Optional: Hydrate memory registry if we found it in DB
+                // activeRegistry.put(nodeId, NodeMapper.toEntity(record));
+                return Optional.of(record);
+            }
+        } catch (Exception e) {
+            log.error("Failed to retrieve node {} from repository: {}", nodeId, e.getMessage());
+        }
+
+        return Optional.empty();
     }
 
     private boolean isFlooding(UUID uuid, long now) {

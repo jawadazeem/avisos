@@ -13,6 +13,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.function.Function;
 
 /**
  * Loads and resolves application configuration.
@@ -37,13 +38,22 @@ public final class ConfigLoader {
      * @return fully resolved application configuration
      */
     public static AppConfig load() {
+        return load(
+                ConfigLoader.class.getResourceAsStream("/application.yml"),
+                System::getenv
+        );
+    }
+
+    static AppConfig load(
+            InputStream input,
+            Function<String, String> environment
+    ) {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
         mapper.registerModule(new JavaTimeModule());
         mapper.setPropertyNamingStrategy(PropertyNamingStrategies.KEBAB_CASE);
 
-        try (InputStream input =
-                     ConfigLoader.class.getResourceAsStream("/application.yml")) {
+        try (input) {
 
             if (input == null) {
                 throw new MissingConfigFileException(
@@ -54,7 +64,7 @@ public final class ConfigLoader {
             AppConfig baseConfig =
                     mapper.readValue(input, AppConfig.class);
 
-            return overrideWithEnvironment(baseConfig);
+            return overrideWithEnvironment(baseConfig, environment);
 
         } catch (IOException e) {
             throw new RuntimeException(
@@ -70,25 +80,39 @@ public final class ConfigLoader {
      * @param config the base YAML configuration
      * @return resolved configuration with environment overrides
      */
-    private static AppConfig overrideWithEnvironment(AppConfig config) {
+    private static AppConfig overrideWithEnvironment(
+            AppConfig config,
+            Function<String, String> environment
+    ) {
 
         NodeConfig node = new NodeConfig(
                 config.node().nodeId(),
-                ConfigResolver.env("NODE_NAME", config.node().name()),
-                ConfigResolver.env("NODE_TYPE", config.node().type())
+                resolve(environment, "NODE_NAME", config.node().name()),
+                resolve(environment, "NODE_TYPE", config.node().type())
         );
 
         MqttConfig mqtt = new MqttConfig(
-                ConfigResolver.env(
+                resolve(
+                        environment,
                         "MQTT_BROKER_URL",
                         config.mqtt().brokerUrl()
                 ),
-                ConfigResolver.env(
+                resolve(
+                        environment,
                         "MQTT_TOPIC",
                         config.mqtt().topic()
                 )
         );
 
         return new AppConfig(node, mqtt);
+    }
+
+    private static String resolve(
+            Function<String, String> environment,
+            String key,
+            String fallback
+    ) {
+        String value = environment.apply(key);
+        return value != null ? value : fallback;
     }
 }

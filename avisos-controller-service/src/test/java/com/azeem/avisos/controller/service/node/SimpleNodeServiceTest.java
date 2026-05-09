@@ -6,7 +6,6 @@
 package com.azeem.avisos.controller.service.node;
 
 import com.azeem.avisos.controller.entity.node.NodeEntity;
-import com.azeem.avisos.controller.model.node.NodeRecord;
 import com.azeem.avisos.controller.model.node.NodeStatus;
 import com.azeem.avisos.controller.repository.NodeRepository;
 import org.junit.jupiter.api.BeforeEach;

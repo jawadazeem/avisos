@@ -1,0 +1,33 @@
+/*
+ * (C) Copyright 2026 Jawad Azeem
+ * Apache 2.0 License
+ */
+
+package com.azeem.avisos.controller.service.cli.command.impl;
+
+import com.azeem.avisos.controller.infrastructure.cli.CliClient;
+import com.azeem.avisos.controller.service.node.NodeService;
+import com.azeem.avisos.controller.service.cli.command.api.Command;
+
+public class PurgeCommand implements Command {
+    private final NodeService nodeService;
+    private final CliClient cliClient;
+
+    public PurgeCommand(CliClient cliClient, NodeService nodeService) {
+        this.nodeService = nodeService;
+        this.cliClient = cliClient;
+    }
+
+    @Override
+    public String name() { return "purge"; }
+
+    @Override
+    public String description() { return "Manually triggers the eviction of unresponsive nodes (>60s)."; }
+
+    @Override
+    public void execute(String input) {
+        cliClient.println("Scanning registry for stale nodes...");
+        nodeService.checkStaleNodes();
+        cliClient.println("Purge cycle complete.");
+    }
+}

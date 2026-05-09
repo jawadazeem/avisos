@@ -128,29 +128,34 @@ public class AppContainer {
         CliClient cliClient = new JLineCliClient();
         classObjectMap.put(CliClient.class, cliClient);
 
-        // Register Commands (Secure)
+        // Register Commands (Non-Secure)
         CommandRegistry commandRegistry = new InMemoryCommandRegistry();
         classObjectMap.put(CommandRegistry.class, commandRegistry);
         commandRegistry.register(new ExitCommand(cliClient));
 
-        Command alarmCmd = new AlarmsCommand(cliClient, alarmService);
-        Command secureAlarmCmd = new SecureCommand(
-                cliClient,
-                alarmCmd,
-                authService,
-                securityContext
-        );
-
-        commandRegistry.register(alarmCmd);
-        classObjectMap.put(AlarmsCommand.class, alarmCmd);
-        commandRegistry.register(secureAlarmCmd);
-        classObjectMap.put(SecureCommand.class, secureAlarmCmd);
-
-        // Register Commands (Non-Secure)
+        Command alarmsCmd = new AlarmsCommand(cliClient, alarmService);
+        commandRegistry.register(alarmsCmd);
+        classObjectMap.put(AlarmsCommand.class, alarmsCmd);
 
         Command helpCmd = new HelpCommand(cliClient, commandRegistry);
         commandRegistry.register(helpCmd);
         classObjectMap.put(HelpCommand.class, helpCmd);
+
+        Command inspectCmd = new InspectCommand(cliClient, nodeService);
+        commandRegistry.register(inspectCmd);
+        classObjectMap.put(InspectCommand.class, inspectCmd);
+
+        Command nodesCmd = new NodesCommand(cliClient, nodeService);
+        commandRegistry.register(nodesCmd);
+        classObjectMap.put(NodesCommand.class, nodesCmd);
+
+        Command purgeCmd = new PurgeCommand(cliClient, nodeService);
+        commandRegistry.register(purgeCmd);
+        classObjectMap.put(PurgeCommand.class, purgeCmd);
+
+        Command statsCmd = new StatsCommand(cliClient);
+        commandRegistry.register(statsCmd);
+        classObjectMap.put(StatsCommand.class, statsCmd);
 
         // Rest of the terminal
         CliService cliService = new JLineCliService(
