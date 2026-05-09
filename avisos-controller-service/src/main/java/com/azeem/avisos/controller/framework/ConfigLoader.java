@@ -18,7 +18,7 @@ import java.io.InputStream;
 import java.util.List;
 
 public class ConfigLoader {
-    // ObjectMapper for loading all configs
+    // Yml ObjectMapper for loading all configs
     private final ObjectMapper ymlMapper;
 
     public ConfigLoader() {
@@ -44,47 +44,76 @@ public class ConfigLoader {
     }
 
     public VisionConfig loadVisionConfig() {
-        try (InputStream is = getClass().getResourceAsStream("/application.yml")) {
-            if (is == null) {
-                throw new CriticalInfrastructureException(
-                        "CRITICAL: Config file not found in classpath! Cannot start "
-                                + "application without vision service connection details."
-                );
-            }
-            AppConfig config = ymlMapper.readValue(is, AppConfig.class);
-            return config.getVision();
-        } catch (IOException e) {
-            throw new ConfigFileMisconfiguredException("Failed to parse vision policy", e);
-        }
+        VisionConfig vision = loadAppConfig().getVision();
+        return new VisionConfig(
+                env("VISION_API_URL", vision.apiUrl()),
+                envDouble("VISION_MIN_CONFIDENCE", vision.minConfidence()),
+                envInt("VISION_TIMEOUT_SECONDS", vision.timeoutSeconds())
+        );
     }
 
     public MqttConfig loadMqttConfig() {
-        try (InputStream is = getClass().getResourceAsStream("/application.yml")) {
-            if (is == null) {
-                throw new CriticalInfrastructureException(
-                        "CRITICAL: Config file not found in classpath!" +
-                                " Cannot start application without MQTT connection details."
-                );
-            }
-            AppConfig config = ymlMapper.readValue(is, AppConfig.class);
-            return config.getMqtt();
-        } catch (IOException e) {
-            throw new ConfigFileMisconfiguredException("Failed to parse mqtt policy", e);
-        }
+        MqttConfig mqtt = loadAppConfig().getMqtt();
+        return new MqttConfig(
+                env("MQTT_CONTROLLER_CLIENT_ID", mqtt.controllerClientId()),
+                env("MQTT_BROKER_URL", mqtt.broker()),
+                env("MQTT_TOPIC", mqtt.topic()),
+                envInt("MQTT_CONNECTION_TIMEOUT", mqtt.connectionTimeout()),
+                envBoolean("MQTT_CLEAN_SESSION", mqtt.cleanSession()),
+                envBoolean("MQTT_AUTOMATIC_RECONNECT", mqtt.automaticReconnect())
+        );
     }
 
     public DatabaseConfig loadDBConfig() {
+        DatabaseConfig database = loadAppConfig().getDatabase();
+        return new DatabaseConfig(env("DATABASE_URL", database.url()));
+    }
+
+    public NodeServiceConfig loadNodeServiceConfig() {
+        NodeServiceConfig nodeServiceConfig = loadAppConfig().getNodeServiceConfig();
+        return new NodeServiceConfig(
+                envInt("STALE_THRESHOLD", nodeServiceConfig.staleThreshold()),
+                envInt("MIN_HEARTBEAT_INTERVAL_MS", nodeServiceConfig.minHeartbeatIntervalMs())
+        );
+    }
+
+    private AppConfig loadAppConfig() {
         try (InputStream is = getClass().getResourceAsStream("/application.yml")) {
             if (is == null) {
                 throw new CriticalInfrastructureException(
                         "CRITICAL: Config file not found in classpath! " +
-                                "Cannot start application without DB connection details."
+                                "Cannot start application without connection details."
                 );
             }
-            AppConfig config = ymlMapper.readValue(is, AppConfig.class);
-            return config.getDatabase();
+            return ymlMapper.readValue(is, AppConfig.class);
         } catch (IOException e) {
-            throw new ConfigFileMisconfiguredException("Failed to parse database policy", e);
+            throw new ConfigFileMisconfiguredException("Failed to parse application configuration", e);
         }
+    }
+
+    private static String env(String key, String fallback) {
+        String value = System.getenv(key);
+        return value == null || value.isBlank() ? fallback : value;
+    }
+
+    private static int envInt(String key, int fallback) {
+        String value = System.getenv(key);
+        return value == null || value.isBlank()
+                ? fallback
+                : Integer.parseInt(value);
+    }
+
+    private static double envDouble(String key, double fallback) {
+        String value = System.getenv(key);
+        return value == null || value.isBlank()
+                ? fallback
+                : Double.parseDouble(value);
+    }
+
+    private static boolean envBoolean(String key, boolean fallback) {
+        String value = System.getenv(key);
+        return value == null || value.isBlank()
+                ? fallback
+                : Boolean.parseBoolean(value);
     }
 }

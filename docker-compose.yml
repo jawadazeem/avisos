@@ -11,9 +11,16 @@ services:
     tty: true
     environment:
       - TERM=xterm-256color
+      - MQTT_BROKER_URL=tcp://mosquitto:1883
+      - MQTT_TOPIC=avisos/telemetry
+      - VISION_API_URL=http://vision-api:32168/v1/vision/detection
+      - DATABASE_URL=jdbc:sqlite:/app/data/avisos.db
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
+    depends_on:
+      - mosquitto
+      - vision-api
     restart: unless-stopped
 
   node-01:
@@ -23,10 +30,20 @@ services:
     container_name: avisos-node-01
     networks:
       - avisos-net
+    environment:
+      - MQTT_BROKER_URL=tcp://mosquitto:1883
+      - MQTT_TOPIC=avisos/telemetry
+      - NODE_NAME=avisos-node-01
+      - NODE_TYPE=data-acquisition-device
+    depends_on:
+      - mosquitto
+    restart: unless-stopped
 
   mosquitto:
     image: eclipse-mosquitto:latest
     container_name: avisos-broker
+    networks:
+      - avisos-net
     ports:
       - "1883:1883"
     volumes:
@@ -37,8 +54,10 @@ services:
   localstack:
     image: localstack/localstack:3
     container_name: avisos-cloud
+    networks:
+      - avisos-net
     ports:
-      - "4566:4566"
+      - "4567:4566"
     environment:
       - SERVICES=sns
       - DEFAULT_REGION=us-east-1
@@ -54,6 +73,8 @@ services:
     platform: linux/amd64
     image: codeproject/ai-server
     container_name: avisos-VisionRequest
+    networks:
+      - avisos-net
     ports:
       - "32168:32168"
     environment:

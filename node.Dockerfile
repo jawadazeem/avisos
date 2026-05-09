@@ -8,4 +8,4 @@ RUN mvn clean install
 FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 COPY --from=builder /app/avisos-node-service/target/node-service.jar node-service.jar
-ENTRYPOINT ["java", "-jar", "node-service.jar"]
+ENTRYPOINT ["java", "--enable-native-access=ALL-UNNAMED", "-jar", "node-service.jar"]

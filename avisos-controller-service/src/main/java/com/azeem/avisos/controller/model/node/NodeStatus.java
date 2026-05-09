@@ -7,5 +7,6 @@ package com.azeem.avisos.controller.model.node;
 
 public enum NodeStatus {
     RESPONSIVE,
-    UNRESPONSIVE
+    UNRESPONSIVE,
+    OFFLINE
 }

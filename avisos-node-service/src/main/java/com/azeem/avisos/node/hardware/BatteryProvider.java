@@ -24,6 +24,7 @@ import java.util.List;
  */
 public class BatteryProvider {
     private static final Logger log = LoggerFactory.getLogger(BatteryProvider.class);
+    private static final int ASSUMED_LINE_POWER_LEVEL = 100;
 
     /**
      * <p>
@@ -34,12 +35,17 @@ public class BatteryProvider {
      * @return the current battery level percentage
      */
     public int getBatteryLevel() {
-        if (getPowerSources().isEmpty()) {
-            log.error("Could not get a battery level for this device.");
-            return 0;
+        List<PowerSource> powerSources = getPowerSources();
+
+        if (powerSources.isEmpty()) {
+            log.debug(
+                    "No battery power source detected; assuming line power at {}%",
+                    ASSUMED_LINE_POWER_LEVEL
+            );
+            return ASSUMED_LINE_POWER_LEVEL;
         }
 
-        return getPowerSources().getFirst().getCurrentCapacity();
+        return powerSources.getFirst().getCurrentCapacity();
     }
 
     /**

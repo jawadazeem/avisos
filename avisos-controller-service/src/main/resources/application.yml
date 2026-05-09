@@ -5,6 +5,9 @@ mqtt:
   connection-timeout: 10
   clean-session: false
   automatic-reconnect: true
+node:
+  stale-threshold: 60
+  min-heartbeat-interval-ms: 2000
 vision:
   api-url: "http://localhost:32168/v1/vision/detection"
   min-confidence: 0.70

@@ -5,6 +5,7 @@
 
 package com.azeem.avisos.controller.service.node;
 
+import com.azeem.avisos.controller.config.NodeServiceConfig;
 import com.azeem.avisos.controller.entity.node.NodeEntity;
 import com.azeem.avisos.controller.model.node.NodeStatus;
 import com.azeem.avisos.controller.repository.NodeRepository;
@@ -28,6 +29,8 @@ public class SimpleNodeServiceTest {
     @Mock
     NodeRepository nodeRepository;
 
+    NodeServiceConfig nodeServiceConfig;
+
     @InjectMocks
     SimpleNodeService nodeService;
 
@@ -37,6 +40,14 @@ public class SimpleNodeServiceTest {
     @BeforeEach
     void setUp() {
         nodeId = UUID.randomUUID();
+
+        nodeServiceConfig = new NodeServiceConfig(
+                60,   // staleThreshold
+                2000  // minHeartbeatIntervalMs
+        );
+
+        nodeService = new SimpleNodeService(nodeRepository, nodeServiceConfig);
+
         sampleEntity = new NodeEntity(
                 nodeId.toString(),
                 "Avisos-Node-01",
@@ -99,7 +110,7 @@ public class SimpleNodeServiceTest {
 
         when(nodeRepository.getNodeEntity(uuidStr)).thenReturn(sampleEntity);
 
-        SimpleNodeService freshService = new SimpleNodeService(nodeRepository);
+        SimpleNodeService freshService = new SimpleNodeService(nodeRepository, nodeServiceConfig);
         freshService.registerHeartbeat(nodeId);
 
         verify(nodeRepository, times(1)).getNodeEntity(uuidStr);

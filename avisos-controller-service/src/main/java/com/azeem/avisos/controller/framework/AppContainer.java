@@ -81,11 +81,15 @@ public class AppContainer {
         // Services
         AuthService authService = new AuthService(authRepository);
         AlarmService alarmService = new AlarmService(alarmRepo);
-        NodeService nodeService = new SimpleNodeService(nodeRepo);
+        NodeService nodeService = new SimpleNodeService(
+                nodeRepo,
+                configLoader.loadNodeServiceConfig());
+
         VisionClient visionClient = new CodeProjectVisionClient(
                 new ObjectMapper(),
                 configLoader.loadVisionConfig()
         );
+
         VisionService visionService = new CodeProjectVisionService(visionClient);
 
         List<List<String>> problematicLabels = configLoader.loadProblematicLabelsConfig();
@@ -114,8 +118,7 @@ public class AppContainer {
                 mqttIngressAdapter,
                 configLoader.loadMqttConfig()
         );
-        // TODO: Uncomment
-//        mqttIngressListener.init();
+        mqttIngressListener.init();
         classObjectMap.put(MqttIngressListener.class, mqttIngressListener);
 
         NotificationService notificationService = new SnsService();

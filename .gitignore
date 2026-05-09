@@ -43,7 +43,8 @@ avisos.db-wal
 target
 localstack/cache
 logs
-mosquitto
+mosquitto/data
+mosquitto/log
 data
 .env
 /.idea/

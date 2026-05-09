@@ -16,15 +16,24 @@ public record KeywordThreatDetector(
 
     @Override
     public AlarmSeverity evaluate(List<String> detectedLabels) {
+
         List<String> lowerLabels = detectedLabels.stream()
                 .map(String::toLowerCase)
                 .toList();
 
-        if (lowerLabels.stream().anyMatch(criticalLabels::contains)) {
+        boolean isCritical = lowerLabels.stream()
+                .anyMatch(label -> criticalLabels.stream()
+                        .anyMatch(label::contains));
+
+        if (isCritical) {
             return AlarmSeverity.CRITICAL;
         }
 
-        if (lowerLabels.stream().anyMatch(warningLabels::contains)) {
+        boolean isWarning = lowerLabels.stream()
+                .anyMatch(label -> warningLabels.stream()
+                        .anyMatch(label::contains));
+
+        if (isWarning) {
             return AlarmSeverity.WARNING;
         }
 

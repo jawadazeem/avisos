@@ -5,12 +5,15 @@
 
 package com.azeem.avisos.controller.service.ingress;
 
+import com.azeem.avisos.controller.common.telemetry.PacketTypeDto;
 import com.azeem.avisos.controller.common.telemetry.TelemetryPacketDto;
 import com.azeem.avisos.controller.config.VisionConfig;
 import com.azeem.avisos.controller.model.alarm.AlarmRecord;
 import com.azeem.avisos.controller.model.alarm.AlarmSeverity;
 import com.azeem.avisos.controller.model.alarm.AlarmStatus;
 import com.azeem.avisos.controller.model.ingress.data.IngressMessage;
+import com.azeem.avisos.controller.model.node.NodeRecord;
+import com.azeem.avisos.controller.model.node.NodeStatus;
 import com.azeem.avisos.controller.model.vision.Prediction;
 import com.azeem.avisos.controller.model.vision.VisionRequest;
 import com.azeem.avisos.controller.model.vision.VisionResponse;
@@ -33,6 +36,7 @@ import java.util.UUID;
  */
 public class TelemetryIngressHandler implements IngressDataHandler<IngressMessage> {
     private static final Logger log = LoggerFactory.getLogger(TelemetryIngressHandler.class);
+    private static final String TELEMETRY_NODE_TYPE = "MQTT_TELEMETRY_NODE";
     private final NodeService deviceService;
     private final AlarmService alarmService;
     private final ThreatDetector threatDetector;
@@ -71,7 +75,25 @@ public class TelemetryIngressHandler implements IngressDataHandler<IngressMessag
             return;
         }
 
+        deviceService.updateNodeHeartbeat(
+                new NodeRecord(
+                        packet.nodeId(),
+                        packet.nodeName(),
+                        TELEMETRY_NODE_TYPE,
+                        NodeStatus.RESPONSIVE,
+                        packet.batteryLevel(),
+                        LocalDateTime.now()
+                )
+        );
         deviceService.registerHeartbeat(packet.nodeId());
+        if (packet.type() == PacketTypeDto.HEARTBEAT) {
+            log.info(
+                    "Heartbeat registered for device {} batteryLevel={}%",
+                    packet.nodeId(),
+                    packet.batteryLevel()
+            );
+            return;
+        }
 
         try {
             VisionResponse visionResponse = visionService.analyze(

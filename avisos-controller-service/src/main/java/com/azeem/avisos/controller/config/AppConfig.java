@@ -9,6 +9,7 @@ public class AppConfig {
     private DatabaseConfig database;
     private MqttConfig mqtt;
     private VisionConfig vision;
+    private NodeServiceConfig nodeServiceConfig;
 
     public DatabaseConfig getDatabase() {
         return database;
@@ -32,5 +33,13 @@ public class AppConfig {
 
     public void setVision(VisionConfig vision) {
         this.vision = vision;
+    }
+
+    public NodeServiceConfig getNodeServiceConfig() {
+        return nodeServiceConfig;
+    }
+
+    public void setNodeServiceConfig(NodeServiceConfig nodeServiceConfig) {
+        this.nodeServiceConfig = nodeServiceConfig;
     }
 }

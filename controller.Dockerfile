@@ -9,4 +9,4 @@ FROM eclipse-temurin:25-jre-jammy
 WORKDIR /app
 COPY --from=builder /app/avisos-controller-service/target/controller-service.jar controller-service.jar
 COPY --from=builder /app/avisos-controller-service/.env .env
-ENTRYPOINT ["java", "-jar", "controller-service.jar"]
+ENTRYPOINT ["java", "--enable-native-access=ALL-UNNAMED", "-jar", "controller-service.jar"]

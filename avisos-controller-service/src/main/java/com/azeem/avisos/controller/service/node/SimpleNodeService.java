@@ -5,6 +5,7 @@
 
 package com.azeem.avisos.controller.service.node;
 
+import com.azeem.avisos.controller.config.NodeServiceConfig;
 import com.azeem.avisos.controller.entity.node.NodeEntity;
 import com.azeem.avisos.controller.mapper.node.NodeMapper;
 import com.azeem.avisos.controller.model.node.NodeRecord;
@@ -21,6 +22,11 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * Simple in-memory implementation of {@link NodeService}.
+ * Handles heartbeat tracking, stale node cleanup,
+ * caching, and basic operational metrics.
+ */
 public class SimpleNodeService implements NodeService {
 
     private static final Logger log = LoggerFactory.getLogger(SimpleNodeService.class);
@@ -36,10 +42,14 @@ public class SimpleNodeService implements NodeService {
     private final AtomicLong rejectedHeartbeats = new AtomicLong();
     private final AtomicLong dbFailures = new AtomicLong();
 
-    private static final long MIN_HEARTBEAT_INTERVAL_MS = 2000;
+    // Config
+    private final NodeServiceConfig nodeServiceConfig;
 
-    public SimpleNodeService(NodeRepository nodeRepository) {
+    public SimpleNodeService(NodeRepository nodeRepository,
+                             NodeServiceConfig nodeServiceConfig
+    ) {
         this.nodeRepository = nodeRepository;
+        this.nodeServiceConfig = nodeServiceConfig;
     }
 
     @Override
@@ -92,7 +102,7 @@ public class SimpleNodeService implements NodeService {
     @Override
     public void checkStaleNodes() {
         try {
-            int threshold = 60;
+            int threshold = nodeServiceConfig.staleThreshold();
             int affected = nodeRepository.markStaleNodesOffline(threshold);
 
             log.info("Stale cleanup: marked {} nodes OFFLINE", affected);
@@ -171,7 +181,7 @@ public class SimpleNodeService implements NodeService {
     private boolean isFlooding(UUID uuid, long now) {
         Long lastSeen = floodProtector.put(uuid, now);
 
-        if (lastSeen != null && (now - lastSeen) < MIN_HEARTBEAT_INTERVAL_MS) {
+        if (lastSeen != null && (now - lastSeen) < nodeServiceConfig.minHeartbeatIntervalMs()) {
             log.warn(
                     "Flood detected node={} intervalMs={}",
                     uuid,
