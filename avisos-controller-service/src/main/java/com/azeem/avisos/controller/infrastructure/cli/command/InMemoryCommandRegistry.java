@@ -20,7 +20,10 @@ public class InMemoryCommandRegistry implements CommandRegistry {
 
     @Override
     public Optional<Command> find(String name) {
-        return Optional.ofNullable(commands.get(name.toLowerCase()));
+        String input = name.split("\\s+")[0].toLowerCase();
+        return Optional.ofNullable(
+                commands.get(input)
+        );
     }
 
     @Override

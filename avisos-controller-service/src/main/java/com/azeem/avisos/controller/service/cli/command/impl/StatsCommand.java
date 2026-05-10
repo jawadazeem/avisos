@@ -27,7 +27,9 @@ public class StatsCommand implements Command {
         long mb = 1024 * 1024;
 
         cliClient.println("--- CONTROLLER STATS ---");
-        cliClient.println("Used Memory:  " + (runtime.totalMemory() - runtime.freeMemory()) / mb + "MB");
+        cliClient.println(
+                "Used Memory:  " + (runtime.totalMemory() - runtime.freeMemory()) / mb + "MB"
+        );
         cliClient.println("Max Memory:   " + (runtime.maxMemory() / mb) + "MB");
         cliClient.println("Threads:      " + Thread.activeCount());
     }

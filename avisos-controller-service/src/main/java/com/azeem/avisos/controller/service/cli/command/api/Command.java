@@ -9,8 +9,4 @@ public interface Command {
     String name();
     void execute(String input);
     String description();
-
-    default boolean matches(String input) {
-        return input.trim().toLowerCase().startsWith(name().toLowerCase());
-    }
 }

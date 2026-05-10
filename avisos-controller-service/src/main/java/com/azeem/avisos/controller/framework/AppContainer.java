@@ -169,8 +169,12 @@ public class AppContainer {
         commandRegistry.register(new HelpCommand(cliClient, commandRegistry));
         commandRegistry.register(new InspectCommand(cliClient, nodeService));
         commandRegistry.register(new NodesCommand(cliClient, nodeService));
-        commandRegistry.register(new PurgeCommand(cliClient, nodeService));
         commandRegistry.register(new StatsCommand(cliClient));
+        commandRegistry.register(new PurgeCommand(
+                cliClient,
+                nodeService,
+                configLoader.loadNodeServiceConfig())
+        );
 
 
         // Rest of the terminal
