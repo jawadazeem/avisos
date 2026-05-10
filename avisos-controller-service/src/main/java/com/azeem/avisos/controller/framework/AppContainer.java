@@ -7,6 +7,7 @@ package com.azeem.avisos.controller.framework;
 
 import com.azeem.avisos.controller.infrastructure.cli.*;
 import com.azeem.avisos.controller.infrastructure.ingress.MqttIngressListener;
+import com.azeem.avisos.controller.infrastructure.lifecycle.ShutdownManager;
 import com.azeem.avisos.controller.repository.*;
 import com.azeem.avisos.controller.security.model.SecurityContext;
 import com.azeem.avisos.controller.security.repository.AuthRepository;
@@ -172,5 +173,8 @@ public class AppContainer {
         cliThread.setName("CLI-Thread");
         cliThread.start();
         classObjectMap.put(CliService.class, cliService);
+
+        ShutdownManager shutdownManager = new ShutdownManager();
+        classObjectMap.put(ShutdownManager.class, shutdownManager);
     }
 }

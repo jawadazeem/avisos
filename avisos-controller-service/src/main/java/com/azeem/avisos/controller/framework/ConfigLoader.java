@@ -87,7 +87,9 @@ public class ConfigLoader {
             }
             return ymlMapper.readValue(is, AppConfig.class);
         } catch (IOException e) {
-            throw new ConfigFileMisconfiguredException("Failed to parse application configuration", e);
+            throw new ConfigFileMisconfiguredException(
+                    "Failed to parse application configuration", e
+            );
         }
     }
 
