@@ -170,6 +170,7 @@ public class AppContainer {
         commandRegistry.register(new InspectCommand(cliClient, nodeService));
         commandRegistry.register(new NodesCommand(cliClient, nodeService));
         commandRegistry.register(new StatsCommand(cliClient));
+        commandRegistry.register(new AboutCommand(cliClient));
         commandRegistry.register(new PurgeCommand(
                 cliClient,
                 nodeService,
