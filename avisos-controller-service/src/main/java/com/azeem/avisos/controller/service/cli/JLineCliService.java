@@ -10,7 +10,7 @@ import com.azeem.avisos.controller.infrastructure.cli.CliClient;
 import com.azeem.avisos.controller.security.model.SecurityContext;
 import com.azeem.avisos.controller.security.model.UserRecord;
 import com.azeem.avisos.controller.security.service.AuthService;
-import com.azeem.avisos.controller.service.cli.command.api.CommandRegistry;
+import com.azeem.avisos.controller.infrastructure.cli.command.CommandRegistry;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.UserInterruptException;
 import org.slf4j.Logger;
@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class JLineCliService implements CliService {
     private static final Logger log = LoggerFactory.getLogger(JLineCliService.class);
@@ -31,13 +30,14 @@ public class JLineCliService implements CliService {
     public JLineCliService(CliClient cliClient,
                            CommandRegistry commandRegistry,
                            AuthService authService,
-                           SecurityContext securityContext
+                           SecurityContext securityContext,
+                           ExecutorService executor
     ) {
         this.cliClient = cliClient;
         this.commandRegistry = commandRegistry;
         this.authService = authService;
         this.securityContext = securityContext;
-        this.executor = Executors.newVirtualThreadPerTaskExecutor();
+        this.executor = executor;
     }
 
     @Override
@@ -119,6 +119,5 @@ public class JLineCliService implements CliService {
     private void shutdownCli() {
         securityContext.clear();
         cliClient.shutdown();
-        executor.shutdown();
     }
 }

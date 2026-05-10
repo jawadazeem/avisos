@@ -3,7 +3,9 @@
  * Apache 2.0 License
  */
 
-package com.azeem.avisos.controller.service.cli.command.api;
+package com.azeem.avisos.controller.infrastructure.cli.command;
+
+import com.azeem.avisos.controller.service.cli.command.api.Command;
 
 import java.util.List;
 import java.util.Optional;

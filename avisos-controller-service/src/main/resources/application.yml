@@ -5,7 +5,7 @@ mqtt:
   connection-timeout: 10
   clean-session: false
   automatic-reconnect: true
-node:
+node-service:
   stale-threshold: 60
   min-heartbeat-interval-ms: 2000
 vision:

@@ -70,7 +70,7 @@ public class ConfigLoader {
     }
 
     public NodeServiceConfig loadNodeServiceConfig() {
-        NodeServiceConfig nodeServiceConfig = loadAppConfig().getNodeServiceConfig();
+        NodeServiceConfig nodeServiceConfig = loadAppConfig().getNodeService();
         return new NodeServiceConfig(
                 envInt("STALE_THRESHOLD", nodeServiceConfig.staleThreshold()),
                 envInt("MIN_HEARTBEAT_INTERVAL_MS", nodeServiceConfig.minHeartbeatIntervalMs())

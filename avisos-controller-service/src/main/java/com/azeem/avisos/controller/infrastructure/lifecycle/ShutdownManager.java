@@ -17,8 +17,9 @@ public class ShutdownManager {
     private static final Logger log = LoggerFactory.getLogger(ShutdownManager.class);
     private final List<Runnable> shutdownTasks = new CopyOnWriteArrayList<>();
 
-    public void addTask(Runnable task) {
+    public ShutdownManager addTask(Runnable task) {
         shutdownTasks.add(task);
+        return this;
     }
 
     public void initiate() {

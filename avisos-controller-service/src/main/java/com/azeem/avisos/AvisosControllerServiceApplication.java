@@ -5,16 +5,18 @@
 
 package com.azeem.avisos;
 
-import com.azeem.avisos.controller.framework.AppBootStrap;
+import com.azeem.avisos.controller.framework.AppLifeCycle;
 
 
 /**
- * Uses the AppBootStrap from DIY framework to initialize and run the Avisos Application
+ * Uses the AppLifeCycle from DIY framework to initialize and run the Avisos Application
  */
 public class AvisosControllerServiceApplication {
     void main() {
-        AppBootStrap bootStrap = new AppBootStrap();
-        bootStrap.init();
+        AppLifeCycle lifecycle = new AppLifeCycle();
+        lifecycle.init();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(lifecycle::close));
     }
 }
 

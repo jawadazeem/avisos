@@ -18,6 +18,7 @@ import javax.sql.DataSource;
 public class JdbiProvider {
 
     private static volatile Jdbi jdbi;
+    private static volatile DataSource dataSource;
 
     public static synchronized Jdbi getJdbi(DatabaseConfig config) {
         if (jdbi != null) {
@@ -49,5 +50,14 @@ public class JdbiProvider {
                     "Failed to initialize database: " + e.getMessage()
             );
         }
+    }
+
+    public static DataSource getDataSource() {
+
+        if (dataSource == null) {
+            throw new IllegalStateException("Datasource not initialized");
+        }
+
+        return dataSource;
     }
 }

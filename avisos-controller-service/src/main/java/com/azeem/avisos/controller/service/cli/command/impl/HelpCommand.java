@@ -7,7 +7,7 @@ package com.azeem.avisos.controller.service.cli.command.impl;
 
 import com.azeem.avisos.controller.infrastructure.cli.CliClient;
 import com.azeem.avisos.controller.service.cli.command.api.Command;
-import com.azeem.avisos.controller.service.cli.command.api.CommandRegistry;
+import com.azeem.avisos.controller.infrastructure.cli.command.CommandRegistry;
 
 import java.util.Comparator;
 

@@ -5,27 +5,32 @@
 
 package com.azeem.avisos.controller.framework;
 
-import com.azeem.avisos.controller.infrastructure.cli.*;
+import com.azeem.avisos.controller.infrastructure.cli.CliClient;
+import com.azeem.avisos.controller.infrastructure.cli.JLineCliClient;
+import com.azeem.avisos.controller.infrastructure.cli.command.InMemoryCommandRegistry;
+import com.azeem.avisos.controller.infrastructure.health.DatabaseHealthCheck;
+import com.azeem.avisos.controller.infrastructure.health.SystemHealthMonitor;
 import com.azeem.avisos.controller.infrastructure.ingress.MqttIngressListener;
 import com.azeem.avisos.controller.infrastructure.lifecycle.ShutdownManager;
-import com.azeem.avisos.controller.repository.*;
+import com.azeem.avisos.controller.infrastructure.vision.CodeProjectVisionClient;
+import com.azeem.avisos.controller.infrastructure.vision.VisionClient;
+import com.azeem.avisos.controller.repository.AlarmRepository;
+import com.azeem.avisos.controller.repository.NodeRepository;
+import com.azeem.avisos.controller.repository.TelemetryRepository;
 import com.azeem.avisos.controller.security.model.SecurityContext;
 import com.azeem.avisos.controller.security.repository.AuthRepository;
 import com.azeem.avisos.controller.security.service.AuthService;
 import com.azeem.avisos.controller.service.alarm.AlarmService;
 import com.azeem.avisos.controller.service.cli.CliService;
-import com.azeem.avisos.controller.service.cli.*;
-import com.azeem.avisos.controller.service.cli.command.api.Command;
-import com.azeem.avisos.controller.service.cli.command.api.CommandRegistry;
+import com.azeem.avisos.controller.service.cli.JLineCliService;
+import com.azeem.avisos.controller.infrastructure.cli.command.CommandRegistry;
 import com.azeem.avisos.controller.service.cli.command.impl.*;
-import com.azeem.avisos.controller.service.node.NodeService;
-import com.azeem.avisos.controller.service.node.SimpleNodeService;
 import com.azeem.avisos.controller.service.ingress.MqttIngressAdapter;
 import com.azeem.avisos.controller.service.ingress.TelemetryIngressHandler;
+import com.azeem.avisos.controller.service.node.NodeService;
+import com.azeem.avisos.controller.service.node.SimpleNodeService;
 import com.azeem.avisos.controller.service.notification.NotificationService;
 import com.azeem.avisos.controller.service.notification.SnsService;
-import com.azeem.avisos.controller.infrastructure.vision.CodeProjectVisionClient;
-import com.azeem.avisos.controller.infrastructure.vision.VisionClient;
 import com.azeem.avisos.controller.service.threat.KeywordThreatDetector;
 import com.azeem.avisos.controller.service.threat.ThreatDetector;
 import com.azeem.avisos.controller.service.vision.CodeProjectVisionService;
@@ -38,7 +43,12 @@ import org.jdbi.v3.core.Jdbi;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
+import static com.azeem.avisos.controller.repository.JdbiProvider.getDataSource;
 import static com.azeem.avisos.controller.repository.JdbiProvider.getJdbi;
 
 /**
@@ -49,16 +59,34 @@ import static com.azeem.avisos.controller.repository.JdbiProvider.getJdbi;
  * </p>
  */
 public class AppContainer {
-    public Map<Class<?>, Object> classObjectMap = new HashMap<>();
+    private final Map<Class<?>, Object> classObjectRegistry = new HashMap<>();
 
     public <T> T get(Class<T> type) {
-        return type.cast(classObjectMap.get(type));
+        return type.cast(classObjectRegistry.get(type));
+    }
+
+    /**
+     * Always use this method as opposed to directly inserting into the classObjectRegistry
+     * to ensure type safety.
+     */
+    public <T> void put(Class<? super T> type, T instance) {
+        classObjectRegistry.put(type, instance);
+    }
+
+    public Map<Class<?>, Object> getClassObjectRegistry() {
+        return classObjectRegistry;
     }
 
     /**
      * Initializes all needed objects
      */
     public void init() {
+        // Executor
+        ScheduledExecutorService scheduler =
+                Executors.newSingleThreadScheduledExecutor();
+
+        ExecutorService virtualWorkers =
+                Executors.newVirtualThreadPerTaskExecutor();
 
         ConfigLoader configLoader = new ConfigLoader();
 
@@ -69,10 +97,10 @@ public class AppContainer {
         NodeRepository nodeRepo = jdbi.onDemand(NodeRepository.class);
         TelemetryRepository telemetryRepository = jdbi.onDemand(TelemetryRepository.class);
         AuthRepository authRepository = jdbi.onDemand(AuthRepository.class);
-        classObjectMap.put(AlarmRepository.class, alarmRepo);
-        classObjectMap.put(NodeRepository.class, nodeRepo);
-        classObjectMap.put(TelemetryRepository.class, telemetryRepository);
-        classObjectMap.put(AuthRepository.class, authRepository);
+        put(AlarmRepository.class, alarmRepo);
+        put(NodeRepository.class, nodeRepo);
+        put(TelemetryRepository.class, telemetryRepository);
+        put(AuthRepository.class, authRepository);
 
         alarmRepo.initAlarmTable();
         nodeRepo.initNodeTable();
@@ -95,10 +123,11 @@ public class AppContainer {
 
         List<List<String>> problematicLabels = configLoader.loadProblematicLabelsConfig();
         ThreatDetector threatDetector = new KeywordThreatDetector(problematicLabels.get(0), problematicLabels.get(1));
-        classObjectMap.put(VisionClient.class, visionService);
-        classObjectMap.put(AuthService.class, authService);
-        classObjectMap.put(AlarmService.class, alarmService);
-        classObjectMap.put(NodeService.class, nodeService);
+        put(VisionClient.class, visionClient);
+        put(VisionService.class, visionService);
+        put(AuthService.class, authService);
+        put(AlarmService.class, alarmService);
+        put(NodeService.class, nodeService);
 
         TelemetryIngressHandler telemetryIngressHandler = new TelemetryIngressHandler(
                 nodeService,
@@ -110,71 +139,92 @@ public class AppContainer {
                         .registerModule(new JavaTimeModule())
                         .registerModule(new ParameterNamesModule())
         );
-        classObjectMap.put(TelemetryIngressHandler.class, telemetryIngressHandler);
+        put(TelemetryIngressHandler.class, telemetryIngressHandler);
 
         MqttIngressAdapter mqttIngressAdapter = new MqttIngressAdapter(telemetryIngressHandler);
-        classObjectMap.put(MqttIngressAdapter.class, mqttIngressAdapter);
+        put(MqttIngressAdapter.class, mqttIngressAdapter);
 
         MqttIngressListener mqttIngressListener = new MqttIngressListener(
                 mqttIngressAdapter,
                 configLoader.loadMqttConfig()
         );
         mqttIngressListener.init();
-        classObjectMap.put(MqttIngressListener.class, mqttIngressListener);
+        put(MqttIngressListener.class, mqttIngressListener);
 
         NotificationService notificationService = new SnsService();
-        classObjectMap.put(NotificationService.class, notificationService);
+        put(NotificationService.class, notificationService);
 
         // Auth context (must be singleton)
         SecurityContext securityContext = new SecurityContext();
 
         // Terminal
         CliClient cliClient = new JLineCliClient();
-        classObjectMap.put(CliClient.class, cliClient);
+        put(CliClient.class, cliClient);
 
-        // Register Commands (Non-Secure)
+        // Register Commands
         CommandRegistry commandRegistry = new InMemoryCommandRegistry();
-        classObjectMap.put(CommandRegistry.class, commandRegistry);
+        put(CommandRegistry.class, commandRegistry);
         commandRegistry.register(new ExitCommand(cliClient));
+        commandRegistry.register(new AlarmsCommand(cliClient, alarmService));
+        commandRegistry.register(new HelpCommand(cliClient, commandRegistry));
+        commandRegistry.register(new InspectCommand(cliClient, nodeService));
+        commandRegistry.register(new NodesCommand(cliClient, nodeService));
+        commandRegistry.register(new PurgeCommand(cliClient, nodeService));
+        commandRegistry.register(new StatsCommand(cliClient));
 
-        Command alarmsCmd = new AlarmsCommand(cliClient, alarmService);
-        commandRegistry.register(alarmsCmd);
-        classObjectMap.put(AlarmsCommand.class, alarmsCmd);
-
-        Command helpCmd = new HelpCommand(cliClient, commandRegistry);
-        commandRegistry.register(helpCmd);
-        classObjectMap.put(HelpCommand.class, helpCmd);
-
-        Command inspectCmd = new InspectCommand(cliClient, nodeService);
-        commandRegistry.register(inspectCmd);
-        classObjectMap.put(InspectCommand.class, inspectCmd);
-
-        Command nodesCmd = new NodesCommand(cliClient, nodeService);
-        commandRegistry.register(nodesCmd);
-        classObjectMap.put(NodesCommand.class, nodesCmd);
-
-        Command purgeCmd = new PurgeCommand(cliClient, nodeService);
-        commandRegistry.register(purgeCmd);
-        classObjectMap.put(PurgeCommand.class, purgeCmd);
-
-        Command statsCmd = new StatsCommand(cliClient);
-        commandRegistry.register(statsCmd);
-        classObjectMap.put(StatsCommand.class, statsCmd);
 
         // Rest of the terminal
         CliService cliService = new JLineCliService(
                 cliClient,
                 commandRegistry,
                 authService,
-                securityContext);
+                securityContext,
+                Executors.newVirtualThreadPerTaskExecutor());
 
         Thread cliThread = new Thread(cliService::start);
         cliThread.setDaemon(false);  // Non-daemon keeps JVM alive
         cliThread.setName("CLI-Thread");
         cliThread.start();
-        classObjectMap.put(CliService.class, cliService);
+        put(CliService.class, cliService);
+
+        DatabaseHealthCheck dbHealthCheck = new DatabaseHealthCheck(getDataSource());
+        SystemHealthMonitor systemHealthMonitor =
+                new SystemHealthMonitor(dbHealthCheck, virtualWorkers);
+
+        // Scheduling
+        scheduler.scheduleWithFixedDelay(() -> {
+            try {
+                systemHealthMonitor.checkSystemHealth();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, 0, 10, TimeUnit.SECONDS);
+
+        // Application Shutdown
 
         ShutdownManager shutdownManager = new ShutdownManager();
-        classObjectMap.put(ShutdownManager.class, shutdownManager);
+        put(ShutdownManager.class, shutdownManager);
+
+        shutdownManager.addTask(() -> {
+            try {
+                scheduler.shutdown();
+                if (!virtualWorkers.awaitTermination(5, TimeUnit.SECONDS)) {
+                    virtualWorkers.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                virtualWorkers.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }).addTask(() -> {
+            try {
+                scheduler.shutdown();
+                if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                    scheduler.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                scheduler.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        });
     }
 }

@@ -18,15 +18,18 @@ public class SystemHealthMonitor {
 
     private static final Logger log = LoggerFactory.getLogger(SystemHealthMonitor.class);
 
-    private final NodeRepository repository;
-    private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+    private volatile SystemHealthReport latestReport;
+
+    private final DatabaseHealthCheck dbHealthCheck;
+    private final ExecutorService executor;
 
     // thresholds
     private static final long DISK_THRESHOLD_BYTES = 100L * 1024 * 1024; // 100MB
     private static final long DB_TIMEOUT_MS = 500;
 
-    public SystemHealthMonitor(NodeRepository repository) {
-        this.repository = repository;
+    public SystemHealthMonitor(DatabaseHealthCheck dbHealthCheck, ExecutorService executor) {
+        this.dbHealthCheck = dbHealthCheck;
+        this.executor = executor;
     }
 
     /**
@@ -44,13 +47,14 @@ public class SystemHealthMonitor {
         return new SystemHealthReport(overall, results);
     }
 
+    public void refreshHealth() {
+        latestReport = checkSystemHealth();
+    }
+
     private ComponentHealth checkDatabase() {
         long start = System.currentTimeMillis();
 
-        Future<Boolean> future = executor.submit(() -> {
-            repository.getRegisteredNodeUuids();
-            return true;
-        });
+        Future<Boolean> future = executor.submit(dbHealthCheck::check);
 
         try {
             future.get(DB_TIMEOUT_MS, TimeUnit.MILLISECONDS);
@@ -90,7 +94,7 @@ public class SystemHealthMonitor {
         long start = System.currentTimeMillis();
 
         try {
-            File root = new File("/"); // system mount point (correct approach)
+            File root = new File("/"); // system mount point
 
             long usable = root.getUsableSpace();
 
