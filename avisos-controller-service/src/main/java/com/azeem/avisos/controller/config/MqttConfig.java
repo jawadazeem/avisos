@@ -5,11 +5,10 @@
 
 package com.azeem.avisos.controller.config;
 
-public record MqttConfig (
+public record MqttConfig(
     String controllerClientId,
     String broker,
     String topic,
     int connectionTimeout,
     boolean cleanSession,
-    boolean automaticReconnect
-) {}
+    boolean automaticReconnect) {}

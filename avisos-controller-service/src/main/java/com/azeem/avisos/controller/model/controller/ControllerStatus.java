@@ -6,6 +6,6 @@
 package com.azeem.avisos.controller.model.controller;
 
 public enum ControllerStatus {
-    DISARMED,
-    ARMED
+  DISARMED,
+  ARMED
 }

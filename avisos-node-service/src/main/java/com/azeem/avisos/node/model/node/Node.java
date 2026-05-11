@@ -7,12 +7,5 @@ package com.azeem.avisos.node.model.node;
 
 import java.util.UUID;
 
-/**
- * Represents the node/device this program is running on.
- */
-public record Node(
-        UUID uuid,
-        String name,
-        String type
-) {}
-
+/** Represents the node/device this program is running on. */
+public record Node(UUID uuid, String name, String type) {}

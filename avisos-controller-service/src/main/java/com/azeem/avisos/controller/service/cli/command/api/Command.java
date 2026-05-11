@@ -6,7 +6,9 @@
 package com.azeem.avisos.controller.service.cli.command.api;
 
 public interface Command {
-    String name();
-    void execute(String input);
-    String description();
+  String name();
+
+  void execute(String input);
+
+  String description();
 }

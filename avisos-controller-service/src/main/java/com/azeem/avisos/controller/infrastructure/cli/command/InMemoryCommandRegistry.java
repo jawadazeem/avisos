@@ -6,28 +6,25 @@
 package com.azeem.avisos.controller.infrastructure.cli.command;
 
 import com.azeem.avisos.controller.service.cli.command.api.Command;
-
 import java.util.*;
 
 public class InMemoryCommandRegistry implements CommandRegistry {
 
-    private final Map<String, Command> commands = new HashMap<>();
+  private final Map<String, Command> commands = new HashMap<>();
 
-    @Override
-    public void register(Command command) {
-        commands.put(command.name().toLowerCase(), command);
-    }
+  @Override
+  public void register(Command command) {
+    commands.put(command.name().toLowerCase(), command);
+  }
 
-    @Override
-    public Optional<Command> find(String name) {
-        String input = name.split("\\s+")[0].toLowerCase();
-        return Optional.ofNullable(
-                commands.get(input)
-        );
-    }
+  @Override
+  public Optional<Command> find(String name) {
+    String input = name.split("\\s+")[0].toLowerCase();
+    return Optional.ofNullable(commands.get(input));
+  }
 
-    @Override
-    public List<Command> getAllCommands() {
-        return commands.values().stream().toList();
-    }
+  @Override
+  public List<Command> getAllCommands() {
+    return commands.values().stream().toList();
+  }
 }

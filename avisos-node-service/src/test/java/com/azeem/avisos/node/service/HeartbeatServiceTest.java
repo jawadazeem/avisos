@@ -5,6 +5,4 @@
 
 package com.azeem.avisos.node.service;
 
-public class HeartbeatServiceTest {
-    
-}
+public class HeartbeatServiceTest {}

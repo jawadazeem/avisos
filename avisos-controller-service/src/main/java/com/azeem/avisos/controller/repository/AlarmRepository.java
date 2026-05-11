@@ -6,15 +6,15 @@
 package com.azeem.avisos.controller.repository;
 
 import com.azeem.avisos.controller.model.alarm.AlarmRecord;
+import java.util.List;
 import org.jdbi.v3.sqlobject.config.RegisterConstructorMapper;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
-import java.util.List;
-
 public interface AlarmRepository {
 
-    @SqlUpdate("""
+  @SqlUpdate(
+      """
         CREATE TABLE IF NOT EXISTS alarms (
             id TEXT PRIMARY KEY,
             device_uuid TEXT NOT NULL,
@@ -25,9 +25,10 @@ public interface AlarmRepository {
             resolved_at TEXT
         )
     """)
-    void initAlarmTable();
+  void initAlarmTable();
 
-    @SqlUpdate("""
+  @SqlUpdate(
+      """
         INSERT INTO alarms (
             id, device_uuid, severity, reason, status, triggered_at
         )
@@ -35,17 +36,19 @@ public interface AlarmRepository {
             :id, :deviceUuid, :severity, :reason, :status, :triggeredAtTimestamp
         )
     """)
-    void triggerAlarm(AlarmRecord alarm);
+  void triggerAlarm(AlarmRecord alarm);
 
-    @SqlUpdate("""
+  @SqlUpdate(
+      """
         UPDATE alarms
         SET status = 'RESOLVED',
             resolved_at = CURRENT_TIMESTAMP
         WHERE id = :id
     """)
-    void resolveAlarm(java.util.UUID id);
+  void resolveAlarm(java.util.UUID id);
 
-    @SqlQuery("""
+  @SqlQuery(
+      """
         SELECT
             id,
             device_uuid AS deviceUuid,
@@ -57,6 +60,6 @@ public interface AlarmRepository {
         FROM alarms
         WHERE status = 'ACTIVE'
     """)
-    @RegisterConstructorMapper(AlarmRecord.class)
-    List<AlarmRecord> getActiveAlarms();
+  @RegisterConstructorMapper(AlarmRecord.class)
+  List<AlarmRecord> getActiveAlarms();
 }

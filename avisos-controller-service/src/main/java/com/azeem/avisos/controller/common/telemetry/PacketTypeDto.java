@@ -6,8 +6,8 @@
 package com.azeem.avisos.controller.common.telemetry;
 
 public enum PacketTypeDto {
-    HEARTBEAT,
-    NETWORK_SCAN,
-    SYSTEM_ERROR,
-    UNRECOGNIZED
+  HEARTBEAT,
+  NETWORK_SCAN,
+  SYSTEM_ERROR,
+  UNRECOGNIZED
 }

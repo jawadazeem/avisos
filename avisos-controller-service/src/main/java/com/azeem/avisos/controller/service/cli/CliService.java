@@ -6,5 +6,5 @@
 package com.azeem.avisos.controller.service.cli;
 
 public interface CliService {
-    void start();
+  void start();
 }

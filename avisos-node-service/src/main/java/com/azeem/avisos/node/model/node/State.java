@@ -6,8 +6,8 @@
 package com.azeem.avisos.node.model.node;
 
 public enum State {
-    STARTING,
-    RUNNING,
-    STOPPING,
-    SHUTDOWN
+  STARTING,
+  RUNNING,
+  STOPPING,
+  SHUTDOWN
 }

@@ -5,6 +5,4 @@
 
 package com.azeem.avisos.controller.config;
 
-public record DatabaseConfig (
-        String url
-) {}
+public record DatabaseConfig(String url) {}

@@ -10,11 +10,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * Annotation to mark methods for timing their execution duration.
- */
+/** Annotation to mark methods for timing their execution duration. */
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ServiceAudit {
-    String value() default "";
+  String value() default "";
 }

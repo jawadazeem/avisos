@@ -8,6 +8,4 @@ package com.azeem.avisos.controller.infrastructure.health;
 import java.util.List;
 
 public record SystemHealthReport(
-        HealthStatusLevel overallStatus,
-        List<ComponentHealth> components
-) {}
+    HealthStatusLevel overallStatus, List<ComponentHealth> components) {}

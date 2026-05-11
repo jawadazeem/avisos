@@ -7,7 +7,4 @@ package com.azeem.avisos.controller.config;
 
 import java.util.List;
 
-public record LabelConfig (
-    List<String> critical,
-    List<String> warning
-) {}
+public record LabelConfig(List<String> critical, List<String> warning) {}

@@ -9,7 +9,8 @@ import org.jdbi.v3.sqlobject.customizer.Bind;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
 public interface TelemetryRepository {
-    @SqlUpdate("""
+  @SqlUpdate(
+      """
         CREATE TABLE IF NOT EXISTS telemetry_audit (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             device_uuid TEXT,
@@ -17,9 +18,8 @@ public interface TelemetryRepository {
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
-    void initAuditTable();
+  void initAuditTable();
 
-    @SqlUpdate("INSERT INTO telemetry_audit (device_uuid, packet_type) VALUES (:uuid, :type)")
-    void logTelemetry(@Bind("uuid") String uuid, @Bind("type") String type);
-
+  @SqlUpdate("INSERT INTO telemetry_audit (device_uuid, packet_type) VALUES (:uuid, :type)")
+  void logTelemetry(@Bind("uuid") String uuid, @Bind("type") String type);
 }

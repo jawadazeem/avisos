@@ -6,6 +6,6 @@
 package com.azeem.avisos.controller.model.alarm;
 
 public enum AlarmStatus {
-    ACTIVE,
-    RESOLVED
+  ACTIVE,
+  RESOLVED
 }

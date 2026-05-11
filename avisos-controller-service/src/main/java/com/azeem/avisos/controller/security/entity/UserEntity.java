@@ -7,13 +7,10 @@ package com.azeem.avisos.controller.security.entity;
 
 import java.time.LocalDateTime;
 
-/**
- * Database entity - maps directly to users table
- */
+/** Database entity - maps directly to users table */
 public record UserEntity(
-        String username,
-        String passwordHash,
-        String role,
-        LocalDateTime createdAt,
-        LocalDateTime lastLogin
-) {}
+    String username,
+    String passwordHash,
+    String role,
+    LocalDateTime createdAt,
+    LocalDateTime lastLogin) {}

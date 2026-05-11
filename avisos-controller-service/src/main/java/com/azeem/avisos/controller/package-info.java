@@ -4,7 +4,7 @@
  */
 
 /**
- * Purpose: Orchestration, persistence, and high-level analysis.
- * This is where the business logic for the controller, the REPL and DB lives.
+ * Purpose: Orchestration, persistence, and high-level analysis. This is where the business logic
+ * for the controller, the REPL and DB lives.
  */
 package com.azeem.avisos.controller;

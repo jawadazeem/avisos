@@ -6,40 +6,40 @@
 package com.azeem.avisos.controller.config;
 
 public class AppConfig {
-    private DatabaseConfig database;
-    private MqttConfig mqtt;
-    private VisionConfig vision;
-    private NodeServiceConfig nodeService;
+  private DatabaseConfig database;
+  private MqttConfig mqtt;
+  private VisionConfig vision;
+  private NodeServiceConfig nodeService;
 
-    public DatabaseConfig getDatabase() {
-        return database;
-    }
+  public DatabaseConfig getDatabase() {
+    return database;
+  }
 
-    public void setDatabase(DatabaseConfig database) {
-        this.database = database;
-    }
+  public void setDatabase(DatabaseConfig database) {
+    this.database = database;
+  }
 
-    public MqttConfig getMqtt() {
-        return mqtt;
-    }
+  public MqttConfig getMqtt() {
+    return mqtt;
+  }
 
-    public void setMqtt(MqttConfig mqtt) {
-        this.mqtt = mqtt;
-    }
+  public void setMqtt(MqttConfig mqtt) {
+    this.mqtt = mqtt;
+  }
 
-    public VisionConfig getVision() {
-        return vision;
-    }
+  public VisionConfig getVision() {
+    return vision;
+  }
 
-    public void setVision(VisionConfig vision) {
-        this.vision = vision;
-    }
+  public void setVision(VisionConfig vision) {
+    this.vision = vision;
+  }
 
-    public NodeServiceConfig getNodeService() {
-        return nodeService;
-    }
+  public NodeServiceConfig getNodeService() {
+    return nodeService;
+  }
 
-    public void setNodeService(NodeServiceConfig nodeService) {
-        this.nodeService = nodeService;
-    }
+  public void setNodeService(NodeServiceConfig nodeService) {
+    this.nodeService = nodeService;
+  }
 }

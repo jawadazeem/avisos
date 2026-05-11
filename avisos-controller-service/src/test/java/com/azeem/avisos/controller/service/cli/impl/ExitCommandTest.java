@@ -5,22 +5,22 @@
 
 package com.azeem.avisos.controller.service.cli.impl;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+
 import com.azeem.avisos.controller.infrastructure.cli.CliClient;
 import com.azeem.avisos.controller.service.cli.command.impl.ExitCommand;
 import org.junit.jupiter.api.Test;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-
 public class ExitCommandTest {
-    @Test
-    void shouldShutdownCliClientWhenExitCommandRuns() {
-        CliClient cliClient = mock(CliClient.class);
+  @Test
+  void shouldShutdownCliClientWhenExitCommandRuns() {
+    CliClient cliClient = mock(CliClient.class);
 
-        ExitCommand command = new ExitCommand(cliClient);
+    ExitCommand command = new ExitCommand(cliClient);
 
-        command.execute("");
+    command.execute("");
 
-        verify(cliClient).shutdown();
-    }
+    verify(cliClient).shutdown();
+  }
 }

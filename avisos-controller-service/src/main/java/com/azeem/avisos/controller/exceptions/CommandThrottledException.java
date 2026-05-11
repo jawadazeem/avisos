@@ -6,18 +6,17 @@
 package com.azeem.avisos.controller.exceptions;
 
 public class CommandThrottledException extends RuntimeException {
-    public CommandThrottledException(String message, Throwable cause) {
-        super(message, cause);
-    }
+  public CommandThrottledException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
-    public CommandThrottledException(String message) {
-        super(message);
-    }
+  public CommandThrottledException(String message) {
+    super(message);
+  }
 
-    public CommandThrottledException(Throwable cause) {
-        super(cause);
-    }
+  public CommandThrottledException(Throwable cause) {
+    super(cause);
+  }
 
-    public CommandThrottledException() {
-    }
+  public CommandThrottledException() {}
 }

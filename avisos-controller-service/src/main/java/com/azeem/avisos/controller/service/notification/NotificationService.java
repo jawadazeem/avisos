@@ -5,5 +5,4 @@
 
 package com.azeem.avisos.controller.service.notification;
 
-public interface NotificationService {
-}
+public interface NotificationService {}

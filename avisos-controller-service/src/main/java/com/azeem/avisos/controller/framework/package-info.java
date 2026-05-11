@@ -4,17 +4,14 @@
  */
 
 /**
- * <p>
- *     This is a small DIY framework built for learning and experimentation.
- *     In a real-world enterprise environment, you would typically use a mature
- *     framework such as Spring or a similar solution, which provides robust features,
- *     scalability, and long-term support.
- * </p>
- * <p>Package is responsible for:</p>
- * <li>{@link com.azeem.avisos.controller.framework.AppLifeCycle} Starting the application</li>
- * <li>{@link com.azeem.avisos.controller.framework.AppContainer} Dependency creation + storage</li>
- * <li>{@link com.azeem.avisos.controller.framework.ConfigLoader} All YAML loading</li>
- * <li>{@link com.azeem.avisos.controller.framework.AspectProcessor} Audit + timing reflection logic</li>
+ * This is a small DIY framework built for learning and experimentation. In a real-world enterprise
+ * environment, you would typically use a mature framework such as Spring or a similar solution,
+ * which provides robust features, scalability, and long-term support.
+ *
+ * <p>Package is responsible for:
+ * <li>{@link com.azeem.avisos.controller.framework.AppLifeCycle} Starting the application
+ * <li>{@link com.azeem.avisos.controller.framework.AppContainer} Dependency creation + storage
+ * <li>{@link com.azeem.avisos.controller.framework.ConfigLoader} All YAML loading
+ * <li>{@link com.azeem.avisos.controller.framework.AspectProcessor} Audit + timing reflection logic
  */
-
 package com.azeem.avisos.controller.framework;

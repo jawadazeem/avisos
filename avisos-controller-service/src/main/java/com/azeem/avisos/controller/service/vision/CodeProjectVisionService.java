@@ -10,22 +10,23 @@ import com.azeem.avisos.controller.model.vision.VisionRequest;
 import com.azeem.avisos.controller.model.vision.VisionResponse;
 
 /**
- * This class implements the VisionService interface and uses a VisionClient to send requests to the vision service.
+ * This class implements the VisionService interface and uses a VisionClient to send requests to the
+ * vision service.
  */
 public class CodeProjectVisionService implements VisionService {
-    private final VisionClient visionClient;
+  private final VisionClient visionClient;
 
-    public CodeProjectVisionService(VisionClient visionClient) {
-        this.visionClient = visionClient;
-    }
+  public CodeProjectVisionService(VisionClient visionClient) {
+    this.visionClient = visionClient;
+  }
 
-    @Override
-    public VisionResponse analyze(VisionRequest visionRequest) {
-        return visionClient.sendRequest(visionRequest);
-    }
+  @Override
+  public VisionResponse analyze(VisionRequest visionRequest) {
+    return visionClient.sendRequest(visionRequest);
+  }
 
-    @Override
-    public boolean isAvailable() {
-        return visionClient.isAvailable();
-    }
+  @Override
+  public boolean isAvailable() {
+    return visionClient.isAvailable();
+  }
 }

@@ -5,8 +5,4 @@
 
 package com.azeem.avisos.controller.config;
 
-public record VisionConfig(
-        String apiUrl,
-        double minConfidence,
-        int timeoutSeconds
-) {}
+public record VisionConfig(String apiUrl, double minConfidence, int timeoutSeconds) {}

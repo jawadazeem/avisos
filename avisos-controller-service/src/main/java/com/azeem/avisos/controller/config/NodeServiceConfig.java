@@ -5,8 +5,4 @@
 
 package com.azeem.avisos.controller.config;
 
-
-public record NodeServiceConfig(
-        int staleThreshold,
-        int minHeartbeatIntervalMs
-) {}
+public record NodeServiceConfig(int staleThreshold, int minHeartbeatIntervalMs) {}

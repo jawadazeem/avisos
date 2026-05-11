@@ -6,7 +6,7 @@
 package com.azeem.avisos.controller.infrastructure.health;
 
 public enum HealthStatusLevel {
-    HEALTHY,
-    DEGRADED,
-    UNHEALTHY
+  HEALTHY,
+  DEGRADED,
+  UNHEALTHY
 }

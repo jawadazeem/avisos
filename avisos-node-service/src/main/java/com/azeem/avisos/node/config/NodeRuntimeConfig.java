@@ -5,6 +5,4 @@
 
 package com.azeem.avisos.node.config;
 
-public class NodeRuntimeConfig {
-
-}
+public class NodeRuntimeConfig {}

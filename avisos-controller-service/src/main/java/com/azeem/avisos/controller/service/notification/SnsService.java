@@ -5,5 +5,4 @@
 
 package com.azeem.avisos.controller.service.notification;
 
-public class SnsService implements NotificationService {
-}
+public class SnsService implements NotificationService {}

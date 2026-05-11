@@ -8,7 +8,7 @@ package com.azeem.avisos.controller.model.alarm;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public record AlarmRecord (
+public record AlarmRecord(
     UUID id,
     UUID deviceUuid,
     AlarmSeverity severity,
@@ -16,4 +16,4 @@ public record AlarmRecord (
     AlarmStatus status,
     LocalDateTime triggeredAtTimestamp,
     LocalDateTime resolvedAtTimestamp // Can be null if the alarm is still active
-) {}
+    ) {}

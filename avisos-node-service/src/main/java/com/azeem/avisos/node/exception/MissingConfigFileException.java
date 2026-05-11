@@ -6,7 +6,7 @@
 package com.azeem.avisos.node.exception;
 
 public class MissingConfigFileException extends RuntimeException {
-    public MissingConfigFileException(String message) {
-        super(message);
-    }
+  public MissingConfigFileException(String message) {
+    super(message);
+  }
 }

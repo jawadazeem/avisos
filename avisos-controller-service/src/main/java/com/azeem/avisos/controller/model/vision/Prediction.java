@@ -6,10 +6,4 @@
 package com.azeem.avisos.controller.model.vision;
 
 public record Prediction(
-        String label,
-        double confidence,
-        int x_min,
-        int y_min,
-        int x_max,
-        int y_max
-) {}
+    String label, double confidence, int x_min, int y_min, int x_max, int y_max) {}

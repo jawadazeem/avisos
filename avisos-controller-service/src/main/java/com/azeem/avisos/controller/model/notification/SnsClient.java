@@ -5,5 +5,4 @@
 
 package com.azeem.avisos.controller.model.notification;
 
-public class SnsClient {
-}
+public class SnsClient {}

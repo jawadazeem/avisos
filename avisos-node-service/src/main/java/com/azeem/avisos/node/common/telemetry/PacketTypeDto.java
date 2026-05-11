@@ -6,7 +6,7 @@
 package com.azeem.avisos.node.common.telemetry;
 
 public enum PacketTypeDto {
-    HEARTBEAT,
-    NETWORK_SCAN,
-    SYSTEM_ERROR
+  HEARTBEAT,
+  NETWORK_SCAN,
+  SYSTEM_ERROR
 }
