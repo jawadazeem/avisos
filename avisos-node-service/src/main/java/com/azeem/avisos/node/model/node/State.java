@@ -5,7 +5,9 @@
 
 package com.azeem.avisos.node.model.node;
 
-public enum NodeStatus {
-    OPERATIONAL,
-    AWAY
+public enum State {
+    STARTING,
+    RUNNING,
+    STOPPING,
+    SHUTDOWN
 }

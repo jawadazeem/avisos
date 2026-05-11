@@ -11,6 +11,7 @@ import com.azeem.avisos.node.config.NodeConfig;
 import com.azeem.avisos.node.hardware.BatteryProvider;
 import com.azeem.avisos.node.network.api.MqttProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.azeem.avisos.node.model.node.State;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -36,11 +37,11 @@ public class NodeRuntimeTest {
 
         assertTrue(mqttProvider.connected.await(1, TimeUnit.SECONDS));
         assertTrue(heartbeatService.sent.await(1, TimeUnit.SECONDS));
-        assertEquals(NodeRuntime.State.RUNNING, runtime.state());
+        assertEquals(State.RUNNING, runtime.state());
 
         runtime.stop();
 
-        assertEquals(NodeRuntime.State.SHUTDOWN, runtime.state());
+        assertEquals(State.SHUTDOWN, runtime.state());
         assertEquals(1, mqttProvider.disconnects.get());
     }
 

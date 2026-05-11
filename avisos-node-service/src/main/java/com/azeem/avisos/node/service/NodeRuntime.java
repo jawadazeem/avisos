@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import com.azeem.avisos.node.model.node.State;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -279,12 +279,5 @@ public class NodeRuntime {
             throw new IllegalArgumentException(name + " must be positive");
         }
         return duration;
-    }
-
-    public enum State {
-        STARTING,
-        RUNNING,
-        STOPPING,
-        SHUTDOWN
     }
 }
