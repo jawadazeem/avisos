@@ -5,7 +5,6 @@
 
 package com.azeem.avisos.controller.infrastructure.health;
 
-import com.azeem.avisos.controller.repository.NodeRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -140,5 +139,9 @@ public class SystemHealthMonitor {
         if (hasDegraded) return HealthStatusLevel.DEGRADED;
 
         return HealthStatusLevel.HEALTHY;
+    }
+
+    public SystemHealthReport getLatestReport() {
+        return latestReport;
     }
 }

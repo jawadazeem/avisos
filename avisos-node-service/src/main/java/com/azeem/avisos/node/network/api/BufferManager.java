@@ -19,7 +19,7 @@ public interface BufferManager {
     void drain();
 
     /**
-     * Starts background processing loop (if applicable).
+     * Starts background processing loop.
      */
     void start();
 

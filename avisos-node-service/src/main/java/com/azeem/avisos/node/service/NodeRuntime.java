@@ -48,18 +48,20 @@ public class NodeRuntime {
             new AtomicReference<>(State.SHUTDOWN);
 
     private ExecutorService executor;
-
+    // TODO: Update NodeRuntime to use ReactiveBufferManager, not directly PahoMqttProvider
     public NodeRuntime(
             AppConfig config,
             MqttProvider mqttProvider,
             HeartbeatService heartbeatService,
-            BatteryProvider batteryProvider
+            BatteryProvider batteryProvider,
+            ExecutorService executor
     ) {
         this(
                 config,
                 mqttProvider,
                 heartbeatService,
                 batteryProvider,
+                executor,
                 DEFAULT_HEARTBEAT_INTERVAL,
                 DEFAULT_WATCHDOG_INTERVAL,
                 DEFAULT_INITIAL_RETRY_DELAY,
@@ -72,6 +74,7 @@ public class NodeRuntime {
             MqttProvider mqttProvider,
             HeartbeatService heartbeatService,
             BatteryProvider batteryProvider,
+            ExecutorService executor,
             Duration heartbeatInterval,
             Duration watchdogInterval,
             Duration initialRetryDelay,
@@ -87,6 +90,7 @@ public class NodeRuntime {
                 batteryProvider,
                 "batteryProvider"
         );
+        this.executor = Objects.requireNonNull(executor, "executor");
         this.heartbeatInterval = positive(heartbeatInterval, "heartbeatInterval");
         this.watchdogInterval = positive(watchdogInterval, "watchdogInterval");
         this.initialRetryDelay = positive(initialRetryDelay, "initialRetryDelay");
@@ -102,7 +106,6 @@ public class NodeRuntime {
             return;
         }
 
-        executor = Executors.newVirtualThreadPerTaskExecutor();
         logStartupConfiguration();
 
         executor.submit(this::runConnectionSupervisor);

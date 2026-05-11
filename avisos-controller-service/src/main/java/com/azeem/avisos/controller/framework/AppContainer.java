@@ -154,6 +154,12 @@ public class AppContainer {
         NotificationService notificationService = new SnsService();
         put(NotificationService.class, notificationService);
 
+        // Health setup
+        DatabaseHealthCheck dbHealthCheck = new DatabaseHealthCheck(getDataSource());
+        SystemHealthMonitor systemHealthMonitor =
+                new SystemHealthMonitor(dbHealthCheck, virtualWorkers);
+        put(SystemHealthMonitor.class, systemHealthMonitor);
+
         // Auth context (must be singleton)
         SecurityContext securityContext = new SecurityContext();
 
@@ -171,6 +177,7 @@ public class AppContainer {
         commandRegistry.register(new NodesCommand(cliClient, nodeService));
         commandRegistry.register(new StatsCommand(cliClient));
         commandRegistry.register(new AboutCommand(cliClient));
+        commandRegistry.register(new HealthCommand(cliClient, systemHealthMonitor));
         commandRegistry.register(new PurgeCommand(
                 cliClient,
                 nodeService,
@@ -191,10 +198,6 @@ public class AppContainer {
         cliThread.setName("CLI-Thread");
         cliThread.start();
         put(CliService.class, cliService);
-
-        DatabaseHealthCheck dbHealthCheck = new DatabaseHealthCheck(getDataSource());
-        SystemHealthMonitor systemHealthMonitor =
-                new SystemHealthMonitor(dbHealthCheck, virtualWorkers);
 
         // Scheduling
         scheduler.scheduleWithFixedDelay(() -> {

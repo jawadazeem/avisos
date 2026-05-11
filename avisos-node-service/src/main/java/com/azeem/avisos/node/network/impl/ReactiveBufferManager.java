@@ -5,6 +5,7 @@
 
 package com.azeem.avisos.node.network.impl;
 
+import com.azeem.avisos.node.config.MqttConfig;
 import com.azeem.avisos.node.network.api.BufferManager;
 import com.azeem.avisos.node.network.api.MqttProvider;
 
@@ -37,6 +38,7 @@ public class ReactiveBufferManager implements BufferManager {
 
     private final ArrayBlockingQueue<byte[]> buffer;
     private final MqttProvider mqttProvider;
+    private final MqttConfig mqttConfig;
     private final ExecutorService workerPool;
     private final ScheduledExecutorService scheduler;
     private final AtomicBoolean running = new AtomicBoolean(false);
@@ -47,20 +49,18 @@ public class ReactiveBufferManager implements BufferManager {
     private final LongAdder published = new LongAdder();
     private final LongAdder failedPublishes = new LongAdder();
 
-    // Config
-    private static final int WORKER_THREADS = 4;
     private static final int BUFFER_SIZE = 5000;
 
-    public ReactiveBufferManager(MqttProvider mqttProvider) {
+    public ReactiveBufferManager(MqttProvider mqttProvider,
+                                 MqttConfig mqttConfig,
+                                 ExecutorService workerPool,
+                                 ScheduledExecutorService scheduler
+    ) {
         this.mqttProvider = mqttProvider;
+        this.mqttConfig = mqttConfig;
         this.buffer = new ArrayBlockingQueue<>(BUFFER_SIZE);
-
-        this.workerPool = Executors.newFixedThreadPool(
-                WORKER_THREADS,
-                Thread.ofVirtual().factory()
-        );
-
-        this.scheduler = Executors.newSingleThreadScheduledExecutor();
+        this.workerPool = workerPool;
+        this.scheduler = scheduler;
     }
 
     // Producer side
@@ -83,7 +83,9 @@ public class ReactiveBufferManager implements BufferManager {
     // Consumer side
     @Override
     public void drain() {
-        if (!running.get()) return;
+        if (!running.get()) {
+            return;
+        }
 
         byte[] payload;
 
@@ -96,7 +98,7 @@ public class ReactiveBufferManager implements BufferManager {
 
     private void process(byte[] payload) {
         try {
-            mqttProvider.publish("avisos/telemetry/priority", payload);
+            mqttProvider.publish(mqttConfig.topic(), payload);
             published.increment();
 
         } catch (Exception e) {
@@ -110,7 +112,7 @@ public class ReactiveBufferManager implements BufferManager {
     private void retryPublish(byte[] payload, int attempts) {
         for (int i = 0; i < attempts; i++) {
             try {
-                mqttProvider.publish("avisos/telemetry/priority", payload);
+                mqttProvider.publish(mqttConfig.topic(), payload);
                 published.increment();
                 return;
 
@@ -126,24 +128,16 @@ public class ReactiveBufferManager implements BufferManager {
     // Lifecycle
     @Override
     public void start() {
-        if (!running.compareAndSet(false, true)) return;
+        if (!running.compareAndSet(false, true)) {
+            return;
+        }
 
-        scheduler.scheduleAtFixedRate(this::drain, 0, 200, TimeUnit.MILLISECONDS);
+        scheduler.scheduleAtFixedRate(this::drain, 0, 40, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public void stop() {
         running.set(false);
-
-        scheduler.shutdown();
-        workerPool.shutdown();
-
-        try {
-            scheduler.awaitTermination(3, TimeUnit.SECONDS);
-            workerPool.awaitTermination(5, TimeUnit.SECONDS);
-        } catch (InterruptedException ignored) {
-            Thread.currentThread().interrupt();
-        }
     }
 
     // Monitoring
@@ -169,6 +163,7 @@ public class ReactiveBufferManager implements BufferManager {
     }
 
     // Backpressure fallback
+    // TODO: Spool to disk
     private void spoolToDisk(byte[] data) {
         // Placeholder for extension:
         // - file-based queue

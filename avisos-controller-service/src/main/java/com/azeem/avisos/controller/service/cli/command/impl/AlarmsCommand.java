@@ -32,9 +32,8 @@ public class AlarmsCommand implements Command {
     @Override
     public String description() {
         return """
-                Retrieves and displays a real-time list of all active security alerts, 
-                including severity levels and timestamps. Used for immediate situational
-                awareness of the infrastructure.
+                Retrieves a real-time list of all active security alerts. 
+                Used for immediate situational awareness of the infrastructure.
                 """;
     }
 

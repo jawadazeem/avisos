@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
 
 public final class NodeApplication {
 
@@ -47,7 +48,8 @@ public final class NodeApplication {
                 config,
                 mqttProvider,
                 heartbeatService,
-                batteryProvider
+                batteryProvider,
+                Executors.newVirtualThreadPerTaskExecutor()
         );
         CountDownLatch shutdownLatch = new CountDownLatch(1);
 

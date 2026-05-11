@@ -44,6 +44,18 @@ public final class ConfigLoader {
         );
     }
 
+    /**
+     * Loads configuration using the provided
+     * configuration stream and environment resolver.
+     *
+     * <p>
+     * Intended for internal use and testing.
+     * </p>
+     *
+     * @param input configuration input stream
+     * @param environment environment variable resolver
+     * @return resolved application configuration
+     */
     static AppConfig load(
             InputStream input,
             Function<String, String> environment

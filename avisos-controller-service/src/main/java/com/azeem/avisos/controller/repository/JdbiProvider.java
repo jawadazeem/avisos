@@ -18,7 +18,7 @@ import javax.sql.DataSource;
 public class JdbiProvider {
 
     private static volatile Jdbi jdbi;
-    private static volatile DataSource dataSource;
+    private static volatile DataSource encryptingDataSource;
 
     public static synchronized Jdbi getJdbi(DatabaseConfig config) {
         if (jdbi != null) {
@@ -38,7 +38,7 @@ public class JdbiProvider {
 
             HikariDataSource hikari = new HikariDataSource(hikariConfig);
 
-            DataSource encryptingDataSource = new EncryptingDataSource(hikari, key);
+            encryptingDataSource = new EncryptingDataSource(hikari, key);
 
             jdbi = Jdbi.create(encryptingDataSource);
             jdbi.installPlugin(new SqlObjectPlugin());
@@ -54,10 +54,10 @@ public class JdbiProvider {
 
     public static DataSource getDataSource() {
 
-        if (dataSource == null) {
+        if (encryptingDataSource == null) {
             throw new IllegalStateException("Datasource not initialized");
         }
 
-        return dataSource;
+        return encryptingDataSource;
     }
 }

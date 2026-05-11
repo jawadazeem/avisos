@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * High-velocity edge logging.
+ * High-velocity edge noise suppression tool for logging.
  * Collapses repetitive error signatures into a single summary log.
  */
 public class DeduplicatingLogger {
