@@ -1,8 +1,88 @@
 critical:
+  # Weapons
   - "weapon"
   - "firearm"
   - "machine gun"
+  - "gun"
+  - "rifle"
+  - "pistol"
+  - "shotgun"
+  - "knife"
+  - "explosive"
+  - "bomb"
+  - "grenade"
+
+  # Hostile behavior
+  - "fire"
+  - "flame"
+  - "smoke"
+  - "explosion"
+
+  # Unauthorized vehicle access
+  - "tank"
+  - "military vehicle"
+
 warning:
+  # Unauthorized personnel
   - "person"
-  - "crowbar"
+  - "crowd"
+  - "group of people"
+  - "trespasser"
+  - "intruder"
+
+  # Concealment and disguise
   - "mask"
+  - "balaclava"
+  - "hood"
+  - "helmet"
+  - "face covering"
+
+  # Break-in tools
+  - "crowbar"
+  - "bolt cutter"
+  - "pry bar"
+  - "drill"
+  - "saw"
+  - "hammer"
+  - "wire cutter"
+  - "lockpick"
+  - "angle grinder"
+
+  # Suspicious objects
+  - "backpack"
+  - "duffel bag"
+  - "unattended bag"
+  - "package"
+  - "suitcase"
+  - "container"
+
+  # Suspicious vehicles
+  - "van"
+  - "unmarked vehicle"
+  - "truck"
+
+  # Data center specific
+  - "ladder"
+  - "cable"
+  - "hard drive"
+  - "usb drive"
+  - "flash drive"
+  - "laptop"
+  - "portable device"
+  - "camera"
+  - "recording device"
+
+  # Perimeter and access
+  - "fence"
+  - "broken glass"
+  - "open door"
+  - "propped door"
+  - "tailgating"
+  - "forced entry"
+  - "damaged lock"
+
+  # Environmental hazards
+  - "water"
+  - "flooding"
+  - "leak"
+  - "spill"

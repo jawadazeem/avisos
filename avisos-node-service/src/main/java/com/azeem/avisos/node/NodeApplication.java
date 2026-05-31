@@ -19,7 +19,8 @@ import java.util.concurrent.Executors;
 
 public final class NodeApplication {
 
-  private NodeApplication() {}
+  private NodeApplication() {
+  }
 
   /**
    * Application entry point.
@@ -31,16 +32,14 @@ public final class NodeApplication {
     BatteryProvider batteryProvider = new BatteryProvider();
     MqttProvider mqttProvider = new PahoMqttProvider(config.mqtt(), config.node());
     ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
-    HeartbeatService heartbeatService =
-        new HeartbeatService(
-            mqttProvider, batteryProvider, config.mqtt(), config.node(), objectMapper);
-    NodeRuntime runtime =
-        new NodeRuntime(
-            config,
-            mqttProvider,
-            heartbeatService,
-            batteryProvider,
-            Executors.newVirtualThreadPerTaskExecutor());
+    HeartbeatService heartbeatService = new HeartbeatService(
+        mqttProvider, batteryProvider, config.mqtt(), config.node(), objectMapper);
+    NodeRuntime runtime = new NodeRuntime(
+        config,
+        mqttProvider,
+        heartbeatService,
+        batteryProvider,
+        Executors.newVirtualThreadPerTaskExecutor());
     CountDownLatch shutdownLatch = new CountDownLatch(1);
 
     Runtime.getRuntime()
