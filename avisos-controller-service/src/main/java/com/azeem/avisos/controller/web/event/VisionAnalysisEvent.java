@@ -9,6 +9,7 @@ import com.azeem.avisos.controller.model.vision.VisionResponse;
 import java.util.UUID;
 import org.springframework.context.ApplicationEvent;
 
+/** Published when a vision AI analysis completes for an incoming telemetry frame. */
 public class VisionAnalysisEvent extends ApplicationEvent {
   private final VisionResponse response;
   private final UUID nodeId;

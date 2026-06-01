@@ -8,6 +8,7 @@ package com.azeem.avisos.controller.service.threat;
 import com.azeem.avisos.controller.model.alarm.AlarmSeverity;
 import java.util.List;
 
+/** Evaluates vision detection labels against configured threat keywords. */
 public interface ThreatDetector {
   AlarmSeverity evaluate(List<String> detectedLabels);
 }

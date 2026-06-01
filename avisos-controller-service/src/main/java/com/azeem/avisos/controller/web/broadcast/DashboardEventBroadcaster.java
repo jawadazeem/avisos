@@ -13,6 +13,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
+/** Listens for domain events and broadcasts them to STOMP WebSocket topics for the dashboard. */
 @Component
 public class DashboardEventBroadcaster {
   private final SimpMessagingTemplate messagingTemplate;

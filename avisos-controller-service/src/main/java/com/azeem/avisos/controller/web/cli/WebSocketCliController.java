@@ -26,6 +26,11 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 
+/**
+ * Bridges the CLI command framework to the web dashboard over STOMP WebSocket. Creates a fresh
+ * {@link BufferingCliClient} and command registry per request to capture output without shared
+ * state.
+ */
 @Controller
 public class WebSocketCliController {
   private final AlarmService alarmService;

@@ -8,6 +8,7 @@ package com.azeem.avisos.controller.web.event;
 import com.azeem.avisos.controller.model.alarm.AlarmRecord;
 import org.springframework.context.ApplicationEvent;
 
+/** Published when a new alarm is triggered by the telemetry pipeline. */
 public class AlarmCreatedEvent extends ApplicationEvent {
   private final AlarmRecord alarm;
 

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/** REST API for querying registered edge nodes and their current status. */
 @RestController
 @RequestMapping("/api/nodes")
 public class NodeController {

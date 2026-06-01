@@ -8,6 +8,7 @@ package com.azeem.avisos.controller.web.event;
 import com.azeem.avisos.controller.model.node.NodeRecord;
 import org.springframework.context.ApplicationEvent;
 
+/** Published when a node heartbeat is received and processed. */
 public class NodeHeartbeatEvent extends ApplicationEvent {
   private final NodeRecord node;
 

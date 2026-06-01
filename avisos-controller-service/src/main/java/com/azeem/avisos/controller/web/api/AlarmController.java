@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/** REST API for listing active alarms and resolving them by ID. */
 @RestController
 @RequestMapping("/api/alarms")
 public class AlarmController {
