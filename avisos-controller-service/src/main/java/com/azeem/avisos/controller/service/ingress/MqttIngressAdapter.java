@@ -10,11 +10,13 @@ import java.time.Instant;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /**
  * Adapts MQTT messages to the internal IngressMessage format and forwards them to the
  * IngressDataHandler.
  */
+@Component
 public class MqttIngressAdapter {
   private static final Logger log = LoggerFactory.getLogger(MqttIngressAdapter.class);
   private final IngressDataHandler<IngressMessage> handler;

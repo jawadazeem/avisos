@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /**
  * Implementation of VisionClient that interacts with the CodeProject.AI vision API. It sends
@@ -30,6 +31,7 @@ import org.slf4j.LoggerFactory;
  * <p>Building a multipart/form-data by hand is largely unnecessary, I have done it here for
  * learning purposes (RFC 7578).
  */
+@Component
 public class CodeProjectVisionClient implements VisionClient {
   private static final Logger log = LoggerFactory.getLogger(CodeProjectVisionClient.class);
   private final ObjectMapper jsonMapper;

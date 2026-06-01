@@ -34,26 +34,32 @@ mosquitto/                  MQTT broker config (Eclipse Mosquitto)
 
 ### Controller Service (`com.azeem.avisos.controller`)
 
+Spring Boot 3.4.1 application with auto-configuration and component scanning.
+
 | Package | Purpose |
 |---|---|
-| `framework/` | Custom DIY IoC container (AppContainer, AppLifeCycle) |
+| `config/` | `@ConfigurationProperties` records, `@Configuration` classes (JDBI, services, health, CLI, ingress) |
 | `infrastructure/` | CLI (JLine REPL), MQTT ingress, health, vision client, shutdown |
-| `service/` | Business logic: alarms, nodes, threats, notifications, vision |
-| `repository/` | JDBI SQL object interfaces (SQLite) |
+| `service/` | Business logic: alarms, nodes, threats, notifications, vision (`@Service` annotated) |
+| `repository/` | JDBI SQL object interfaces (SQLite, created via `jdbi.onDemand()` beans) |
 | `model/` | Domain models (Java records) |
 | `entity/` | Database entities with JDBI row mappers |
 | `mapper/` | Entity <-> domain model mappers |
 | `security/` | Auth with Argon2 hashing, ThreadLocal SecurityContext |
 | `instrumentation/` | AOP annotations (@Timed, @ServiceAudit) |
-| `config/` | YAML configuration POJOs |
 
-Entry point: `AvisosControllerServiceApplication` (instance main, Java 25 preview)
+Entry point: `AvisosControllerServiceApplication` (`@SpringBootApplication`, Tomcat on port 8080)
+
+CLI is optional -- enabled via `avisos.cli.enabled=true` (default `false` in web/Docker mode).
 
 ### Node Service (`com.azeem.avisos.node`)
 
+Lightweight IoT node with custom DIY IoC framework (no Spring Boot -- edge device footprint).
+
 | Package | Purpose |
 |---|---|
-| `config/` | ConfigLoader with env var overrides |
+| `framework/` | Custom DIY IoC container (AppContainer, AppLifeCycle, ConfigLoader, AspectProcessor) |
+| `config/` | Configuration records (AppConfig, NodeConfig, MqttConfig) |
 | `hardware/` | Battery monitoring (OSHI) |
 | `network/` | MQTT client (Paho) + ReactiveBufferManager |
 | `service/` | HeartbeatService, NodeRuntime |
@@ -69,14 +75,16 @@ Entry point: `NodeApplication.main()`
 
 ## Key Conventions
 
-- **No Spring Boot** -- custom IoC container in `framework/` package (learning project)
+- **Spring Boot 3.4.1** for controller service (BOM import, not parent POM)
+- **Custom DIY IoC** for node service (`framework/` package -- lightweight edge footprint)
 - **Domain models are Java records** (immutable)
 - **JDBI for data access** (SQL object interfaces), not JPA/Hibernate
 - **SQLite** as embedded database
 - **Protobuf** for node-to-controller telemetry over MQTT
 - **Virtual threads** (Project Loom) for concurrent operations
 - **Lombok** used in controller service (entities, builders)
-- **Config** loaded from `application.yml` with environment variable overrides
+- **Controller config** via `@ConfigurationProperties` records under `avisos.*` prefix
+- **Node config** loaded from `application.yml` with environment variable overrides
 
 ## Testing
 
@@ -98,7 +106,7 @@ Conventional Commits format:
 
 | Service | Container | Purpose |
 |---|---|---|
-| `controller` | avisos-controller | Orchestration service |
+| `controller` | avisos-controller | Orchestration service (port 8080) |
 | `node-01` | avisos-node-01 | Sample node |
 | `mosquitto` | avisos-broker | MQTT broker (port 1883) |
 | `localstack` | avisos-cloud | AWS SNS emulation (port 4567) |
@@ -106,7 +114,7 @@ Conventional Commits format:
 
 ## Environment Variables
 
-**Controller:** `MQTT_BROKER_URL`, `MQTT_TOPIC`, `VISION_API_URL`, `DATABASE_URL`
+**Controller:** `MQTT_BROKER_URL`, `MQTT_TOPIC`, `VISION_API_URL`, `DATABASE_URL`, `AVISOS_CLI_ENABLED`
 **Node:** `MQTT_BROKER_URL`, `MQTT_TOPIC`, `NODE_NAME`, `NODE_TYPE`
 
 ## Future Directions

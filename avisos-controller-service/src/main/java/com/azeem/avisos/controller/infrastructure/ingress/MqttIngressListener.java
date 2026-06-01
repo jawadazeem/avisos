@@ -7,6 +7,8 @@ package com.azeem.avisos.controller.infrastructure.ingress;
 
 import com.azeem.avisos.controller.config.MqttConfig;
 import com.azeem.avisos.controller.service.ingress.MqttIngressAdapter;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -15,10 +17,12 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /**
  * Listens to the configured MQTT broker and forwards incoming messages to the MqttIngressAdapter.
  */
+@Component
 public class MqttIngressListener implements IngressListener {
   private static final Logger log = LoggerFactory.getLogger(MqttIngressListener.class);
   MqttIngressAdapter mqttIngressAdapter;
@@ -32,6 +36,7 @@ public class MqttIngressListener implements IngressListener {
     this.config = config;
   }
 
+  @PostConstruct
   @Override
   public void init() {
     MqttConnectOptions options = new MqttConnectOptions();
@@ -52,6 +57,7 @@ public class MqttIngressListener implements IngressListener {
     }
   }
 
+  @PreDestroy
   @Override
   public void shutdown() {
     try {

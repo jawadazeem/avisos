@@ -7,14 +7,14 @@ services:
     container_name: avisos-controller
     networks:
       - avisos-net
-    stdin_open: true
-    tty: true
+    ports:
+      - "8080:8080"
     environment:
-      - TERM=xterm-256color
       - MQTT_BROKER_URL=tcp://mosquitto:1883
       - MQTT_TOPIC=avisos/telemetry
       - VISION_API_URL=http://vision-api:32168/v1/vision/detection
       - DATABASE_URL=jdbc:sqlite:/app/data/avisos.db
+      - AVISOS_CLI_ENABLED=false
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs

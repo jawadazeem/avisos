@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.azeem.avisos.node.exception.MissingConfigFileException;
+import com.azeem.avisos.node.framework.ConfigLoader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -22,9 +23,11 @@ public class ConfigLoaderTest {
   private static final UUID DEFAULT_NODE_ID =
       UUID.fromString("00000000-0000-0000-0000-000000000000");
 
+  private final ConfigLoader configLoader = new ConfigLoader();
+
   @Test
   void shouldLoadYamlConfig() {
-    AppConfig config = ConfigLoader.load();
+    AppConfig config = configLoader.loadAppConfig();
 
     assertEquals(DEFAULT_NODE_ID, config.node().nodeId());
     assertEquals("unassigned-node", config.node().name());
@@ -42,7 +45,7 @@ public class ConfigLoaderTest {
             "NODE_NAME", "edge-node-01",
             "NODE_TYPE", "environment-monitor");
 
-    AppConfig config = ConfigLoader.load(yamlStream(), environment::get);
+    AppConfig config = configLoader.load(yamlStream(), environment::get);
 
     assertEquals("edge-node-01", config.node().name());
     assertEquals("environment-monitor", config.node().type());
@@ -52,14 +55,15 @@ public class ConfigLoaderTest {
 
   @Test
   void shouldThrowWhenYamlMissing() {
-    assertThrows(MissingConfigFileException.class, () -> ConfigLoader.load(null, key -> null));
+    assertThrows(
+        MissingConfigFileException.class, () -> configLoader.load(null, key -> null));
   }
 
   @Test
   void shouldReturnFallbackWhenEnvMissing() {
     Function<String, String> emptyEnvironment = key -> null;
 
-    AppConfig config = ConfigLoader.load(yamlStream(), emptyEnvironment);
+    AppConfig config = configLoader.load(yamlStream(), emptyEnvironment);
 
     assertEquals("yaml-node", config.node().name());
     assertEquals("sensor", config.node().type());

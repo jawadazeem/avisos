@@ -10,7 +10,9 @@ import com.azeem.avisos.controller.repository.AlarmRepository;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
+@Service
 public class AlarmService {
   private static final Logger log = LoggerFactory.getLogger(AlarmService.class);
   AlarmRepository alarmRepository;

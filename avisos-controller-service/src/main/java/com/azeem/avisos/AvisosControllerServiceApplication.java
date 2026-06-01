@@ -5,14 +5,18 @@
 
 package com.azeem.avisos;
 
-import com.azeem.avisos.controller.framework.AppLifeCycle;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
-/** Uses the AppLifeCycle from DIY framework to initialize and run the Avisos Application */
+/** Spring Boot entry point for the Avisos Controller Service. */
+@SpringBootApplication(
+    scanBasePackages = "com.azeem.avisos.controller",
+    exclude = DataSourceAutoConfiguration.class)
+@EnableConfigurationProperties
 public class AvisosControllerServiceApplication {
-  void main() {
-    AppLifeCycle lifecycle = new AppLifeCycle();
-    lifecycle.init();
-
-    Runtime.getRuntime().addShutdownHook(new Thread(lifecycle::close));
+  public static void main(String[] args) {
+    SpringApplication.run(AvisosControllerServiceApplication.class, args);
   }
 }

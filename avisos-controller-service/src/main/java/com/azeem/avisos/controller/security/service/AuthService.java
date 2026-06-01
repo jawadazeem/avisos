@@ -13,12 +13,14 @@ import de.mkammerer.argon2.Argon2Factory;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 /**
  * Service class responsible for handling user authentication, password hashing, and user
  * management. It uses the Argon2 algorithm for secure password hashing and interacts with the
  * AuthRepository for data persistence.
  */
+@Service
 public class AuthService {
   private static final Logger log = LoggerFactory.getLogger(AuthService.class);
   private final AuthRepository authRepo;

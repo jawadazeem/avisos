@@ -28,11 +28,13 @@ import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /**
  * Handles raw MQTT data (IngressMessage) and deserializes it into TelemetryPacketDto for processing
  * by the Vision and Alarm services.
  */
+@Component
 public class TelemetryIngressHandler implements IngressDataHandler<IngressMessage> {
   private static final Logger log = LoggerFactory.getLogger(TelemetryIngressHandler.class);
   private static final String TELEMETRY_NODE_TYPE = "MQTT_TELEMETRY_NODE";

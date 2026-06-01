@@ -3,8 +3,11 @@
  * Apache 2.0 License
  */
 
-package com.azeem.avisos.node.config;
+package com.azeem.avisos.node.framework;
 
+import com.azeem.avisos.node.config.AppConfig;
+import com.azeem.avisos.node.config.MqttConfig;
+import com.azeem.avisos.node.config.NodeConfig;
 import com.azeem.avisos.node.exception.MissingConfigFileException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
@@ -15,48 +18,41 @@ import java.io.InputStream;
 import java.util.function.Function;
 
 /**
- * Loads and resolves application configuration.
+ * Loads and resolves application configuration from YAML with environment variable overrides.
  *
- * <p>Configuration is loaded from the bundled {@code application.yml} resource and then overridden
- * by environment variables when present.
+ * <p>This is the node-service adaptation of the DIY ConfigLoader originally built for the controller
+ * service. It supports both a production path (reads from classpath, resolves via {@code
+ * System.getenv}) and a testable path (accepts an {@code InputStream} and env resolver function).
  */
-public final class ConfigLoader {
+public class ConfigLoader {
 
-  /** Prevents instantiation. */
-  private ConfigLoader() {}
+  private final ObjectMapper ymlMapper;
 
-  /**
-   * Loads the application configuration.
-   *
-   * @return fully resolved application configuration
-   */
-  public static AppConfig load() {
-    return load(ConfigLoader.class.getResourceAsStream("/application.yml"), System::getenv);
+  public ConfigLoader() {
+    ymlMapper = new ObjectMapper(new YAMLFactory());
+    ymlMapper.registerModule(new JavaTimeModule());
+    ymlMapper.setPropertyNamingStrategy(PropertyNamingStrategies.KEBAB_CASE);
+  }
+
+  /** Production entry point -- loads from classpath and resolves env vars via System.getenv. */
+  public AppConfig loadAppConfig() {
+    return load(getClass().getResourceAsStream("/application.yml"), System::getenv);
   }
 
   /**
-   * Loads configuration using the provided configuration stream and environment resolver.
-   *
-   * <p>Intended for internal use and testing.
+   * Testable entry point -- loads from the given stream using the provided environment resolver.
    *
    * @param input configuration input stream
    * @param environment environment variable resolver
    * @return resolved application configuration
    */
-  static AppConfig load(InputStream input, Function<String, String> environment) {
-    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-
-    mapper.registerModule(new JavaTimeModule());
-    mapper.setPropertyNamingStrategy(PropertyNamingStrategies.KEBAB_CASE);
-
+  AppConfig load(InputStream input, Function<String, String> environment) {
     try (input) {
-
       if (input == null) {
         throw new MissingConfigFileException("Missing application.yml configuration file");
       }
 
-      AppConfig baseConfig = mapper.readValue(input, AppConfig.class);
-
+      AppConfig baseConfig = ymlMapper.readValue(input, AppConfig.class);
       return overrideWithEnvironment(baseConfig, environment);
 
     } catch (IOException e) {
@@ -64,12 +60,6 @@ public final class ConfigLoader {
     }
   }
 
-  /**
-   * Applies environment variable overrides to the base configuration.
-   *
-   * @param config the base YAML configuration
-   * @return resolved configuration with environment overrides
-   */
   private static AppConfig overrideWithEnvironment(
       AppConfig config, Function<String, String> environment) {
 

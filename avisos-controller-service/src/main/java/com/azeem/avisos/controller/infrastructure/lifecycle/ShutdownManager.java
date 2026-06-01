@@ -5,12 +5,15 @@
 
 package com.azeem.avisos.controller.infrastructure.lifecycle;
 
+import jakarta.annotation.PreDestroy;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /** Manages the "Exit Strategy" for the Controller. */
+@Component
 public class ShutdownManager {
   private static final Logger log = LoggerFactory.getLogger(ShutdownManager.class);
   private final List<Runnable> shutdownTasks = new CopyOnWriteArrayList<>();
@@ -20,6 +23,7 @@ public class ShutdownManager {
     return this;
   }
 
+  @PreDestroy
   public void initiate() {
     log.info("Commencing graceful shutdown of Avisos Controller...");
     for (Runnable task : shutdownTasks) {

@@ -5,4 +5,7 @@
 
 package com.azeem.avisos.controller.service.notification;
 
+import org.springframework.stereotype.Service;
+
+@Service
 public class SnsService implements NotificationService {}

@@ -20,11 +20,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 /**
  * Simple in-memory implementation of {@link NodeService}. Handles heartbeat tracking, stale node
  * cleanup, caching, and basic operational metrics.
  */
+@Service
 public class SimpleNodeService implements NodeService {
 
   private static final Logger log = LoggerFactory.getLogger(SimpleNodeService.class);

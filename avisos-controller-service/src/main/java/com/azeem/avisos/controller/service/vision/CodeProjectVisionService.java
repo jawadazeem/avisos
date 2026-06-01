@@ -8,11 +8,13 @@ package com.azeem.avisos.controller.service.vision;
 import com.azeem.avisos.controller.infrastructure.vision.VisionClient;
 import com.azeem.avisos.controller.model.vision.VisionRequest;
 import com.azeem.avisos.controller.model.vision.VisionResponse;
+import org.springframework.stereotype.Service;
 
 /**
  * This class implements the VisionService interface and uses a VisionClient to send requests to the
  * vision service.
  */
+@Service
 public class CodeProjectVisionService implements VisionService {
   private final VisionClient visionClient;
 

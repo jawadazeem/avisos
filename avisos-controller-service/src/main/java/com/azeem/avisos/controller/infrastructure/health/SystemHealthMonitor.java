@@ -11,7 +11,10 @@ import java.util.List;
 import java.util.concurrent.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
+@Component
 public class SystemHealthMonitor {
 
   private static final Logger log = LoggerFactory.getLogger(SystemHealthMonitor.class);
@@ -25,7 +28,8 @@ public class SystemHealthMonitor {
   private static final long DISK_THRESHOLD_BYTES = 100L * 1024 * 1024; // 100MB
   private static final long DB_TIMEOUT_MS = 500;
 
-  public SystemHealthMonitor(DatabaseHealthCheck dbHealthCheck, ExecutorService executor) {
+  public SystemHealthMonitor(
+      DatabaseHealthCheck dbHealthCheck, @Qualifier("healthExecutor") ExecutorService executor) {
     this.dbHealthCheck = dbHealthCheck;
     this.executor = executor;
   }

@@ -5,22 +5,13 @@
 
 package com.azeem.avisos.node;
 
-import com.azeem.avisos.node.config.AppConfig;
-import com.azeem.avisos.node.config.ConfigLoader;
-import com.azeem.avisos.node.hardware.BatteryProvider;
-import com.azeem.avisos.node.network.api.MqttProvider;
-import com.azeem.avisos.node.network.impl.PahoMqttProvider;
-import com.azeem.avisos.node.service.HeartbeatService;
+import com.azeem.avisos.node.framework.AppLifeCycle;
 import com.azeem.avisos.node.service.NodeRuntime;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
 
 public final class NodeApplication {
 
-  private NodeApplication() {
-  }
+  private NodeApplication() {}
 
   /**
    * Application entry point.
@@ -28,25 +19,17 @@ public final class NodeApplication {
    * @param args command-line startup arguments
    */
   public static void main(String[] args) throws InterruptedException {
-    AppConfig config = ConfigLoader.load();
-    BatteryProvider batteryProvider = new BatteryProvider();
-    MqttProvider mqttProvider = new PahoMqttProvider(config.mqtt(), config.node());
-    ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
-    HeartbeatService heartbeatService = new HeartbeatService(
-        mqttProvider, batteryProvider, config.mqtt(), config.node(), objectMapper);
-    NodeRuntime runtime = new NodeRuntime(
-        config,
-        mqttProvider,
-        heartbeatService,
-        batteryProvider,
-        Executors.newVirtualThreadPerTaskExecutor());
+    AppLifeCycle lifecycle = new AppLifeCycle();
+    lifecycle.init();
+
+    NodeRuntime runtime = lifecycle.getRuntime();
     CountDownLatch shutdownLatch = new CountDownLatch(1);
 
     Runtime.getRuntime()
         .addShutdownHook(
             new Thread(
                 () -> {
-                  runtime.stop();
+                  lifecycle.close();
                   shutdownLatch.countDown();
                 },
                 "avisos-node-shutdown"));
