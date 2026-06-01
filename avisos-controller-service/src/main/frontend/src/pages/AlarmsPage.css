@@ -1,0 +1,35 @@
+.alarms-page {
+  height: 100%;
+}
+
+.row-critical {
+  animation: critical-pulse 2s infinite;
+}
+
+@keyframes critical-pulse {
+  0%, 100% { background: transparent; }
+  50% { background: rgba(255, 51, 51, 0.05); }
+}
+
+.alarm-reason {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resolve-btn {
+  background: transparent;
+  color: var(--accent-green);
+  border: 1px solid var(--accent-green);
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.resolve-btn:hover {
+  background: rgba(0, 255, 136, 0.1);
+}

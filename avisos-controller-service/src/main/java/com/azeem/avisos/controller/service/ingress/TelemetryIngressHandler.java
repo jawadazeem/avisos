@@ -21,6 +21,9 @@ import com.azeem.avisos.controller.service.alarm.AlarmService;
 import com.azeem.avisos.controller.service.node.NodeService;
 import com.azeem.avisos.controller.service.threat.ThreatDetector;
 import com.azeem.avisos.controller.service.vision.VisionService;
+import com.azeem.avisos.controller.web.event.AlarmCreatedEvent;
+import com.azeem.avisos.controller.web.event.NodeHeartbeatEvent;
+import com.azeem.avisos.controller.web.event.VisionAnalysisEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -28,6 +31,7 @@ import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 /**
@@ -44,6 +48,7 @@ public class TelemetryIngressHandler implements IngressDataHandler<IngressMessag
   private final VisionService visionService;
   private final VisionConfig visionConfig;
   private final ObjectMapper objectMapper;
+  private final ApplicationEventPublisher eventPublisher;
 
   public TelemetryIngressHandler(
       NodeService deviceService,
@@ -51,13 +56,15 @@ public class TelemetryIngressHandler implements IngressDataHandler<IngressMessag
       VisionService visionService,
       VisionConfig visionConfig,
       ThreatDetector threatDetector,
-      ObjectMapper objectMapper) {
+      ObjectMapper objectMapper,
+      ApplicationEventPublisher eventPublisher) {
     this.deviceService = deviceService;
     this.alarmService = alarmService;
     this.visionConfig = visionConfig;
     this.visionService = visionService;
     this.threatDetector = threatDetector;
     this.objectMapper = objectMapper;
+    this.eventPublisher = eventPublisher;
   }
 
   @Override
@@ -79,15 +86,17 @@ public class TelemetryIngressHandler implements IngressDataHandler<IngressMessag
       return;
     }
 
-    deviceService.updateNodeHeartbeat(
+    NodeRecord nodeRecord =
         new NodeRecord(
             packet.nodeId(),
             packet.nodeName(),
             TELEMETRY_NODE_TYPE,
             NodeStatus.RESPONSIVE,
             packet.batteryLevel(),
-            LocalDateTime.now()));
+            LocalDateTime.now());
+    deviceService.updateNodeHeartbeat(nodeRecord);
     deviceService.registerHeartbeat(packet.nodeId());
+    eventPublisher.publishEvent(new NodeHeartbeatEvent(this, nodeRecord));
     if (packet.type() == PacketTypeDto.HEARTBEAT) {
       log.info(
           "Heartbeat registered for device {} batteryLevel={}%",
@@ -103,6 +112,8 @@ public class TelemetryIngressHandler implements IngressDataHandler<IngressMessag
                   UUID.randomUUID().toString(),
                   visionConfig.minConfidence(),
                   packet.nodeId().toString()));
+      eventPublisher.publishEvent(
+          new VisionAnalysisEvent(this, visionResponse, packet.nodeId()));
 
       List<String> labels =
           visionResponse.predictions() != null
@@ -113,7 +124,7 @@ public class TelemetryIngressHandler implements IngressDataHandler<IngressMessag
 
       String formattedLabels = formatLabelsForAlarm(labels);
       if (severity != AlarmSeverity.NONE) {
-        alarmService.save(
+        AlarmRecord alarm =
             new AlarmRecord(
                 UUID.randomUUID(),
                 packet.nodeId(),
@@ -121,7 +132,9 @@ public class TelemetryIngressHandler implements IngressDataHandler<IngressMessag
                 formattedLabels,
                 AlarmStatus.ACTIVE,
                 LocalDateTime.now(),
-                null));
+                null);
+        alarmService.save(alarm);
+        eventPublisher.publishEvent(new AlarmCreatedEvent(this, alarm));
       }
 
       log.info(

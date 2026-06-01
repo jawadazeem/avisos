@@ -1,0 +1,97 @@
+.nodes-page {
+  height: 100%;
+}
+
+.page-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+  letter-spacing: 1px;
+}
+
+.page-error {
+  color: var(--accent-red);
+  padding: 20px;
+}
+
+.scada-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.scada-table thead {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.scada-table th {
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.scada-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(30, 42, 58, 0.5);
+  color: var(--text-secondary);
+}
+
+.scada-table tbody tr:hover {
+  background: rgba(0, 255, 136, 0.03);
+}
+
+.node-name {
+  color: var(--accent-cyan);
+  font-weight: 500;
+}
+
+.uuid {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.timestamp {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.empty-row {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 40px 12px !important;
+}
+
+.battery-bar-container {
+  position: relative;
+  width: 80px;
+  height: 16px;
+  background: var(--bg-tertiary);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.battery-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.battery-green { background: var(--accent-green); opacity: 0.7; }
+.battery-amber { background: var(--accent-amber); opacity: 0.7; }
+.battery-red { background: var(--accent-red); opacity: 0.7; }
+
+.battery-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 9px;
+  font-weight: 500;
+  color: #fff;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+}

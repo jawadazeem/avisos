@@ -1,0 +1,33 @@
+.status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.badge-green {
+  color: var(--accent-green);
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.badge-amber {
+  color: var(--accent-amber);
+  background: rgba(255, 179, 0, 0.1);
+  border: 1px solid rgba(255, 179, 0, 0.2);
+}
+
+.badge-red {
+  color: var(--accent-red);
+  background: rgba(255, 51, 51, 0.1);
+  border: 1px solid rgba(255, 51, 51, 0.2);
+}
+
+.badge-muted {
+  color: var(--text-muted);
+  background: rgba(85, 102, 119, 0.1);
+  border: 1px solid rgba(85, 102, 119, 0.2);
+}

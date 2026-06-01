@@ -1,0 +1,66 @@
+export type NodeStatus = "RESPONSIVE" | "UNRESPONSIVE" | "OFFLINE";
+
+export interface NodeRecord {
+  uuid: string;
+  name: string;
+  type: string;
+  status: NodeStatus;
+  batteryLevel: number;
+  lastSeen: string;
+}
+
+export type AlarmSeverity = "CRITICAL" | "WARNING" | "NONE";
+export type AlarmStatus = "ACTIVE" | "RESOLVED";
+
+export interface AlarmRecord {
+  id: string;
+  deviceUuid: string;
+  severity: AlarmSeverity;
+  reason: string;
+  status: AlarmStatus;
+  triggeredAtTimestamp: string;
+  resolvedAtTimestamp: string | null;
+}
+
+export type HealthStatusLevel = "HEALTHY" | "DEGRADED" | "UNHEALTHY";
+
+export interface ComponentHealth {
+  component: string;
+  status: HealthStatusLevel;
+  message: string;
+  latencyMs: number;
+}
+
+export interface SystemHealthReport {
+  overallStatus: HealthStatusLevel;
+  components: ComponentHealth[];
+}
+
+export interface SystemStats {
+  heapUsedMb: number;
+  heapMaxMb: number;
+  availableProcessors: number;
+  activeThreads: number;
+  uptimeSeconds: number;
+  javaVersion: string;
+}
+
+export interface SystemAbout {
+  name: string;
+  description: string;
+  version: string;
+  architecture: string;
+}
+
+export interface CliResponse {
+  command: string;
+  output: string;
+  executionMs: number;
+}
+
+export interface VisionEvent {
+  nodeId: string;
+  response: {
+    predictions: { label: string; confidence: number }[];
+  };
+}
