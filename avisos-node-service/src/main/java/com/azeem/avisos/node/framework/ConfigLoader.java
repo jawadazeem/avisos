@@ -20,8 +20,8 @@ import java.util.function.Function;
 /**
  * Loads and resolves application configuration from YAML with environment variable overrides.
  *
- * <p>This is the node-service adaptation of the DIY ConfigLoader originally built for the controller
- * service. It supports both a production path (reads from classpath, resolves via {@code
+ * <p>This is the node-service adaptation of the DIY ConfigLoader originally built for the
+ * controller service. It supports both a production path (reads from classpath, resolves via {@code
  * System.getenv}) and a testable path (accepts an {@code InputStream} and env resolver function).
  */
 public class ConfigLoader {

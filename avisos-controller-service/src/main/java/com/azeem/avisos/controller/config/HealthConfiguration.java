@@ -12,7 +12,9 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** Health monitoring infrastructure: virtual thread executor and periodic health check scheduler. */
+/**
+ * Health monitoring infrastructure: virtual thread executor and periodic health check scheduler.
+ */
 @Configuration
 public class HealthConfiguration {
 

@@ -37,8 +37,14 @@ class AlarmControllerTest {
   @Test
   void getActiveAlarms_shouldDelegateToService() {
     AlarmRecord alarm =
-        new AlarmRecord(UUID.randomUUID(), UUID.randomUUID(), AlarmSeverity.CRITICAL, "threat",
-            AlarmStatus.ACTIVE, LocalDateTime.now(), null);
+        new AlarmRecord(
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            AlarmSeverity.CRITICAL,
+            "threat",
+            AlarmStatus.ACTIVE,
+            LocalDateTime.now(),
+            null);
     when(alarmService.loadAllActiveAlarms()).thenReturn(List.of(alarm));
 
     List<AlarmRecord> result = alarmController.getActiveAlarms();

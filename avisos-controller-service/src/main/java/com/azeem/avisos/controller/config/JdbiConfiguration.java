@@ -19,10 +19,7 @@ import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Replaces {@code JdbiProvider} -- creates the DataSource, Jdbi, and all JDBI
- * repositories.
- */
+/** Replaces {@code JdbiProvider} -- creates the DataSource, Jdbi, and all JDBI repositories. */
 @Configuration
 public class JdbiConfiguration {
 

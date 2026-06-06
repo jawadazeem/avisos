@@ -50,7 +50,7 @@ class ReactiveBufferManagerTest {
   void enqueue_shouldAcceptDataWhenRunning() {
     bufferManager.start();
 
-    bufferManager.enqueue(new byte[]{1, 2, 3});
+    bufferManager.enqueue(new byte[] {1, 2, 3});
 
     assertEquals(1, bufferManager.size());
     assertEquals(1, bufferManager.getAccepted());
@@ -59,7 +59,7 @@ class ReactiveBufferManagerTest {
 
   @Test
   void enqueue_shouldDiscardDataWhenNotRunning() {
-    bufferManager.enqueue(new byte[]{1, 2, 3});
+    bufferManager.enqueue(new byte[] {1, 2, 3});
 
     assertEquals(0, bufferManager.size());
     assertEquals(0, bufferManager.getAccepted());
@@ -68,7 +68,7 @@ class ReactiveBufferManagerTest {
   @Test
   void drain_shouldPublishBufferedMessages() throws Exception {
     bufferManager.start();
-    bufferManager.enqueue(new byte[]{10, 20});
+    bufferManager.enqueue(new byte[] {10, 20});
 
     bufferManager.drain();
 
@@ -89,7 +89,7 @@ class ReactiveBufferManagerTest {
   @Test
   void drain_shouldNotDrainWhenStopped() {
     bufferManager.start();
-    bufferManager.enqueue(new byte[]{1});
+    bufferManager.enqueue(new byte[] {1});
     bufferManager.stop();
 
     bufferManager.drain();
@@ -103,7 +103,7 @@ class ReactiveBufferManagerTest {
     bufferManager.start();
     bufferManager.stop();
 
-    bufferManager.enqueue(new byte[]{1, 2, 3});
+    bufferManager.enqueue(new byte[] {1, 2, 3});
 
     assertEquals(0, bufferManager.size());
   }
@@ -113,7 +113,7 @@ class ReactiveBufferManagerTest {
     bufferManager.start();
     bufferManager.start();
 
-    bufferManager.enqueue(new byte[]{1});
+    bufferManager.enqueue(new byte[] {1});
     assertEquals(1, bufferManager.getAccepted());
   }
 
@@ -121,9 +121,9 @@ class ReactiveBufferManagerTest {
   void metrics_shouldTrackAcceptedCount() {
     bufferManager.start();
 
-    bufferManager.enqueue(new byte[]{1});
-    bufferManager.enqueue(new byte[]{2});
-    bufferManager.enqueue(new byte[]{3});
+    bufferManager.enqueue(new byte[] {1});
+    bufferManager.enqueue(new byte[] {2});
+    bufferManager.enqueue(new byte[] {3});
 
     assertEquals(3, bufferManager.getAccepted());
     assertEquals(0, bufferManager.getDropped());
@@ -134,8 +134,8 @@ class ReactiveBufferManagerTest {
     bufferManager.start();
     assertEquals(0, bufferManager.size());
 
-    bufferManager.enqueue(new byte[]{1});
-    bufferManager.enqueue(new byte[]{2});
+    bufferManager.enqueue(new byte[] {1});
+    bufferManager.enqueue(new byte[] {2});
 
     assertEquals(2, bufferManager.size());
   }
@@ -143,7 +143,7 @@ class ReactiveBufferManagerTest {
   @Test
   void metrics_shouldTrackPublishedOnSuccess() throws Exception {
     bufferManager.start();
-    bufferManager.enqueue(new byte[]{1});
+    bufferManager.enqueue(new byte[] {1});
 
     bufferManager.drain();
     Thread.sleep(200);
@@ -154,10 +154,11 @@ class ReactiveBufferManagerTest {
 
   @Test
   void metrics_shouldTrackFailuresOnPublishError() throws Exception {
-    doThrow(new RuntimeException("broker down")).when(mqttProvider)
+    doThrow(new RuntimeException("broker down"))
+        .when(mqttProvider)
         .publish(anyString(), any(byte[].class));
     bufferManager.start();
-    bufferManager.enqueue(new byte[]{1});
+    bufferManager.enqueue(new byte[] {1});
 
     bufferManager.drain();
     Thread.sleep(200);

@@ -55,8 +55,7 @@ public class ConfigLoaderTest {
 
   @Test
   void shouldThrowWhenYamlMissing() {
-    assertThrows(
-        MissingConfigFileException.class, () -> configLoader.load(null, key -> null));
+    assertThrows(MissingConfigFileException.class, () -> configLoader.load(null, key -> null));
   }
 
   @Test

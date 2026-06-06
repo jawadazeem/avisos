@@ -112,8 +112,7 @@ public class TelemetryIngressHandler implements IngressDataHandler<IngressMessag
                   UUID.randomUUID().toString(),
                   visionConfig.minConfidence(),
                   packet.nodeId().toString()));
-      eventPublisher.publishEvent(
-          new VisionAnalysisEvent(this, visionResponse, packet.nodeId()));
+      eventPublisher.publishEvent(new VisionAnalysisEvent(this, visionResponse, packet.nodeId()));
 
       List<String> labels =
           visionResponse.predictions() != null

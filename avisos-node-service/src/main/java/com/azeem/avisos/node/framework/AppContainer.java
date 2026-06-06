@@ -33,7 +33,8 @@ public class AppContainer {
   }
 
   /**
-   * Always use this method as opposed to directly inserting into the registry to ensure type safety.
+   * Always use this method as opposed to directly inserting into the registry to ensure type
+   * safety.
    */
   public <T> void put(Class<? super T> type, T instance) {
     registry.put(type, instance);

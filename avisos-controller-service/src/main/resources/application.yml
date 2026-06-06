@@ -1,28 +1,28 @@
 server:
-  port: 8080
+    port: 8083
 
 management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
+    endpoints:
+        web:
+            exposure:
+                include: health,info,metrics
 
 avisos:
-  cli:
-    enabled: false
-  mqtt:
-    controller-client-id: "avisos-controller"
-    broker: "tcp://localhost:1883"
-    topic: "avisos/alerts"
-    connection-timeout: 10
-    clean-session: false
-    automatic-reconnect: true
-  node-service:
-    stale-threshold: 60
-    min-heartbeat-interval-ms: 2000
-  vision:
-    api-url: "http://localhost:32168/v1/vision/detection"
-    min-confidence: 0.70
-    timeout-seconds: 5
-  database:
-    url: "jdbc:sqlite:avisos.db"
+    cli:
+        enabled: false
+    mqtt:
+        controller-client-id: "avisos-controller"
+        broker: "tcp://localhost:1883"
+        topic: "avisos/alerts"
+        connection-timeout: 10
+        clean-session: false
+        automatic-reconnect: true
+    node-service:
+        stale-threshold: 60
+        min-heartbeat-interval-ms: 2000
+    vision:
+        api-url: "http://localhost:32168/v1/vision/detection"
+        min-confidence: 0.70
+        timeout-seconds: 5
+    database:
+        url: "jdbc:sqlite:avisos.db"

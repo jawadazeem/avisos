@@ -100,7 +100,8 @@ class HeartbeatServiceTest {
   @Test
   void sendTelemetry_shouldNotThrowOnPublishFailure() {
     when(batteryProvider.getBatteryLevel()).thenReturn(60.0);
-    doThrow(new RuntimeException("Connection lost")).when(mqttProvider)
+    doThrow(new RuntimeException("Connection lost"))
+        .when(mqttProvider)
         .publish(anyString(), any(byte[].class));
 
     assertDoesNotThrow(() -> heartbeatService.sendTelemetry());

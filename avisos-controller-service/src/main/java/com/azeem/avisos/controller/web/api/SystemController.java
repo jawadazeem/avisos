@@ -36,8 +36,9 @@ public class SystemController {
   public Map<String, String> getAbout() {
     return Map.of(
         "name", "AVISOS",
+        "author", "Jawad Azeem",
         "description", "Advanced Visual Infrastructure Secure Operational Systems",
-        "version", "1.0-SNAPSHOT",
+        "version", "1.0",
         "architecture", "Spring Boot 3.4.1 + MQTT + Protobuf + SQLite");
   }
 }

@@ -1,85 +1,95 @@
 services:
-  controller:
-    build:
-      context: .
-      dockerfile: controller.Dockerfile
-    image: avisos-controller:latest
-    container_name: avisos-controller
-    networks:
-      - avisos-net
-    ports:
-      - "8080:8080"
-    environment:
-      - MQTT_BROKER_URL=tcp://mosquitto:1883
-      - MQTT_TOPIC=avisos/telemetry
-      - VISION_API_URL=http://vision-api:32168/v1/vision/detection
-      - DATABASE_URL=jdbc:sqlite:/app/data/avisos.db
-      - AVISOS_CLI_ENABLED=false
-    volumes:
-      - ./data:/app/data
-      - ./logs:/app/logs
-    depends_on:
-      - mosquitto
-      - vision-api
-    restart: unless-stopped
+    controller:
+        build:
+            context: .
+            dockerfile: controller.Dockerfile
+        image: avisos-controller:latest
+        container_name: avisos-controller
+        networks:
+            - avisos-net
+        ports:
+            - "8083:8083"
+        environment:
+            - MQTT_BROKER_URL=tcp://mosquitto:1883
+            - MQTT_TOPIC=avisos/telemetry
+            - VISION_API_URL=http://vision-api:32168/v1/vision/detection
+            - DATABASE_URL=jdbc:sqlite:/app/data/avisos.db
+            - AVISOS_CLI_ENABLED=false
+        volumes:
+            - ./data:/app/data
+            - ./logs:/app/logs
+        depends_on:
+            - mosquitto
+            - vision-api
+        restart: unless-stopped
 
-  node-01:
-    build:
-      context: .
-      dockerfile: node.Dockerfile
-    container_name: avisos-node-01
-    networks:
-      - avisos-net
-    environment:
-      - MQTT_BROKER_URL=tcp://mosquitto:1883
-      - MQTT_TOPIC=avisos/telemetry
-      - NODE_NAME=avisos-node-01
-      - NODE_TYPE=data-acquisition-device
-    depends_on:
-      - mosquitto
-    restart: unless-stopped
+    node-01:
+        build:
+            context: .
+            dockerfile: node.Dockerfile
+        container_name: avisos-node-01
+        networks:
+            - avisos-net
+        environment:
+            - MQTT_BROKER_URL=tcp://mosquitto:1883
+            - MQTT_TOPIC=avisos/telemetry
+            - NODE_NAME=avisos-node-01
+            - NODE_TYPE=data-acquisition-device
+        depends_on:
+            - mosquitto
+        restart: unless-stopped
 
-  mosquitto:
-    image: eclipse-mosquitto:latest
-    container_name: avisos-broker
-    networks:
-      - avisos-net
-    ports:
-      - "1883:1883"
-    volumes:
-      - ./mosquitto/config:/mosquitto/config
-      - ./mosquitto/data:/mosquitto/data
-      - ./mosquitto/log:/mosquitto/log
+    hardware-simulator:
+        build: ./avisos-hardware-simulator
+        depends_on:
+        - node-service
+        environment:
+        - TARGET_NODE_URL=http://node-service:5000/api/hardware-feed
+        - SIMULATION_INTERVAL_MS=2000
+        networks:
+        - avisos-network
 
-  localstack:
-    image: localstack/localstack:3
-    container_name: avisos-cloud
-    networks:
-      - avisos-net
-    ports:
-      - "4567:4566"
-    environment:
-      - SERVICES=sns
-      - DEFAULT_REGION=us-east-1
-      - DOCKER_HOST=unix:///var/run/docker.sock
-      - LOCALSTACK_AUTH_TOKEN=
-      - LOCALSTACK_API_KEY=
-      - LOCALSTACK_SKIP_LICENSE_CHECK=1
-    volumes:
-      - "./localstack:/var/lib/localstack"
-      - "/var/run/docker.sock:/var/run/docker.sock"
+    mosquitto:
+        image: eclipse-mosquitto:latest
+        container_name: avisos-broker
+        networks:
+            - avisos-net
+        ports:
+            - "1883:1883"
+        volumes:
+            - ./mosquitto/config:/mosquitto/config
+            - ./mosquitto/data:/mosquitto/data
+            - ./mosquitto/log:/mosquitto/log
 
-  vision-api:
-    platform: linux/amd64
-    image: codeproject/ai-server
-    container_name: avisos-VisionRequest
-    networks:
-      - avisos-net
-    ports:
-      - "32168:32168"
-    environment:
-      - VISION-DETECTION=True
+    localstack:
+        image: localstack/localstack:3
+        container_name: avisos-cloud
+        networks:
+            - avisos-net
+        ports:
+            - "4567:4566"
+        environment:
+            - SERVICES=sns
+            - DEFAULT_REGION=us-east-1
+            - DOCKER_HOST=unix:///var/run/docker.sock
+            - LOCALSTACK_AUTH_TOKEN=
+            - LOCALSTACK_API_KEY=
+            - LOCALSTACK_SKIP_LICENSE_CHECK=1
+        volumes:
+            - "./localstack:/var/lib/localstack"
+            - "/var/run/docker.sock:/var/run/docker.sock"
+
+    vision-api:
+        platform: linux/amd64
+        image: codeproject/ai-server
+        container_name: avisos-VisionRequest
+        networks:
+            - avisos-net
+        ports:
+            - "32168:32168"
+        environment:
+            - VISION-DETECTION=True
 
 networks:
-  avisos-net:
-    driver: bridge
+    avisos-net:
+        driver: bridge

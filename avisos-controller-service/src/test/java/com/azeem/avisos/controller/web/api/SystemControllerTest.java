@@ -57,8 +57,8 @@ class SystemControllerTest {
     Map<String, String> about = systemController.getAbout();
 
     assertEquals("AVISOS", about.get("name"));
-    assertEquals("Advanced Visual Infrastructure Secure Operational Systems",
-        about.get("description"));
+    assertEquals(
+        "Advanced Visual Infrastructure Secure Operational Systems", about.get("description"));
     assertEquals("1.0-SNAPSHOT", about.get("version"));
     assertTrue(about.get("architecture").contains("Spring Boot"));
   }

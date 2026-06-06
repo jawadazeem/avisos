@@ -38,7 +38,12 @@ class NodeControllerTest {
   void setUp() {
     nodeId = UUID.randomUUID();
     sampleNode =
-        new NodeRecord(nodeId, "node-01", "MQTT_TELEMETRY_NODE", NodeStatus.RESPONSIVE, 85.0,
+        new NodeRecord(
+            nodeId,
+            "node-01",
+            "MQTT_TELEMETRY_NODE",
+            NodeStatus.RESPONSIVE,
+            85.0,
             LocalDateTime.now());
   }
 

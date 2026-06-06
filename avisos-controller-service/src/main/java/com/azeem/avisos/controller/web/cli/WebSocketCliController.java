@@ -7,7 +7,6 @@ package com.azeem.avisos.controller.web.cli;
 
 import com.azeem.avisos.controller.config.NodeServiceConfig;
 import com.azeem.avisos.controller.infrastructure.cli.BufferingCliClient;
-import com.azeem.avisos.controller.infrastructure.cli.command.CommandRegistry;
 import com.azeem.avisos.controller.infrastructure.cli.command.InMemoryCommandRegistry;
 import com.azeem.avisos.controller.infrastructure.health.SystemHealthMonitor;
 import com.azeem.avisos.controller.service.alarm.AlarmService;

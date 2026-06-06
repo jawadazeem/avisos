@@ -11,9 +11,9 @@
  * <ul>
  *   <li>{@code api/} &mdash; interfaces ({@code MqttProvider}, {@code BufferManager}) that decouple
  *       business logic from transport implementation.
- *   <li>{@code impl/} &mdash; concrete implementations: {@code PahoMqttProvider} (Eclipse Paho
- *       MQTT client with QoS 1, auto-reconnect) and {@code ReactiveBufferManager} (bounded
- *       in-memory queue with backpressure, scheduled draining every 40 ms, and retry logic).
+ *   <li>{@code impl/} &mdash; concrete implementations: {@code PahoMqttProvider} (Eclipse Paho MQTT
+ *       client with QoS 1, auto-reconnect) and {@code ReactiveBufferManager} (bounded in-memory
+ *       queue with backpressure, scheduled draining every 40 ms, and retry logic).
  * </ul>
  *
  * <p>The reactive buffer provides resilience for unreliable networks: when the buffer fills (5000

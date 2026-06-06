@@ -7,8 +7,8 @@ package com.azeem.avisos.controller.infrastructure.cli;
 
 /**
  * A non-interactive {@link CliClient} that captures all {@code println} output into a string
- * buffer. Designed for single-use: create a new instance per command execution, execute the command,
- * then call {@link #getOutput()} to retrieve the captured output.
+ * buffer. Designed for single-use: create a new instance per command execution, execute the
+ * command, then call {@link #getOutput()} to retrieve the captured output.
  *
  * <p>Interactive methods ({@code readLn}, {@code readPassword}) throw {@link
  * UnsupportedOperationException} since WebSocket CLI execution is non-interactive.

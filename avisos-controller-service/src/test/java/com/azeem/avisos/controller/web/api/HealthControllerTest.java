@@ -30,7 +30,8 @@ class HealthControllerTest {
   @Test
   void getHealth_shouldRefreshThenReturnReport() {
     SystemHealthReport report =
-        new SystemHealthReport(HealthStatusLevel.HEALTHY,
+        new SystemHealthReport(
+            HealthStatusLevel.HEALTHY,
             List.of(new ComponentHealth("database", HealthStatusLevel.HEALTHY, "OK", 5)));
     when(systemHealthMonitor.checkSystemHealth()).thenReturn(report);
 
@@ -46,7 +47,8 @@ class HealthControllerTest {
   @Test
   void getHealth_shouldReturnDegradedReport() {
     SystemHealthReport report =
-        new SystemHealthReport(HealthStatusLevel.DEGRADED,
+        new SystemHealthReport(
+            HealthStatusLevel.DEGRADED,
             List.of(
                 new ComponentHealth("database", HealthStatusLevel.HEALTHY, "OK", 3),
                 new ComponentHealth("storage", HealthStatusLevel.DEGRADED, "Low disk", 1)));

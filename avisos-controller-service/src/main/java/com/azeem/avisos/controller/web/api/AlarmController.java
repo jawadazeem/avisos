@@ -9,7 +9,6 @@ import com.azeem.avisos.controller.model.alarm.AlarmRecord;
 import com.azeem.avisos.controller.model.alarm.AlarmSeverity;
 import com.azeem.avisos.controller.model.alarm.AlarmStatus;
 import com.azeem.avisos.controller.service.alarm.AlarmService;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;

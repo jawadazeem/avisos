@@ -35,7 +35,6 @@ public class DashboardEventBroadcaster {
   @EventListener
   public void onVisionAnalysis(VisionAnalysisEvent event) {
     messagingTemplate.convertAndSend(
-        "/topic/vision",
-        Map.of("nodeId", event.getNodeId(), "response", event.getResponse()));
+        "/topic/vision", Map.of("nodeId", event.getNodeId(), "response", event.getResponse()));
   }
 }
