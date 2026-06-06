@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/** Manages edge node registration, heartbeat tracking, and lifecycle. */
 public interface NodeService {
   void updateNodeHeartbeat(NodeRecord nodeRecord);
 

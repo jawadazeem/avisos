@@ -19,9 +19,14 @@ mvn spotless:apply
 
 # Run the full stack via Docker
 docker compose up --build
+
+# Frontend dev server (hot reload, proxies to backend)
+cd avisos-controller-service/src/main/frontend && npm run dev
 ```
 
 Java 25 with `--enable-preview`. Requires Mockito agent for tests (auto-copied to `target/mockito-agent/` by maven-dependency-plugin).
+
+The React frontend is built automatically during `mvn install` via `frontend-maven-plugin` (installs Node v22, runs `npm install` + `npm run build`). Output goes to `src/main/resources/static/` and is served by Spring Boot.
 
 ## Project Structure
 
@@ -38,19 +43,26 @@ Spring Boot 3.4.1 application with auto-configuration and component scanning.
 
 | Package | Purpose |
 |---|---|
-| `config/` | `@ConfigurationProperties` records, `@Configuration` classes (JDBI, services, health, CLI, ingress) |
-| `infrastructure/` | CLI (JLine REPL), MQTT ingress, health, vision client, shutdown |
+| `config/` | `@ConfigurationProperties` records, `@Configuration` classes (JDBI, services, health, CLI, ingress, WebSocket) |
+| `infrastructure/` | CLI (JLine REPL + BufferingCliClient), MQTT ingress, health, vision client, shutdown |
 | `service/` | Business logic: alarms, nodes, threats, notifications, vision (`@Service` annotated) |
+| `web/api/` | REST controllers (`/api/nodes`, `/api/alarms`, `/api/health`, `/api/system`) |
+| `web/cli/` | WebSocket CLI bridge (`@MessageMapping("/cli")`) |
+| `web/broadcast/` | Domain event → STOMP topic broadcaster |
+| `web/event/` | Domain events (AlarmCreated, NodeHeartbeat, VisionAnalysis) |
 | `repository/` | JDBI SQL object interfaces (SQLite, created via `jdbi.onDemand()` beans) |
 | `model/` | Domain models (Java records) |
 | `entity/` | Database entities with JDBI row mappers |
 | `mapper/` | Entity <-> domain model mappers |
 | `security/` | Auth with Argon2 hashing, ThreadLocal SecurityContext |
 | `instrumentation/` | AOP annotations (@Timed, @ServiceAudit) |
+| `src/main/frontend/` | React 19 + TypeScript + Vite SPA (SCADA dark theme, built into jar) |
 
 Entry point: `AvisosControllerServiceApplication` (`@SpringBootApplication`, Tomcat on port 8080)
 
-CLI is optional -- enabled via `avisos.cli.enabled=true` (default `false` in web/Docker mode).
+Web dashboard at `http://localhost:8080` -- React SPA with 4 pages (Dashboard, Nodes, Alarms, CLI terminal). Real-time updates via STOMP WebSocket at `/ws`. CLI is also accessible via the embedded terminal widget.
+
+CLI REPL is optional -- enabled via `avisos.cli.enabled=true` (default `false` in web/Docker mode).
 
 ### Node Service (`com.azeem.avisos.node`)
 
@@ -121,6 +133,6 @@ Conventional Commits format:
 
 Planned roadmap items are documented in [`docs/future-directions.md`](docs/future-directions.md). When an agent is instructed to work on a future direction, the task will be referenced by its numbered item from that document:
 
-1. **Spring Boot Migration (Controller) + Custom Framework Reuse (Node)**
-2. **Web Dashboard with Embedded CLI**
+1. ~~**Spring Boot Migration (Controller) + Custom Framework Reuse (Node)**~~ -- COMPLETED
+2. ~~**Web Dashboard with Embedded CLI**~~ -- COMPLETED
 3. **AI SOC Analyst Agent**

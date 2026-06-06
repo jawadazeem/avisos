@@ -48,4 +48,8 @@ mosquitto/log
 data
 .env
 /.idea/
-/docs/
+
+### Frontend (React build artifacts) ###
+avisos-controller-service/src/main/frontend/node_modules/
+avisos-controller-service/src/main/frontend/node/
+avisos-controller-service/src/main/resources/static/

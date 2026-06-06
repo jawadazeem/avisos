@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+/** Manages alarm persistence and lifecycle (trigger, query, resolve). */
 @Service
 public class AlarmService {
   private static final Logger log = LoggerFactory.getLogger(AlarmService.class);
