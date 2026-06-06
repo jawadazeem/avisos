@@ -10,10 +10,10 @@ services:
         ports:
             - "8083:8083"
         environment:
-            - MQTT_BROKER_URL=tcp://mosquitto:1883
-            - MQTT_TOPIC=avisos/telemetry
-            - VISION_API_URL=http://vision-api:32168/v1/vision/detection
-            - DATABASE_URL=jdbc:sqlite:/app/data/avisos.db
+            - AVISOS_MQTT_BROKER=tcp://mosquitto:1883
+            - AVISOS_MQTT_TOPIC=avisos/telemetry
+            - AVISOS_VISION_API_URL=http://vision-api:32168/v1/vision/detection
+            - AVISOS_DATABASE_URL=jdbc:sqlite:/app/data/avisos.db
             - AVISOS_CLI_ENABLED=false
         volumes:
             - ./data:/app/data
@@ -40,14 +40,16 @@ services:
         restart: unless-stopped
 
     hardware-simulator:
+        profiles:
+        - hardware
         build: ./avisos-hardware-simulator
         depends_on:
-        - node-service
+        - node-01
         environment:
-        - TARGET_NODE_URL=http://node-service:5000/api/hardware-feed
+        - TARGET_NODE_URL=http://node-01:5000/api/hardware-feed
         - SIMULATION_INTERVAL_MS=2000
         networks:
-        - avisos-network
+        - avisos-net
 
     mosquitto:
         image: eclipse-mosquitto:latest

@@ -38,7 +38,7 @@ public class SystemController {
         "name", "AVISOS",
         "author", "Jawad Azeem",
         "description", "Advanced Visual Infrastructure Secure Operational Systems",
-        "version", "1.0",
+        "version", "1.0-SNAPSHOT",
         "architecture", "Spring Boot 3.4.1 + MQTT + Protobuf + SQLite");
   }
 }

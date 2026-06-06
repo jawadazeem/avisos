@@ -37,11 +37,13 @@ public class CodeProjectVisionClient implements VisionClient {
   private final ObjectMapper jsonMapper;
   private final HttpClient httpClient;
   private final String apiUrl;
+  private final URI statusUrl;
 
   public CodeProjectVisionClient(ObjectMapper jsonMapper, VisionConfig visionConfig) {
     this.jsonMapper = jsonMapper;
     this.httpClient = HttpClient.newHttpClient();
     this.apiUrl = visionConfig.apiUrl();
+    this.statusUrl = URI.create(apiUrl).resolve("/v1/module/status/vision");
   }
 
   @Override
@@ -72,11 +74,7 @@ public class CodeProjectVisionClient implements VisionClient {
 
   @Override
   public boolean isAvailable() {
-    HttpRequest request =
-        HttpRequest.newBuilder()
-            .uri(URI.create("http://localhost:32168/v1/module/status/vision"))
-            .GET()
-            .build();
+    HttpRequest request = HttpRequest.newBuilder().uri(statusUrl).GET().build();
     try {
       HttpResponse<String> response =
           httpClient.send(request, HttpResponse.BodyHandlers.ofString());

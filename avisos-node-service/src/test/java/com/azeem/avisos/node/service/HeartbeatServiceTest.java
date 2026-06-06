@@ -46,7 +46,7 @@ class HeartbeatServiceTest {
 
   @Test
   void sendTelemetry_shouldPublishToConfiguredTopic() {
-    when(batteryProvider.getBatteryLevel()).thenReturn(85.0);
+    when(batteryProvider.getBatteryLevel()).thenReturn(85);
 
     heartbeatService.sendTelemetry();
 
@@ -55,7 +55,7 @@ class HeartbeatServiceTest {
 
   @Test
   void sendTelemetry_shouldIncludeNodeIdInPayload() {
-    when(batteryProvider.getBatteryLevel()).thenReturn(72.0);
+    when(batteryProvider.getBatteryLevel()).thenReturn(72);
 
     heartbeatService.sendTelemetry();
 
@@ -66,18 +66,18 @@ class HeartbeatServiceTest {
 
   @Test
   void sendTelemetry_shouldIncludeBatteryLevel() {
-    when(batteryProvider.getBatteryLevel()).thenReturn(42.5);
+    when(batteryProvider.getBatteryLevel()).thenReturn(42);
 
     heartbeatService.sendTelemetry();
 
     verify(mqttProvider).publish(eq(mqttConfig.topic()), payloadCaptor.capture());
     String json = new String(payloadCaptor.getValue());
-    assertTrue(json.contains("42.5"));
+    assertTrue(json.contains("42"));
   }
 
   @Test
   void sendTelemetry_shouldIncludeNodeName() {
-    when(batteryProvider.getBatteryLevel()).thenReturn(100.0);
+    when(batteryProvider.getBatteryLevel()).thenReturn(100);
 
     heartbeatService.sendTelemetry();
 
@@ -88,7 +88,7 @@ class HeartbeatServiceTest {
 
   @Test
   void sendTelemetry_shouldIncludeHeartbeatPacketType() {
-    when(batteryProvider.getBatteryLevel()).thenReturn(50.0);
+    when(batteryProvider.getBatteryLevel()).thenReturn(50);
 
     heartbeatService.sendTelemetry();
 
@@ -99,7 +99,7 @@ class HeartbeatServiceTest {
 
   @Test
   void sendTelemetry_shouldNotThrowOnPublishFailure() {
-    when(batteryProvider.getBatteryLevel()).thenReturn(60.0);
+    when(batteryProvider.getBatteryLevel()).thenReturn(60);
     doThrow(new RuntimeException("Connection lost"))
         .when(mqttProvider)
         .publish(anyString(), any(byte[].class));

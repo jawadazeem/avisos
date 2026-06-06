@@ -16,7 +16,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class SpaForwardingController {
 
   @GetMapping(
-      value = {"/", "/{path:^(?!api|actuator|ws).*$}/**"},
+      value = {
+        "/{path:^(?!api|actuator|ws|assets|index\\.html|.*\\..*$).*$}",
+        "/{path:^(?!api|actuator|ws|assets|index\\.html|.*\\..*$).*$}/**"
+      },
       produces = "text/html")
   public String forward() {
     return "forward:/index.html";

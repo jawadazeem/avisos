@@ -9,10 +9,10 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/api": "http://localhost:8080",
-      "/actuator": "http://localhost:8080",
+      "/api": "http://localhost:8083",
+      "/actuator": "http://localhost:8083",
       "/ws": {
-        target: "http://localhost:8080",
+        target: "http://localhost:8083",
         ws: true,
       },
     },

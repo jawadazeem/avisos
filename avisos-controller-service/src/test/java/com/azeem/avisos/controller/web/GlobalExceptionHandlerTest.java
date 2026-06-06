@@ -10,8 +10,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 class GlobalExceptionHandlerTest {
 
@@ -42,6 +44,17 @@ class GlobalExceptionHandlerTest {
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     assertEquals("Internal server error", response.getBody().get("error"));
     assertEquals(500, response.getBody().get("status"));
+  }
+
+  @Test
+  void handleNotFound_shouldReturn404ForMissingStaticResources() {
+    NoResourceFoundException ex = new NoResourceFoundException(HttpMethod.GET, "/favicon.ico");
+
+    ResponseEntity<Map<String, Object>> response = handler.handleNotFound(ex);
+
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    assertEquals("Resource not found", response.getBody().get("error"));
+    assertEquals(404, response.getBody().get("status"));
   }
 
   @Test

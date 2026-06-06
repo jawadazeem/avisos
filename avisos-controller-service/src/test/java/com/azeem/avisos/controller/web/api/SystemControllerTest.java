@@ -57,6 +57,7 @@ class SystemControllerTest {
     Map<String, String> about = systemController.getAbout();
 
     assertEquals("AVISOS", about.get("name"));
+    assertEquals("Jawad Azeem", about.get("author"));
     assertEquals(
         "Advanced Visual Infrastructure Secure Operational Systems", about.get("description"));
     assertEquals("1.0-SNAPSHOT", about.get("version"));
@@ -67,8 +68,9 @@ class SystemControllerTest {
   void getAbout_shouldContainAllExpectedKeys() {
     Map<String, String> about = systemController.getAbout();
 
-    assertEquals(4, about.size());
+    assertEquals(5, about.size());
     assertTrue(about.containsKey("name"));
+    assertTrue(about.containsKey("author"));
     assertTrue(about.containsKey("description"));
     assertTrue(about.containsKey("version"));
     assertTrue(about.containsKey("architecture"));

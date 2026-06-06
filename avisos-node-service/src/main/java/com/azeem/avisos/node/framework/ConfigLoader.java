@@ -46,7 +46,7 @@ public class ConfigLoader {
    * @param environment environment variable resolver
    * @return resolved application configuration
    */
-  AppConfig load(InputStream input, Function<String, String> environment) {
+  public AppConfig load(InputStream input, Function<String, String> environment) {
     try (input) {
       if (input == null) {
         throw new MissingConfigFileException("Missing application.yml configuration file");
