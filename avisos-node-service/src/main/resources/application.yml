@@ -8,3 +8,8 @@ node:
 mqtt:
   broker-url: tcp://localhost:1883
   topic: avisos/telemetry
+
+hardware:
+  provider: local
+  simulator-base-url: http://localhost:5000
+  request-timeout: PT2S

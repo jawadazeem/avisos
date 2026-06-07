@@ -10,7 +10,9 @@ import static org.mockito.Mockito.*;
 
 import com.azeem.avisos.node.config.MqttConfig;
 import com.azeem.avisos.node.config.NodeConfig;
-import com.azeem.avisos.node.hardware.BatteryProvider;
+import com.azeem.avisos.node.hardware.HardwareProviderException;
+import com.azeem.avisos.node.hardware.HardwareSnapshot;
+import com.azeem.avisos.node.hardware.HardwareTelemetryProvider;
 import com.azeem.avisos.node.network.api.MqttProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -28,7 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class HeartbeatServiceTest {
 
   @Mock MqttProvider mqttProvider;
-  @Mock BatteryProvider batteryProvider;
+  @Mock HardwareTelemetryProvider hardwareTelemetryProvider;
   @Captor ArgumentCaptor<byte[]> payloadCaptor;
 
   private HeartbeatService heartbeatService;
@@ -41,12 +43,13 @@ class HeartbeatServiceTest {
     nodeConfig = new NodeConfig(UUID.randomUUID(), "test-node", "SENSOR");
     ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     heartbeatService =
-        new HeartbeatService(mqttProvider, batteryProvider, mqttConfig, nodeConfig, objectMapper);
+        new HeartbeatService(
+            mqttProvider, hardwareTelemetryProvider, mqttConfig, nodeConfig, objectMapper);
   }
 
   @Test
   void sendTelemetry_shouldPublishToConfiguredTopic() {
-    when(batteryProvider.getBatteryLevel()).thenReturn(85);
+    when(hardwareTelemetryProvider.readSnapshot()).thenReturn(HardwareSnapshot.localBattery(85));
 
     heartbeatService.sendTelemetry();
 
@@ -55,7 +58,7 @@ class HeartbeatServiceTest {
 
   @Test
   void sendTelemetry_shouldIncludeNodeIdInPayload() {
-    when(batteryProvider.getBatteryLevel()).thenReturn(72);
+    when(hardwareTelemetryProvider.readSnapshot()).thenReturn(HardwareSnapshot.localBattery(72));
 
     heartbeatService.sendTelemetry();
 
@@ -66,7 +69,7 @@ class HeartbeatServiceTest {
 
   @Test
   void sendTelemetry_shouldIncludeBatteryLevel() {
-    when(batteryProvider.getBatteryLevel()).thenReturn(42);
+    when(hardwareTelemetryProvider.readSnapshot()).thenReturn(HardwareSnapshot.localBattery(42));
 
     heartbeatService.sendTelemetry();
 
@@ -77,7 +80,7 @@ class HeartbeatServiceTest {
 
   @Test
   void sendTelemetry_shouldIncludeNodeName() {
-    when(batteryProvider.getBatteryLevel()).thenReturn(100);
+    when(hardwareTelemetryProvider.readSnapshot()).thenReturn(HardwareSnapshot.localBattery(100));
 
     heartbeatService.sendTelemetry();
 
@@ -88,7 +91,7 @@ class HeartbeatServiceTest {
 
   @Test
   void sendTelemetry_shouldIncludeHeartbeatPacketType() {
-    when(batteryProvider.getBatteryLevel()).thenReturn(50);
+    when(hardwareTelemetryProvider.readSnapshot()).thenReturn(HardwareSnapshot.localBattery(50));
 
     heartbeatService.sendTelemetry();
 
@@ -99,11 +102,23 @@ class HeartbeatServiceTest {
 
   @Test
   void sendTelemetry_shouldNotThrowOnPublishFailure() {
-    when(batteryProvider.getBatteryLevel()).thenReturn(60);
+    when(hardwareTelemetryProvider.readSnapshot()).thenReturn(HardwareSnapshot.localBattery(60));
     doThrow(new RuntimeException("Connection lost"))
         .when(mqttProvider)
         .publish(anyString(), any(byte[].class));
 
     assertDoesNotThrow(() -> heartbeatService.sendTelemetry());
+  }
+
+  @Test
+  void sendTelemetry_shouldPublishWithFallbackBatteryWhenHardwareFails() {
+    when(hardwareTelemetryProvider.readSnapshot())
+        .thenThrow(new HardwareProviderException("simulator unavailable"));
+
+    heartbeatService.sendTelemetry();
+
+    verify(mqttProvider).publish(eq(mqttConfig.topic()), payloadCaptor.capture());
+    String json = new String(payloadCaptor.getValue());
+    assertTrue(json.contains("\"batteryLevel\":100"));
   }
 }

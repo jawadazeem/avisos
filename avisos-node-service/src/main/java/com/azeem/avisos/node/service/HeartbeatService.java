@@ -9,33 +9,39 @@ import com.azeem.avisos.node.common.telemetry.PacketTypeDto;
 import com.azeem.avisos.node.common.telemetry.TelemetryPacketDto;
 import com.azeem.avisos.node.config.MqttConfig;
 import com.azeem.avisos.node.config.NodeConfig;
-import com.azeem.avisos.node.hardware.BatteryProvider;
+import com.azeem.avisos.node.hardware.HardwareProviderException;
+import com.azeem.avisos.node.hardware.HardwareSnapshot;
+import com.azeem.avisos.node.hardware.HardwareTelemetryProvider;
 import com.azeem.avisos.node.network.api.MqttProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Core business logic for the Avisos Edge Node. Manages sensor polling and telemetry dispatch. */
 public class HeartbeatService {
   private static final Logger log = LoggerFactory.getLogger(HeartbeatService.class);
+  private static final int SAFE_FALLBACK_BATTERY_LEVEL = 100;
 
   private final MqttProvider mqttProvider;
-  private final BatteryProvider batteryProvider;
+  private final HardwareTelemetryProvider hardwareTelemetryProvider;
   private final MqttConfig mqttConfig;
   private final NodeConfig nodeConfig;
   private final ObjectMapper objectMapper;
   private final Random random = new Random();
+  private final AtomicInteger lastKnownBatteryLevel =
+      new AtomicInteger(SAFE_FALLBACK_BATTERY_LEVEL);
 
   public HeartbeatService(
       MqttProvider mqttProvider,
-      BatteryProvider batteryProvider,
+      HardwareTelemetryProvider hardwareTelemetryProvider,
       MqttConfig mqttConfig,
       NodeConfig nodeConfig,
       ObjectMapper objectMapper) {
     this.mqttProvider = mqttProvider;
-    this.batteryProvider = batteryProvider;
+    this.hardwareTelemetryProvider = hardwareTelemetryProvider;
     this.mqttConfig = mqttConfig;
     this.nodeConfig = nodeConfig;
     this.objectMapper = objectMapper;
@@ -46,22 +52,40 @@ public class HeartbeatService {
       byte[] frameData = new byte[1024];
       random.nextBytes(frameData);
 
-      TelemetryPacketDto packet = createPacket(frameData);
+      HardwareSnapshot snapshot = readHardwareSnapshot();
+      TelemetryPacketDto packet = createPacket(frameData, snapshot.batteryPercent());
 
       byte[] jsonBytes = objectMapper.writeValueAsBytes(packet);
       mqttProvider.publish(mqttConfig.topic(), jsonBytes);
 
-      log.info("Telemetry dispatched: ID={}, Type={}", nodeConfig.nodeId(), packet.type());
+      log.info(
+          "Telemetry dispatched: ID={}, Type={}, batteryLevel={}%",
+          nodeConfig.nodeId(), packet.type(), packet.batteryLevel());
 
     } catch (Exception e) {
       log.error("CRITICAL: Telemetry pipeline failure: {}", e.getMessage());
     }
   }
 
-  private TelemetryPacketDto createPacket(byte[] frameData) {
+  private HardwareSnapshot readHardwareSnapshot() {
+    try {
+      HardwareSnapshot snapshot = hardwareTelemetryProvider.readSnapshot();
+      lastKnownBatteryLevel.set(snapshot.batteryPercent());
+      log.debug("Hardware snapshot read: {}", snapshot);
+      return snapshot;
+    } catch (HardwareProviderException e) {
+      int fallback = lastKnownBatteryLevel.get();
+      log.warn(
+          "Hardware telemetry unavailable: {}. Using fallback batteryLevel={}%",
+          e.getMessage(), fallback);
+      return HardwareSnapshot.localBattery(fallback);
+    }
+  }
+
+  private TelemetryPacketDto createPacket(byte[] frameData, int batteryLevel) {
     return new TelemetryPacketDto(
         nodeConfig.nodeId(),
-        batteryProvider.getBatteryLevel(),
+        batteryLevel,
         nodeConfig.name(),
         PacketTypeDto.HEARTBEAT,
         frameData,

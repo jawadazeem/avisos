@@ -34,6 +34,9 @@ public class ConfigLoaderTest {
     assertEquals("data-acquisition-device", config.node().type());
     assertEquals("tcp://localhost:1883", config.mqtt().brokerUrl());
     assertEquals("avisos/telemetry", config.mqtt().topic());
+    assertEquals("local", config.hardware().provider());
+    assertEquals("http://localhost:5000", config.hardware().simulatorBaseUrl());
+    assertEquals("PT2S", config.hardware().requestTimeout().toString());
   }
 
   @Test
@@ -43,7 +46,10 @@ public class ConfigLoaderTest {
             "MQTT_BROKER_URL", "tcp://broker.internal:1883",
             "MQTT_TOPIC", "avisos/telemetry/override",
             "NODE_NAME", "edge-node-01",
-            "NODE_TYPE", "environment-monitor");
+            "NODE_TYPE", "environment-monitor",
+            "HARDWARE_PROVIDER", "simulator-rest",
+            "HARDWARE_SIMULATOR_BASE_URL", "http://hardware-simulator:5000",
+            "HARDWARE_REQUEST_TIMEOUT", "PT5S");
 
     AppConfig config = configLoader.load(yamlStream(), environment::get);
 
@@ -51,6 +57,9 @@ public class ConfigLoaderTest {
     assertEquals("environment-monitor", config.node().type());
     assertEquals("tcp://broker.internal:1883", config.mqtt().brokerUrl());
     assertEquals("avisos/telemetry/override", config.mqtt().topic());
+    assertEquals("simulator-rest", config.hardware().provider());
+    assertEquals("http://hardware-simulator:5000", config.hardware().simulatorBaseUrl());
+    assertEquals("PT5S", config.hardware().requestTimeout().toString());
   }
 
   @Test
@@ -68,6 +77,9 @@ public class ConfigLoaderTest {
     assertEquals("sensor", config.node().type());
     assertEquals("tcp://yaml-broker:1883", config.mqtt().brokerUrl());
     assertEquals("avisos/yaml", config.mqtt().topic());
+    assertEquals("local", config.hardware().provider());
+    assertEquals("http://localhost:5000", config.hardware().simulatorBaseUrl());
+    assertEquals("PT2S", config.hardware().requestTimeout().toString());
   }
 
   private static InputStream yamlStream() {

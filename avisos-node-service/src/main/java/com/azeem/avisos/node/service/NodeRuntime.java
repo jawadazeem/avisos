@@ -6,7 +6,8 @@
 package com.azeem.avisos.node.service;
 
 import com.azeem.avisos.node.config.AppConfig;
-import com.azeem.avisos.node.hardware.BatteryProvider;
+import com.azeem.avisos.node.hardware.HardwareSnapshot;
+import com.azeem.avisos.node.hardware.HardwareTelemetryProvider;
 import com.azeem.avisos.node.model.node.State;
 import com.azeem.avisos.node.network.api.MqttProvider;
 import java.time.Duration;
@@ -35,7 +36,7 @@ public class NodeRuntime {
   private final AppConfig config;
   private final MqttProvider mqttProvider;
   private final HeartbeatService heartbeatService;
-  private final BatteryProvider batteryProvider;
+  private final HardwareTelemetryProvider hardwareTelemetryProvider;
   private final Duration heartbeatInterval;
   private final Duration watchdogInterval;
   private final Duration initialRetryDelay;
@@ -49,13 +50,13 @@ public class NodeRuntime {
       AppConfig config,
       MqttProvider mqttProvider,
       HeartbeatService heartbeatService,
-      BatteryProvider batteryProvider,
+      HardwareTelemetryProvider hardwareTelemetryProvider,
       ExecutorService executor) {
     this(
         config,
         mqttProvider,
         heartbeatService,
-        batteryProvider,
+        hardwareTelemetryProvider,
         executor,
         DEFAULT_HEARTBEAT_INTERVAL,
         DEFAULT_WATCHDOG_INTERVAL,
@@ -67,7 +68,7 @@ public class NodeRuntime {
       AppConfig config,
       MqttProvider mqttProvider,
       HeartbeatService heartbeatService,
-      BatteryProvider batteryProvider,
+      HardwareTelemetryProvider hardwareTelemetryProvider,
       ExecutorService executor,
       Duration heartbeatInterval,
       Duration watchdogInterval,
@@ -76,7 +77,8 @@ public class NodeRuntime {
     this.config = Objects.requireNonNull(config, "config");
     this.mqttProvider = Objects.requireNonNull(mqttProvider, "mqttProvider");
     this.heartbeatService = Objects.requireNonNull(heartbeatService, "heartbeatService");
-    this.batteryProvider = Objects.requireNonNull(batteryProvider, "batteryProvider");
+    this.hardwareTelemetryProvider =
+        Objects.requireNonNull(hardwareTelemetryProvider, "hardwareTelemetryProvider");
     this.executor = Objects.requireNonNull(executor, "executor");
     this.heartbeatInterval = positive(heartbeatInterval, "heartbeatInterval");
     this.watchdogInterval = positive(watchdogInterval, "watchdogInterval");
@@ -173,7 +175,8 @@ public class NodeRuntime {
   private void runWatchdog() {
     while (isOperational()) {
       try {
-        int batteryLevel = batteryProvider.getBatteryLevel();
+        HardwareSnapshot snapshot = hardwareTelemetryProvider.readSnapshot();
+        int batteryLevel = snapshot.batteryPercent();
         State currentState = state.get();
 
         if (batteryLevel <= LOW_BATTERY_THRESHOLD) {
@@ -183,7 +186,7 @@ public class NodeRuntime {
         if (currentState == State.STARTING) {
           log.warn("R-Team watchdog: MQTT connectivity not yet established");
         } else {
-          log.debug("R-Team watchdog: state={}, batteryLevel={}%", currentState, batteryLevel);
+          log.debug("R-Team watchdog: state={}, vitals={}", currentState, snapshot);
         }
       } catch (RuntimeException e) {
         log.warn("R-Team watchdog: hardware vitals check failed: {}", e.getMessage());
@@ -197,12 +200,13 @@ public class NodeRuntime {
 
   private void logStartupConfiguration() {
     log.info(
-        "Starting Avisos node: nodeId={}, name={}, type={}, mqttBroker={}, mqttTopic={}",
+        "Starting Avisos node: nodeId={}, name={}, type={}, mqttBroker={}, mqttTopic={}, hardwareProvider={}",
         config.node().nodeId(),
         config.node().name(),
         config.node().type(),
         config.mqtt().brokerUrl(),
-        config.mqtt().topic());
+        config.mqtt().topic(),
+        config.hardware().provider());
   }
 
   private Duration nextRetryDelay(Duration currentDelay) {

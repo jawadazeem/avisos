@@ -17,7 +17,7 @@ import oshi.hardware.PowerSource;
  *
  * <p>This class exposes hardware-level battery telemetry for the local node device.
  */
-public class BatteryProvider {
+public class BatteryProvider implements HardwareTelemetryProvider {
   private static final Logger log = LoggerFactory.getLogger(BatteryProvider.class);
   private static final int ASSUMED_LINE_POWER_LEVEL = 100;
 
@@ -37,6 +37,11 @@ public class BatteryProvider {
     }
 
     return powerSources.getFirst().getCurrentCapacity();
+  }
+
+  @Override
+  public HardwareSnapshot readSnapshot() {
+    return HardwareSnapshot.localBattery(getBatteryLevel());
   }
 
   /**

@@ -6,6 +6,7 @@
 package com.azeem.avisos.node.framework;
 
 import com.azeem.avisos.node.config.AppConfig;
+import com.azeem.avisos.node.config.HardwareConfig;
 import com.azeem.avisos.node.config.MqttConfig;
 import com.azeem.avisos.node.config.NodeConfig;
 import com.azeem.avisos.node.exception.MissingConfigFileException;
@@ -15,6 +16,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.function.Function;
 
 /**
@@ -25,6 +27,8 @@ import java.util.function.Function;
  * System.getenv}) and a testable path (accepts an {@code InputStream} and env resolver function).
  */
 public class ConfigLoader {
+  private static final HardwareConfig DEFAULT_HARDWARE_CONFIG =
+      new HardwareConfig("local", "http://localhost:5000", Duration.ofSeconds(2));
 
   private final ObjectMapper ymlMapper;
 
@@ -74,11 +78,39 @@ public class ConfigLoader {
             resolve(environment, "MQTT_BROKER_URL", config.mqtt().brokerUrl()),
             resolve(environment, "MQTT_TOPIC", config.mqtt().topic()));
 
-    return new AppConfig(node, mqtt);
+    HardwareConfig baseHardware =
+        config.hardware() != null ? config.hardware() : DEFAULT_HARDWARE_CONFIG;
+    HardwareConfig hardware =
+        new HardwareConfig(
+            resolve(
+                environment,
+                "HARDWARE_PROVIDER",
+                fallback(baseHardware.provider(), DEFAULT_HARDWARE_CONFIG.provider())),
+            resolve(
+                environment,
+                "HARDWARE_SIMULATOR_BASE_URL",
+                fallback(
+                    baseHardware.simulatorBaseUrl(), DEFAULT_HARDWARE_CONFIG.simulatorBaseUrl())),
+            resolveDuration(
+                environment,
+                "HARDWARE_REQUEST_TIMEOUT",
+                fallback(baseHardware.requestTimeout(), DEFAULT_HARDWARE_CONFIG.requestTimeout())));
+
+    return new AppConfig(node, mqtt, hardware);
   }
 
   private static String resolve(Function<String, String> environment, String key, String fallback) {
     String value = environment.apply(key);
+    return value != null ? value : fallback;
+  }
+
+  private static Duration resolveDuration(
+      Function<String, String> environment, String key, Duration fallback) {
+    String value = environment.apply(key);
+    return value != null ? Duration.parse(value) : fallback;
+  }
+
+  private static <T> T fallback(T value, T fallback) {
     return value != null ? value : fallback;
   }
 }

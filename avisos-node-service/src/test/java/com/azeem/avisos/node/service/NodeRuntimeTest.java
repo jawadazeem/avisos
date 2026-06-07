@@ -9,9 +9,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.azeem.avisos.node.config.AppConfig;
+import com.azeem.avisos.node.config.HardwareConfig;
 import com.azeem.avisos.node.config.MqttConfig;
 import com.azeem.avisos.node.config.NodeConfig;
-import com.azeem.avisos.node.hardware.BatteryProvider;
+import com.azeem.avisos.node.hardware.HardwareSnapshot;
+import com.azeem.avisos.node.hardware.HardwareTelemetryProvider;
 import com.azeem.avisos.node.model.node.State;
 import com.azeem.avisos.node.network.api.MqttProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -63,7 +65,7 @@ public class NodeRuntimeTest {
         appConfig(),
         mqttProvider,
         heartbeatService,
-        new FixedBatteryProvider(),
+        new FixedHardwareTelemetryProvider(),
         Executors.newVirtualThreadPerTaskExecutor(),
         Duration.ofMillis(10),
         Duration.ofMillis(10),
@@ -74,14 +76,19 @@ public class NodeRuntimeTest {
   private static CountingHeartbeatService heartbeatService(MqttProvider mqttProvider) {
     AppConfig config = appConfig();
     return new CountingHeartbeatService(
-        mqttProvider, new FixedBatteryProvider(), config.mqtt(), config.node(), new ObjectMapper());
+        mqttProvider,
+        new FixedHardwareTelemetryProvider(),
+        config.mqtt(),
+        config.node(),
+        new ObjectMapper());
   }
 
   private static AppConfig appConfig() {
     return new AppConfig(
         new NodeConfig(
             UUID.fromString("00000000-0000-0000-0000-000000000000"), "test-node", "sensor"),
-        new MqttConfig("tcp://localhost:1883", "avisos/test"));
+        new MqttConfig("tcp://localhost:1883", "avisos/test"),
+        new HardwareConfig("local", "http://localhost:5000", Duration.ofMillis(100)));
   }
 
   private static final class CountingHeartbeatService extends HeartbeatService {
@@ -89,11 +96,11 @@ public class NodeRuntimeTest {
 
     private CountingHeartbeatService(
         MqttProvider mqttProvider,
-        BatteryProvider batteryProvider,
+        HardwareTelemetryProvider hardwareTelemetryProvider,
         MqttConfig mqttConfig,
         NodeConfig nodeConfig,
         ObjectMapper objectMapper) {
-      super(mqttProvider, batteryProvider, mqttConfig, nodeConfig, objectMapper);
+      super(mqttProvider, hardwareTelemetryProvider, mqttConfig, nodeConfig, objectMapper);
     }
 
     @Override
@@ -102,10 +109,10 @@ public class NodeRuntimeTest {
     }
   }
 
-  private static final class FixedBatteryProvider extends BatteryProvider {
+  private static final class FixedHardwareTelemetryProvider implements HardwareTelemetryProvider {
     @Override
-    public int getBatteryLevel() {
-      return 80;
+    public HardwareSnapshot readSnapshot() {
+      return HardwareSnapshot.localBattery(80);
     }
   }
 

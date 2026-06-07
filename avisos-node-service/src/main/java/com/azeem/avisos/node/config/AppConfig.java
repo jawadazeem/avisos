@@ -10,5 +10,6 @@ package com.azeem.avisos.node.config;
  *
  * @param node Node-specific configuration.
  * @param mqtt MQTT/network configuration.
+ * @param hardware hardware telemetry source configuration.
  */
-public record AppConfig(NodeConfig node, MqttConfig mqtt) {}
+public record AppConfig(NodeConfig node, MqttConfig mqtt, HardwareConfig hardware) {}

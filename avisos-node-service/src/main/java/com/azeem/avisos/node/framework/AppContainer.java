@@ -7,6 +7,8 @@ package com.azeem.avisos.node.framework;
 
 import com.azeem.avisos.node.config.AppConfig;
 import com.azeem.avisos.node.hardware.BatteryProvider;
+import com.azeem.avisos.node.hardware.HardwareTelemetryProvider;
+import com.azeem.avisos.node.hardware.HttpHardwareTelemetryProvider;
 import com.azeem.avisos.node.network.api.MqttProvider;
 import com.azeem.avisos.node.network.impl.PahoMqttProvider;
 import com.azeem.avisos.node.service.HeartbeatService;
@@ -26,6 +28,9 @@ import java.util.concurrent.Executors;
  * controller service, adapted for the simpler node dependency graph.
  */
 public class AppContainer {
+  private static final String LOCAL_HARDWARE_PROVIDER = "local";
+  private static final String SIMULATOR_REST_HARDWARE_PROVIDER = "simulator-rest";
+
   private final Map<Class<?>, Object> registry = new HashMap<>();
 
   public <T> T get(Class<T> type) {
@@ -51,29 +56,45 @@ public class AppContainer {
     AppConfig config = configLoader.loadAppConfig();
     put(AppConfig.class, config);
 
+    // Serialization
+    ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    put(ObjectMapper.class, objectMapper);
+
     // Hardware
     BatteryProvider batteryProvider = new BatteryProvider();
     put(BatteryProvider.class, batteryProvider);
+    HardwareTelemetryProvider hardwareTelemetryProvider =
+        createHardwareTelemetryProvider(config, objectMapper, batteryProvider);
+    put(HardwareTelemetryProvider.class, hardwareTelemetryProvider);
 
     // Network
     MqttProvider mqttProvider = new PahoMqttProvider(config.mqtt(), config.node());
     put(MqttProvider.class, mqttProvider);
 
-    // Serialization
-    ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
-    put(ObjectMapper.class, objectMapper);
-
     // Services
     HeartbeatService heartbeatService =
         new HeartbeatService(
-            mqttProvider, batteryProvider, config.mqtt(), config.node(), objectMapper);
+            mqttProvider, hardwareTelemetryProvider, config.mqtt(), config.node(), objectMapper);
     put(HeartbeatService.class, heartbeatService);
 
     // Runtime
     ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
     NodeRuntime runtime =
-        new NodeRuntime(config, mqttProvider, heartbeatService, batteryProvider, executor);
+        new NodeRuntime(
+            config, mqttProvider, heartbeatService, hardwareTelemetryProvider, executor);
     put(NodeRuntime.class, runtime);
+  }
+
+  private HardwareTelemetryProvider createHardwareTelemetryProvider(
+      AppConfig config, ObjectMapper objectMapper, BatteryProvider batteryProvider) {
+    return switch (config.hardware().provider()) {
+      case LOCAL_HARDWARE_PROVIDER -> batteryProvider;
+      case SIMULATOR_REST_HARDWARE_PROVIDER ->
+          new HttpHardwareTelemetryProvider(config.hardware(), objectMapper);
+      default ->
+          throw new IllegalArgumentException(
+              "Unsupported hardware provider: " + config.hardware().provider());
+    };
   }
 }
