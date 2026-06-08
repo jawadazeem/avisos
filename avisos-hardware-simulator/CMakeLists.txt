@@ -6,14 +6,35 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # External packages
 find_package(Boost REQUIRED)
+find_package(spdlog REQUIRED)
 
-# Include source files
-file(GLOB_RECURSIVE SOURCES "src/*.cpp" "src/*.h")
+# Header-only libraries via FetchContent
+include(FetchContent)
 
-add_executable(hardware_simulator ${SOURCES})
+FetchContent_Declare(
+    json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG        v3.11.3
+    GIT_SHALLOW    TRUE
+)
 
-target_link_libraries(${PROJECT_NAME} Boost::Boost)
+FetchContent_Declare(
+    httplib
+    GIT_REPOSITORY https://github.com/yhirose/cpp-httplib.git
+    GIT_TAG        v0.18.3
+    GIT_SHALLOW    TRUE
+)
 
-# If using a basic HTTP client library like cpp-httplib or libcurl, 
-# you would link them here. For a pure zero-dependency random stream, 
-# standard library works out of the box.
+FetchContent_MakeAvailable(json httplib)
+
+# Source files
+file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.h")
+
+add_executable(${PROJECT_NAME} ${SOURCES})
+
+target_link_libraries(${PROJECT_NAME}
+    Boost::boost
+    spdlog::spdlog
+    nlohmann_json::nlohmann_json
+    httplib::httplib
+)

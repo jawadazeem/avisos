@@ -23,34 +23,6 @@ services:
             - vision-api
         restart: unless-stopped
 
-    node-01:
-        build:
-            context: .
-            dockerfile: node.Dockerfile
-        container_name: avisos-node-01
-        networks:
-            - avisos-net
-        environment:
-            - MQTT_BROKER_URL=tcp://mosquitto:1883
-            - MQTT_TOPIC=avisos/telemetry
-            - NODE_NAME=avisos-node-01
-            - NODE_TYPE=data-acquisition-device
-        depends_on:
-            - mosquitto
-        restart: unless-stopped
-
-    hardware-simulator:
-        profiles:
-        - hardware
-        build: ./avisos-hardware-simulator
-        depends_on:
-        - node-01
-        environment:
-        - TARGET_NODE_URL=http://node-01:5000/api/hardware-feed
-        - SIMULATION_INTERVAL_MS=2000
-        networks:
-        - avisos-net
-
     mosquitto:
         image: eclipse-mosquitto:latest
         container_name: avisos-broker
