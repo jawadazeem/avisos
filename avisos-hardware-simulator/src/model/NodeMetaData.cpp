@@ -1,3 +1,8 @@
+/**
+ * @file NodeMetaData.cpp
+ * @brief Construction and identity generation for simulated sensor nodes.
+ */
+
 #include "NodeMetaData.h"
 
 #include <boost/uuid/uuid_generators.hpp>

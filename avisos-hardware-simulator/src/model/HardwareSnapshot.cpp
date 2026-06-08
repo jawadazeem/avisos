@@ -1,13 +1,30 @@
+/**
+ * @file HardwareSnapshot.cpp
+ * @brief Construction, factory methods, and JSON serialisation for HardwareSnapshot.
+ *
+ * Factory method value ranges:
+ *
+ *   | Field       | shambles    | average     | strong       |
+ *   |-------------|-------------|-------------|--------------|
+ *   | battery     | 1-15%       | 30-70%      | 80-100%      |
+ *   | temperature | 55-80°C     | 30-45°C     | 21.5-23°C    |
+ *   | pressure    | 80-90 kPa   | 95-105 kPa  | 101.2-101.4  |
+ *   | humidity    | 75-95%      | 40-60%      | 44.2-45.5%   |
+ *   | signal      | 5-20%       | 40-70%      | 98-99%       |
+ *   | leak        | 80% chance  | 20% chance  | never        |
+ */
+
 #include "HardwareSnapshot.h"
-#include <random>
+
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
+#include <random>
 #include <sstream>
 
 namespace avisos::model {
 
-// default (use builders for real simulation)
+// -- construction --
 HardwareSnapshot::HardwareSnapshot()
     : battery_percent_(100),
       temperature_celsius_(22.0),

@@ -28,7 +28,13 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(json httplib)
 
 # Source files
-file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.h")
+set(SOURCES
+    src/main.cpp
+    src/service/Simulator.cpp
+    src/controller/HttpController.cpp
+    src/model/HardwareSnapshot.cpp
+    src/model/NodeMetaData.cpp
+)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 

@@ -1,3 +1,15 @@
+/**
+ * @file ArrayBlockingQueue.h
+ * @brief Bounded FIFO queue that rejects inserts when full.
+ *
+ * Modelled after Java's ArrayBlockingQueue but without blocking semantics.
+ * push() returns false when capacity is reached rather than blocking the
+ * caller. Not thread-safe — callers must synchronise externally if shared
+ * across threads.
+ *
+ * @tparam T Element type (must be copyable).
+ */
+
 #pragma once
 
 #include <queue>

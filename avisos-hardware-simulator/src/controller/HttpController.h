@@ -1,3 +1,17 @@
+/**
+ * @file HttpController.h
+ * @brief HTTP layer that exposes simulator telemetry to the Java node service.
+ *
+ * The node service's HttpHardwareTelemetryProvider polls GET /readings
+ * every heartbeat cycle. This controller serves the latest HardwareSnapshot
+ * as JSON, with field names matching the Java HardwareSnapshot record
+ * (camelCase) for zero-config deserialization.
+ *
+ * Endpoints:
+ *   GET /readings — latest HardwareSnapshot as JSON
+ *   GET /health   — simple {"status":"UP"} liveness check
+ */
+
 #pragma once
 
 #include "../service/Simulator.h"
@@ -6,19 +20,17 @@
 
 namespace avisos::controller {
 
-/**
- * HTTP server that exposes the simulator's latest snapshot.
- *
- * The node service polls GET /readings on port 5000 to retrieve
- * hardware telemetry as JSON.
- */
 class HttpController {
 public:
     static constexpr int DEFAULT_PORT = 5000;
 
+    /** @param simulator Reference to the simulator whose snapshots are served. */
     explicit HttpController(avisos::simulator::Simulator& simulator);
 
+    /** Spawns the HTTP server on a background thread. */
     void start(int port = DEFAULT_PORT);
+
+    /** Blocks until the server thread exits. */
     void stop();
 
 private:

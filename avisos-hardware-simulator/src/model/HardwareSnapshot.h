@@ -1,3 +1,16 @@
+/**
+ * @file HardwareSnapshot.h
+ * @brief Telemetry data model mirroring the Java HardwareSnapshot record.
+ *
+ * This is the wire-format contract between the C++ simulator and the Java
+ * node service. The JSON keys produced by to_json() use camelCase to match
+ * the Java record field names exactly (batteryPercent, temperatureCelsius, etc.)
+ * so Jackson deserialises them without a custom mapper.
+ *
+ * Three static factory methods (shambles / average / strong) generate
+ * randomised snapshots representing different hardware health tiers.
+ */
+
 #pragma once
 
 #include <chrono>
@@ -7,12 +20,6 @@
 
 namespace avisos::model {
 
-/**
- * Point-in-time hardware vitals produced by the simulation loop.
- *
- * Field names match the Java HardwareSnapshot record exactly so the
- * node service can deserialize the JSON without any mapping layer.
- */
 class HardwareSnapshot {
 public:
     using Clock = std::chrono::system_clock;
@@ -28,10 +35,14 @@ public:
                      int signal_quality_percent,
                      Instant timestamp);
 
-    // -- builders --
-    HardwareSnapshot shambles();
-    HardwareSnapshot average();
-    HardwareSnapshot strong();
+    // -- factory methods (randomised within tier ranges) --
+
+    /** Critical state: low battery, overheating, high humidity, likely leaking. */
+    static HardwareSnapshot shambles();
+    /** Normal operating state: moderate readings across all sensors. */
+    static HardwareSnapshot average();
+    /** Optimal state: full battery, cool, stable pressure, no leaks. */
+    static HardwareSnapshot strong();
 
     // -- accessors --
 
@@ -53,7 +64,9 @@ public:
     void set_signal_quality_percent(int value);
     void set_timestamp(Instant value);
 
-    // -- serialization --
+    // -- serialization (nlohmann ADL pattern) --
+    // Friends have access to private fields for direct serialisation.
+    // JSON keys are camelCase to match the Java HardwareSnapshot record.
 
     friend void to_json(nlohmann::json& j, const HardwareSnapshot& s);
     friend void from_json(const nlohmann::json& j, HardwareSnapshot& s);

@@ -1,3 +1,11 @@
+/**
+ * @file HttpController.cpp
+ * @brief Implementation of the REST endpoint serving simulator telemetry.
+ *
+ * Uses cpp-httplib (single-header HTTP server). The server binds to
+ * 0.0.0.0 so it is reachable from other containers on the Docker network.
+ */
+
 #include "HttpController.h"
 
 #include <httplib.h>

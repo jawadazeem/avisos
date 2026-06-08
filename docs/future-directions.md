@@ -87,3 +87,33 @@ Integrate an AI agent (Claude or similar LLM) that acts as an automated SOC (Sec
 5. These artifacts are pushed through the existing notification service to the appropriate recipients.
 
 The agent augments -- not replaces -- the rule-based alarm logic already in place, adding natural-language reasoning and contextual triage that static keyword matching cannot provide.
+
+---
+
+## 4. Dashboard Scalability & UX Improvements
+
+With the hardware simulator capable of spawning 100-1000 node+simulator pairs, the frontend needs to handle large datasets gracefully.
+
+**Items:**
+1. **Pagination/filtering on Nodes and Alarms pages** -- tables currently render all records at once; add search, column filtering, and paginated or virtualised scrolling.
+2. **WebSocket message deduplication** -- heartbeat updates append to state without bounds; implement dedup by UUID and a max cache size to prevent memory growth.
+3. **Node detail drill-down** -- clicking a node row should open a detail view using the existing `GET /api/nodes/{id}` endpoint.
+4. **Vision analysis enrichment** -- display bounding boxes, inference time (`inferenceMs`), and execution provider (GPU/CPU) from the VisionResponse; show a persistent card placeholder when no analysis has arrived yet.
+5. **Alarm resolved timestamps** -- display `resolvedAtTimestamp` in the alarms table for historical tracking.
+6. **Health component messages** -- show the `message` field from ComponentHealth (currently only status + latency are rendered).
+7. **System about display** -- render the `GET /api/system/about` response (name, version, author, architecture) in the sidebar footer or a settings modal.
+8. **UUID truncation** -- display short IDs with full UUID in a tooltip at scale.
+
+---
+
+## 5. Flagged Image Storage (S3 / LocalStack)
+
+Store flagged vision-detection images in AWS S3 (LocalStack for dev/test) for audit trail and SOC analyst review.
+
+**Workflow:**
+1. When the vision pipeline detects a threat (matched label above confidence threshold), the source camera frame is uploaded to an S3 bucket alongside the detection metadata (predictions, alarm ID, node ID, timestamp).
+2. The alarm record stores a reference (S3 key) to the flagged image.
+3. The dashboard provides an image viewer for reviewing flagged frames, with bounding box overlays drawn from the stored prediction coordinates.
+4. Retention policies on the S3 bucket handle automatic cleanup of old images.
+
+This pairs with the AI SOC Analyst Agent (item 3) -- the agent would receive the S3 URL of the flagged image rather than the raw frame bytes, enabling async review and historical re-analysis.
