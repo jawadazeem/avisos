@@ -40,4 +40,4 @@ public:
     void setLeakDetected(bool leaked);
     void setSignalQualityPercent(int quality);
     void setTimestamp(Instant time);
-}
+};

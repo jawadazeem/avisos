@@ -53,3 +53,6 @@ data
 avisos-controller-service/src/main/frontend/node_modules/
 avisos-controller-service/src/main/frontend/node/
 avisos-controller-service/src/main/resources/static/
+
+### C++ Build Artifacts ###
+avisos-hardware-simulator/build
