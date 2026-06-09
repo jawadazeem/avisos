@@ -1,0 +1,42 @@
+.app-footer {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 20px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.footer-dot {
+  color: var(--text-muted);
+  font-size: 8px;
+}
+
+.footer-info-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.footer-info-btn:hover {
+  color: var(--accent-green);
+  border-color: var(--accent-green);
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.15);
+}
