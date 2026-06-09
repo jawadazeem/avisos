@@ -70,17 +70,30 @@ resolve_network() {
         return
     fi
 
+    local compose_env_args=()
+    if [ -f "$PROJECT_ROOT/.env" ]; then
+        compose_env_args=(--env-file "$PROJECT_ROOT/.env")
+    elif [ -f "$PROJECT_ROOT/.env.example" ]; then
+        compose_env_args=(--env-file "$PROJECT_ROOT/.env.example")
+    fi
+
     local resolved
-    resolved=$(
-        docker compose -f "$PROJECT_ROOT/docker-compose.yml" config 2>/dev/null \
+    resolved=$(docker network ls \
+        --filter "label=com.docker.compose.project=avisos" \
+        --filter "label=com.docker.compose.network=$COMPOSE_NETWORK_KEY" \
+        --format "{{.Name}}" \
+        | head -n 1 || true)
+
+    if [ -z "$resolved" ]; then
+        resolved=$(docker compose "${compose_env_args[@]}" -f "$PROJECT_ROOT/docker-compose.yml" config 2>/dev/null \
             | awk -v key="$COMPOSE_NETWORK_KEY" '
                 /^networks:/ { in_networks = 1; next }
                 in_networks && $1 == key ":" { in_target = 1; next }
                 in_target && $1 == "name:" { print $2; exit }
-            '
-    )
+            ' || true)
+    fi
 
-    NETWORK="${resolved:-$COMPOSE_NETWORK_KEY}"
+    NETWORK="${resolved:-avisos_${COMPOSE_NETWORK_KEY}}"
 }
 
 ensure_images() {
