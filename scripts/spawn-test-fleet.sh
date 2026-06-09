@@ -14,7 +14,7 @@
 #   docker compose up -d                           # core infra (controller, mosquitto, etc.)
 # -------------------------------------------------------------------
 
-set -euo pipefail
+set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -33,12 +33,36 @@ MQTT_TOPIC="avisos/telemetry"
 log()  { echo "[fleet] $*"; }
 fail() { echo "[fleet] ERROR: $*" >&2; exit 1; }
 
+trap 'fail "Command failed at line $LINENO: $BASH_COMMAND"' ERR
+
+require_command() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        fail "Required command '$1' is not installed or not on PATH."
+    fi
+}
+
+new_uuid() {
+    if command -v uuidgen >/dev/null 2>&1; then
+        uuidgen | tr '[:upper:]' '[:lower:]'
+        return
+    fi
+
+    if [ -r /proc/sys/kernel/random/uuid ]; then
+        cat /proc/sys/kernel/random/uuid
+        return
+    fi
+
+    fail "Cannot generate node UUID: install uuidgen or provide /proc/sys/kernel/random/uuid."
+}
+
 ensure_network() {
     resolve_network
 
     if ! docker network inspect "$NETWORK" &>/dev/null; then
         fail "Docker network '$NETWORK' does not exist. Start the core stack first: docker compose up -d, or set AVISOS_DOCKER_NETWORK explicitly."
     fi
+
+    log "Using Docker network: $NETWORK"
 }
 
 resolve_network() {
@@ -67,7 +91,9 @@ ensure_images() {
         fi
     done
     if [ ${#missing[@]} -gt 0 ]; then
-        fail "Missing images: ${missing[*]}. Run: ./scripts/spawn-test-fleet.sh build"
+        log "Missing images: ${missing[*]}"
+        log "Building missing fleet images now..."
+        cmd_build
     fi
 }
 
@@ -85,6 +111,12 @@ cmd_build() {
 
 cmd_spawn() {
     local count="${1:-10}"
+    require_command docker
+
+    if ! [[ "$count" =~ ^[0-9]+$ ]] || [ "$count" -lt 1 ]; then
+        fail "Count must be a positive integer. Received: '$count'"
+    fi
+
     ensure_network
     ensure_images
 
@@ -94,7 +126,7 @@ cmd_spawn() {
     for i in $(seq 1 "$count"); do
         local node_id
         local id
-        node_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
+        node_id=$(new_uuid)
         id=$(echo "$node_id" | tr -d '-' | cut -c 1-6)
         local sim_name="sim-${id}"
         local node_name="node-${id}"
