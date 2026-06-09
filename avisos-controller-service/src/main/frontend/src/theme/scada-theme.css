@@ -97,3 +97,14 @@ a:hover {
   overflow-y: auto;
   padding: 20px;
 }
+
+@media (max-width: 760px) {
+  .app-layout {
+    grid-template-columns: 72px 1fr;
+    grid-template-rows: 48px 1fr;
+  }
+
+  .app-content {
+    padding: 14px;
+  }
+}

@@ -87,8 +87,10 @@ export function AlarmsPage() {
 function formatTime(ts: string): string {
   if (!ts) return "-";
   try {
-    return new Date(ts).toLocaleString("en-US", { hour12: false });
+    const date = new Date(ts);
+    if (Number.isNaN(date.getTime())) return "-";
+    return date.toLocaleString("en-US", { hour12: false });
   } catch {
-    return ts;
+    return "-";
   }
 }

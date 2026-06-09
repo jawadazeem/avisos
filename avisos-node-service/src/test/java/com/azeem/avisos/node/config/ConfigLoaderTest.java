@@ -41,8 +41,10 @@ public class ConfigLoaderTest {
 
   @Test
   void shouldOverrideBrokerUrlFromEnvironment() {
+    UUID nodeId = UUID.fromString("22222222-2222-2222-2222-222222222222");
     Map<String, String> environment =
         Map.of(
+            "NODE_ID", nodeId.toString(),
             "MQTT_BROKER_URL", "tcp://broker.internal:1883",
             "MQTT_TOPIC", "avisos/telemetry/override",
             "NODE_NAME", "edge-node-01",
@@ -53,6 +55,7 @@ public class ConfigLoaderTest {
 
     AppConfig config = configLoader.load(yamlStream(), environment::get);
 
+    assertEquals(nodeId, config.node().nodeId());
     assertEquals("edge-node-01", config.node().name());
     assertEquals("environment-monitor", config.node().type());
     assertEquals("tcp://broker.internal:1883", config.mqtt().brokerUrl());

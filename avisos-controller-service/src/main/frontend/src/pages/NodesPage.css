@@ -2,12 +2,32 @@
   height: 100%;
 }
 
+.page-header {
+  align-items: flex-end;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
 .page-title {
   font-size: 16px;
   font-weight: 500;
   color: var(--text-primary);
-  margin-bottom: 20px;
   letter-spacing: 1px;
+}
+
+.page-subtitle,
+.pagination-summary {
+  color: var(--text-muted);
+  display: block;
+  font-size: 11px;
+  margin-top: 6px;
+}
+
+.pagination-summary {
+  flex: 0 0 auto;
+  text-align: right;
 }
 
 .page-error {
@@ -15,10 +35,17 @@
   padding: 20px;
 }
 
+.table-shell {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+}
+
 .scada-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
+  min-width: 860px;
 }
 
 .scada-table thead {
@@ -53,6 +80,10 @@
 .uuid {
   color: var(--text-muted);
   font-size: 10px;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .timestamp {
@@ -75,6 +106,10 @@
   overflow: hidden;
 }
 
+.battery-cell {
+  min-width: 92px;
+}
+
 .battery-bar {
   height: 100%;
   border-radius: 3px;
@@ -94,4 +129,57 @@
   font-weight: 500;
   color: #fff;
   text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+}
+
+.pagination-controls {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+.pagination-controls button {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  min-width: 72px;
+  padding: 6px 10px;
+}
+
+.pagination-controls button:hover:not(:disabled) {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+
+.pagination-controls button:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.pagination-page {
+  color: var(--text-muted);
+  font-size: 11px;
+  padding: 0 4px;
+}
+
+@media (max-width: 720px) {
+  .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .pagination-summary {
+    text-align: left;
+  }
+
+  .pagination-controls {
+    justify-content: flex-start;
+  }
 }

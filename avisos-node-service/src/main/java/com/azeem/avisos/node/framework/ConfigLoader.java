@@ -17,6 +17,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
+import java.util.UUID;
 import java.util.function.Function;
 
 /**
@@ -69,7 +70,7 @@ public class ConfigLoader {
 
     NodeConfig node =
         new NodeConfig(
-            config.node().nodeId(),
+            resolveUuid(environment, "NODE_ID", config.node().nodeId()),
             resolve(environment, "NODE_NAME", config.node().name()),
             resolve(environment, "NODE_TYPE", config.node().type()));
 
@@ -108,6 +109,11 @@ public class ConfigLoader {
       Function<String, String> environment, String key, Duration fallback) {
     String value = environment.apply(key);
     return value != null ? Duration.parse(value) : fallback;
+  }
+
+  private static UUID resolveUuid(Function<String, String> environment, String key, UUID fallback) {
+    String value = environment.apply(key);
+    return value != null ? UUID.fromString(value) : fallback;
   }
 
   private static <T> T fallback(T value, T fallback) {

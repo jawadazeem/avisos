@@ -188,8 +188,8 @@ void from_json(const nlohmann::json& j, HardwareSnapshot& s) {
     iss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%SZ");
     s.timestamp_ = HardwareSnapshot::Clock::from_time_t(std::mktime(&tm));
 
-    s.battery_percent_ = clamp_percent(s.battery_percent_);
-    s.signal_quality_percent_ = clamp_percent(s.signal_quality_percent_);
+    s.battery_percent_ = HardwareSnapshot::clamp_percent(s.battery_percent_);
+    s.signal_quality_percent_ = HardwareSnapshot::clamp_percent(s.signal_quality_percent_);
 }
 
 } // namespace avisos::model

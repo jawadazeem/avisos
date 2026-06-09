@@ -19,7 +19,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-NETWORK="avisos-net"
+NETWORK="${AVISOS_DOCKER_NETWORK:-}"
+COMPOSE_NETWORK_KEY="avisos-net"
 NODE_IMAGE="avisos-node:latest"
 SIM_IMAGE="avisos-hardware-simulator:latest"
 LABEL="avisos.fleet=test"
@@ -33,9 +34,29 @@ log()  { echo "[fleet] $*"; }
 fail() { echo "[fleet] ERROR: $*" >&2; exit 1; }
 
 ensure_network() {
+    resolve_network
+
     if ! docker network inspect "$NETWORK" &>/dev/null; then
-        fail "Docker network '$NETWORK' does not exist. Start the core stack first: docker compose up -d"
+        fail "Docker network '$NETWORK' does not exist. Start the core stack first: docker compose up -d, or set AVISOS_DOCKER_NETWORK explicitly."
     fi
+}
+
+resolve_network() {
+    if [ -n "$NETWORK" ]; then
+        return
+    fi
+
+    local resolved
+    resolved=$(
+        docker compose -f "$PROJECT_ROOT/docker-compose.yml" config 2>/dev/null \
+            | awk -v key="$COMPOSE_NETWORK_KEY" '
+                /^networks:/ { in_networks = 1; next }
+                in_networks && $1 == key ":" { in_target = 1; next }
+                in_target && $1 == "name:" { print $2; exit }
+            '
+    )
+
+    NETWORK="${resolved:-$COMPOSE_NETWORK_KEY}"
 }
 
 ensure_images() {
@@ -71,8 +92,10 @@ cmd_spawn() {
 
     local spawned=0
     for i in $(seq 1 "$count"); do
+        local node_id
         local id
-        id=$(head /dev/urandom | tr -dc 'a-z0-9' | head -c 6)
+        node_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
+        id=$(echo "$node_id" | tr -d '-' | cut -c 1-6)
         local sim_name="sim-${id}"
         local node_name="node-${id}"
 
@@ -94,6 +117,7 @@ cmd_spawn() {
             -e HARDWARE_SIMULATOR_BASE_URL="http://${sim_name}:5000" \
             -e MQTT_BROKER_URL="$MQTT_BROKER" \
             -e MQTT_TOPIC="$MQTT_TOPIC" \
+            -e NODE_ID="$node_id" \
             -e NODE_NAME="$node_name" \
             -e NODE_TYPE=data-acquisition-device \
             "$NODE_IMAGE" > /dev/null

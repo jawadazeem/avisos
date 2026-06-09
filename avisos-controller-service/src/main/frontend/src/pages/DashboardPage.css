@@ -56,6 +56,7 @@
 .stat-grid {
   display: flex;
   gap: 24px;
+  min-width: 0;
 }
 
 .stat-item {
@@ -120,4 +121,40 @@
 
 .confidence {
   color: var(--accent-amber);
+}
+
+.alarm-card-content {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.alarm-page-link {
+  align-self: flex-end;
+  border: 1px solid var(--accent-cyan);
+  border-radius: var(--radius-sm);
+  color: var(--accent-cyan);
+  flex: 0 0 auto;
+  font-size: 11px;
+  padding: 7px 12px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.alarm-page-link:hover {
+  background: rgba(0, 229, 255, 0.08);
+  text-decoration: none;
+}
+
+@media (max-width: 720px) {
+  .stat-grid,
+  .alarm-card-content {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .alarm-page-link {
+    align-self: flex-start;
+  }
 }

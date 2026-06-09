@@ -12,7 +12,7 @@ export function Header() {
   }, []);
 
   return (
-    <header className="header">
+    <header className="header app-header">
       <div className="header-left">
         <span className="header-label">SCADA MONITORING</span>
       </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import { useSubscription } from "../hooks/useSubscription";
 import { DataCard } from "../components/ui/DataCard";
@@ -102,19 +103,24 @@ export function DashboardPage() {
         </DataCard>
 
         <DataCard title="Active Alarms" accent={critical > 0 ? "red" : warnings > 0 ? "amber" : "green"}>
-          <div className="stat-grid">
-            <div className="stat-item">
-              <span className="stat-value red">{critical}</span>
-              <span className="stat-label">Critical</span>
+          <div className="alarm-card-content">
+            <div className="stat-grid">
+              <div className="stat-item">
+                <span className="stat-value red">{critical}</span>
+                <span className="stat-label">Critical</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value amber">{warnings}</span>
+                <span className="stat-label">Warnings</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value green">{alarms.filter((a) => a.status === "RESOLVED").length}</span>
+                <span className="stat-label">Resolved</span>
+              </div>
             </div>
-            <div className="stat-item">
-              <span className="stat-value amber">{warnings}</span>
-              <span className="stat-label">Warnings</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-value green">{alarms.filter((a) => a.status === "RESOLVED").length}</span>
-              <span className="stat-label">Resolved</span>
-            </div>
+            <Link className="alarm-page-link" to="/alarms">
+              Open Alarms
+            </Link>
           </div>
         </DataCard>
 

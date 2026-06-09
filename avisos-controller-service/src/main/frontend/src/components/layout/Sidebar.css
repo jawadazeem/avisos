@@ -78,3 +78,30 @@
   border-top: 1px solid var(--border-color);
   margin-top: auto;
 }
+
+@media (max-width: 760px) {
+  .sidebar {
+    align-items: stretch;
+  }
+
+  .sidebar-brand {
+    justify-content: center;
+    padding: 0 8px;
+  }
+
+  .brand-text,
+  .sidebar-subtitle,
+  .sidebar-footer,
+  .sidebar-link span:not(.nav-icon) {
+    display: none;
+  }
+
+  .sidebar-link {
+    justify-content: center;
+    padding: 12px 8px;
+  }
+
+  .nav-icon {
+    width: auto;
+  }
+}
