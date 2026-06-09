@@ -1,0 +1,34 @@
+name: Prod Deployment
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate example env
+        run: |
+          test -f .env.example
+
+      - name: Teardown simulation
+        run: |
+          ./scripts/spawn-test-fleet.sh teardown
+
+      - name: Build and deploy
+        run: |
+          docker compose --env-file .env.example down --remove-orphans
+          docker compose --env-file .env.example up --build -d
+          docker system prune -f
+
+      - name: Build simulated fleet images
+        run: |
+          ./scripts/spawn-test-fleet.sh build
+
+      - name: Create simulated nodes
+        run: |
+          ./scripts/spawn-test-fleet.sh

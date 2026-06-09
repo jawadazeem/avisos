@@ -25,8 +25,14 @@ public class JdbiConfiguration {
 
   @Bean
   public DataSource avisosDataSource(AvisosDatabaseProperties dbProps) {
-    Dotenv dotenv = Dotenv.load();
-    String key = dotenv.get("DATABASE_ENCRYPTION_KEY");
+    Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+    String key = System.getenv("DATABASE_ENCRYPTION_KEY");
+    if (key == null || key.isBlank()) {
+      key = dotenv.get("DATABASE_ENCRYPTION_KEY");
+    }
+    if (key == null || key.isBlank()) {
+      throw new IllegalStateException("DATABASE_ENCRYPTION_KEY must be configured");
+    }
 
     HikariConfig hikariConfig = new HikariConfig();
     hikariConfig.setJdbcUrl(dbProps.url());

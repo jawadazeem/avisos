@@ -6,15 +6,19 @@ services:
         image: avisos-controller:latest
         container_name: avisos-controller
         networks:
-            - avisos-net
+            avisos-net:
+            proxy-net:
+                aliases:
+                    - avisos
         ports:
             - "8083:8083"
         environment:
-            - AVISOS_MQTT_BROKER=tcp://mosquitto:1883
-            - AVISOS_MQTT_TOPIC=avisos/telemetry
-            - AVISOS_VISION_API_URL=http://vision-api:32168/v1/vision/detection
-            - AVISOS_DATABASE_URL=jdbc:sqlite:/app/data/avisos.db
-            - AVISOS_CLI_ENABLED=false
+            - AVISOS_MQTT_BROKER=${AVISOS_MQTT_BROKER:?Set AVISOS_MQTT_BROKER in .env}
+            - AVISOS_MQTT_TOPIC=${AVISOS_MQTT_TOPIC:?Set AVISOS_MQTT_TOPIC in .env}
+            - AVISOS_VISION_API_URL=${AVISOS_VISION_API_URL:?Set AVISOS_VISION_API_URL in .env}
+            - AVISOS_DATABASE_URL=${AVISOS_DATABASE_URL:?Set AVISOS_DATABASE_URL in .env}
+            - DATABASE_ENCRYPTION_KEY=${DATABASE_ENCRYPTION_KEY:?Set DATABASE_ENCRYPTION_KEY in .env}
+            - AVISOS_CLI_ENABLED=${AVISOS_CLI_ENABLED:-false}
         volumes:
             - ./data:/app/data
             - ./logs:/app/logs
@@ -67,3 +71,5 @@ services:
 networks:
     avisos-net:
         driver: bridge
+    proxy-net:
+        external: true
