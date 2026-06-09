@@ -76,7 +76,7 @@ a:hover {
 .app-layout {
   display: grid;
   grid-template-columns: 220px 1fr;
-  grid-template-rows: 48px 1fr;
+  grid-template-rows: 48px 1fr auto;
   height: 100vh;
   gap: 0;
 }
@@ -98,10 +98,15 @@ a:hover {
   padding: 20px;
 }
 
+.app-footer {
+  grid-column: 1 / -1;
+  grid-row: 3;
+}
+
 @media (max-width: 760px) {
   .app-layout {
     grid-template-columns: 72px 1fr;
-    grid-template-rows: 48px 1fr;
+    grid-template-rows: 48px 1fr auto;
   }
 
   .app-content {
