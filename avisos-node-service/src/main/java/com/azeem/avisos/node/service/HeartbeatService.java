@@ -15,7 +15,6 @@ import com.azeem.avisos.node.hardware.HardwareTelemetryProvider;
 import com.azeem.avisos.node.network.api.MqttProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +29,6 @@ public class HeartbeatService {
   private final MqttConfig mqttConfig;
   private final NodeConfig nodeConfig;
   private final ObjectMapper objectMapper;
-  private final Random random = new Random();
   private final AtomicInteger lastKnownBatteryLevel =
       new AtomicInteger(SAFE_FALLBACK_BATTERY_LEVEL);
 
@@ -49,8 +47,7 @@ public class HeartbeatService {
 
   public void sendTelemetry() {
     try {
-      byte[] frameData = new byte[1024];
-      random.nextBytes(frameData);
+      byte[] frameData = hardwareTelemetryProvider.readFrame();
 
       HardwareSnapshot snapshot = readHardwareSnapshot();
       TelemetryPacketDto packet = createPacket(frameData, snapshot.batteryPercent());

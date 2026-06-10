@@ -22,6 +22,7 @@ import com.azeem.avisos.controller.service.node.NodeService;
 import com.azeem.avisos.controller.service.threat.ThreatDetector;
 import com.azeem.avisos.controller.service.vision.VisionService;
 import com.azeem.avisos.controller.web.event.AlarmCreatedEvent;
+import com.azeem.avisos.controller.web.event.ImageFlaggedEvent;
 import com.azeem.avisos.controller.web.event.NodeHeartbeatEvent;
 import com.azeem.avisos.controller.web.event.VisionAnalysisEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -123,17 +124,27 @@ public class TelemetryIngressHandler implements IngressDataHandler<IngressMessag
 
       String formattedLabels = formatLabelsForAlarm(labels);
       if (severity != AlarmSeverity.NONE) {
+        UUID alarmId = UUID.randomUUID();
         AlarmRecord alarm =
             new AlarmRecord(
-                UUID.randomUUID(),
+                alarmId,
                 packet.nodeId(),
                 severity,
                 formattedLabels,
                 AlarmStatus.ACTIVE,
                 LocalDateTime.now(),
+                null,
                 null);
         alarmService.save(alarm);
         eventPublisher.publishEvent(new AlarmCreatedEvent(this, alarm));
+        eventPublisher.publishEvent(
+            new ImageFlaggedEvent(
+                this,
+                alarmId,
+                packet.nodeId(),
+                message.source(),
+                packet.payload(),
+                message.timestamp()));
       }
 
       log.info(

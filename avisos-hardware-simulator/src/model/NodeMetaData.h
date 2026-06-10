@@ -1,3 +1,8 @@
+/*
+ * (C) Copyright 2026 Jawad Azeem
+ * Apache 2.0 License
+ */
+
 /**
  * @file NodeMetaData.h
  * @brief Identity and hardware classification for a simulated sensor node.

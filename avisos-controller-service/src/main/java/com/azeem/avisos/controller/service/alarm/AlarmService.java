@@ -35,4 +35,9 @@ public class AlarmService {
     alarmRepository.resolveAlarm(alarm.id());
     log.info("Alarm ID {} has been marked as RESOLVED", alarm.id());
   }
+
+  public void attachImage(java.util.UUID alarmId, String s3ImageKey) {
+    alarmRepository.updateS3ImageKey(alarmId, s3ImageKey);
+    log.info("Image attached to alarm {} → {}", alarmId, s3ImageKey);
+  }
 }

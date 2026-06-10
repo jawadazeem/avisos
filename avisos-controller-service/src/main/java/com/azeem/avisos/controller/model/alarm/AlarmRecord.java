@@ -15,5 +15,6 @@ public record AlarmRecord(
     String reason,
     AlarmStatus status,
     LocalDateTime triggeredAtTimestamp,
-    LocalDateTime resolvedAtTimestamp // Can be null if the alarm is still active
+    LocalDateTime resolvedAtTimestamp, // Can be null if the alarm is still active
+    String s3ImageKey // S3 object key for the flagged camera frame, null if no image stored
     ) {}

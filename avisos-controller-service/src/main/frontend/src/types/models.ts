@@ -20,6 +20,7 @@ export interface AlarmRecord {
   status: AlarmStatus;
   triggeredAtTimestamp: string;
   resolvedAtTimestamp: string | null;
+  s3ImageKey: string | null;
 }
 
 export type HealthStatusLevel = "HEALTHY" | "DEGRADED" | "UNHEALTHY";

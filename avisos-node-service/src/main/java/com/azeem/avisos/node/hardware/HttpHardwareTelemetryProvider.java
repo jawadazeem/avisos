@@ -32,12 +32,15 @@ public class HttpHardwareTelemetryProvider implements HardwareTelemetryProvider 
         config.requestTimeout());
   }
 
+  private final URI frameUri;
+
   HttpHardwareTelemetryProvider(
       HttpClient httpClient, ObjectMapper objectMapper, URI readingsUri, Duration requestTimeout) {
     this.httpClient = Objects.requireNonNull(httpClient, "httpClient");
     this.objectMapper = Objects.requireNonNull(objectMapper, "objectMapper");
     this.readingsUri = Objects.requireNonNull(readingsUri, "readingsUri");
     this.requestTimeout = Objects.requireNonNull(requestTimeout, "requestTimeout");
+    this.frameUri = readingsUri.resolve("/frame");
   }
 
   @Override
@@ -58,6 +61,26 @@ public class HttpHardwareTelemetryProvider implements HardwareTelemetryProvider 
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new HardwareProviderException("Interrupted while reading hardware simulator", e);
+    }
+  }
+
+  @Override
+  public byte[] readFrame() {
+    HttpRequest request = HttpRequest.newBuilder(frameUri).timeout(requestTimeout).GET().build();
+
+    try {
+      HttpResponse<byte[]> response =
+          httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+      if (response.statusCode() < 200 || response.statusCode() >= 300) {
+        throw new HardwareProviderException(
+            "Simulator /frame returned status " + response.statusCode());
+      }
+      return response.body();
+    } catch (IOException e) {
+      throw new HardwareProviderException("Failed to fetch frame from simulator", e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new HardwareProviderException("Interrupted while fetching frame", e);
     }
   }
 }

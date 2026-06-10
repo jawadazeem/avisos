@@ -1,3 +1,8 @@
+/*
+ * (C) Copyright 2026 Jawad Azeem
+ * Apache 2.0 License
+ */
+
 /**
  * @file main.cpp
  * @brief Entry point for the Avisos Hardware Simulator.
@@ -17,6 +22,7 @@
 #include <spdlog/spdlog.h>
 
 #include "service/Simulator.h"
+#include "service/FrameProvider.h"
 #include "controller/HttpController.h"
 
 // Global pointers for signal handler access. Signal handlers are plain C
@@ -36,7 +42,8 @@ int main() {
     spdlog::info("Avisos Hardware Simulator v0.1.0");
 
     avisos::simulator::Simulator simulator;
-    avisos::controller::HttpController controller(simulator);
+    avisos::service::FrameProvider frame_provider("resources/frames");
+    avisos::controller::HttpController controller(simulator, frame_provider);
 
     g_simulator = &simulator;
     g_controller = &controller;

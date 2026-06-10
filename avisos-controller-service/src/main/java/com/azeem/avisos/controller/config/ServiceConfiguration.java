@@ -19,6 +19,7 @@ import java.io.InputStream;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
  * Central configuration class that enables all {@code @ConfigurationProperties}, provides bridge
@@ -26,12 +27,14 @@ import org.springframework.context.annotation.Configuration;
  * auto-scanned (records with runtime constructor args, singletons, shared ObjectMapper).
  */
 @Configuration
+@EnableAsync
 @EnableConfigurationProperties({
   AvisosMqttProperties.class,
   AvisosVisionProperties.class,
   AvisosDatabaseProperties.class,
   AvisosNodeServiceProperties.class,
-  AvisosCliProperties.class
+  AvisosCliProperties.class,
+  AvisosAwsProperties.class
 })
 public class ServiceConfiguration {
 

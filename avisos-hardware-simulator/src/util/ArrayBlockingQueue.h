@@ -1,3 +1,8 @@
+/*
+ * (C) Copyright 2026 Jawad Azeem
+ * Apache 2.0 License
+ */
+
 /**
  * @file ArrayBlockingQueue.h
  * @brief Bounded FIFO queue that rejects inserts when full.

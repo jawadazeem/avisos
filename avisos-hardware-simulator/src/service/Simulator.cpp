@@ -1,3 +1,8 @@
+/*
+ * (C) Copyright 2026 Jawad Azeem
+ * Apache 2.0 License
+ */
+
 /**
  * @file Simulator.cpp
  * @brief Implementation of the simulation loop and snapshot generation.
@@ -11,7 +16,7 @@
 
 namespace avisos::simulator {
 
-/// How often the simulation loop generates a fresh snapshot.
+// How often the simulation loop generates a fresh snapshot.
 static constexpr auto SIMULATION_INTERVAL = std::chrono::seconds(30);
 
 HardwareSnapshot Simulator::random_snapshot() {

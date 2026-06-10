@@ -1,3 +1,8 @@
+/*
+ * (C) Copyright 2026 Jawad Azeem
+ * Apache 2.0 License
+ */
+
 /**
  * @file HardwareSnapshot.cpp
  * @brief Construction, factory methods, and JSON serialisation for HardwareSnapshot.

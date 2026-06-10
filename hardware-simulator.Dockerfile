@@ -14,5 +14,6 @@ RUN apk add --no-cache libstdc++ spdlog fmt
 
 WORKDIR /root/
 COPY --from=builder /app/build/avisos_hardware_simulator hardware_simulator
+COPY resources/frames resources/frames
 
 CMD ["./hardware_simulator"]

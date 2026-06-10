@@ -1,3 +1,8 @@
+/*
+ * (C) Copyright 2026 Jawad Azeem
+ * Apache 2.0 License
+ */
+
 /**
  * @file NodeMetaData.cpp
  * @brief Construction and identity generation for simulated sensor nodes.

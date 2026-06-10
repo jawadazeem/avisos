@@ -26,3 +26,23 @@ avisos:
         timeout-seconds: 5
     database:
         url: "jdbc:sqlite:avisos.db"
+    aws:
+        endpoint: "http://localhost:4567"
+        region: "us-east-1"
+        s3-bucket-name: "avisos-flagged-images"
+        access-key-id: "test"
+        secret-access-key: "test"
+    ai:
+        ollama-base-url: "http://localhost:11434"
+        chat-model: "llama3.2:3b"
+        embedding-model: "nomic-embed-text"
+        knowledge-base-path: "../avisos-knowledge"
+
+spring:
+    ai:
+        ollama:
+            base-url: ${avisos.ai.ollama-base-url}
+            chat:
+                model: ${avisos.ai.chat-model}
+            embedding:
+                model: ${avisos.ai.embedding-model}

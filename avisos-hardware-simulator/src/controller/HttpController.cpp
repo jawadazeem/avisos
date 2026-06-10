@@ -1,3 +1,8 @@
+/*
+ * (C) Copyright 2026 Jawad Azeem
+ * Apache 2.0 License
+ */
+
 /**
  * @file HttpController.cpp
  * @brief Implementation of the REST endpoint serving simulator telemetry.
@@ -14,8 +19,9 @@
 
 namespace avisos::controller {
 
-HttpController::HttpController(avisos::simulator::Simulator& simulator)
-    : simulator_(simulator) {}
+HttpController::HttpController(avisos::simulator::Simulator& simulator,
+                               avisos::service::FrameProvider& frame_provider)
+    : simulator_(simulator), frame_provider_(frame_provider) {}
 
 void HttpController::start(int port) {
     server_thread_ = std::thread([this, port]() {
@@ -25,6 +31,18 @@ void HttpController::start(int port) {
             auto snapshot = simulator_.latest_snapshot();
             nlohmann::json j = snapshot;
             res.set_content(j.dump(), "application/json");
+        });
+
+        server.Get("/frame", [this](const httplib::Request&, httplib::Response& res) {
+            if (frame_provider_.alarm_count() == 0 && frame_provider_.normal_count() == 0) {
+                res.status = 404;
+                res.set_content(R"({"error":"no frames loaded"})", "application/json");
+                return;
+            }
+            const auto& frame = frame_provider_.pick_frame();
+            res.set_content(
+                std::string(reinterpret_cast<const char*>(frame.data()), frame.size()),
+                "image/png");
         });
 
         server.Get("/health", [](const httplib::Request&, httplib::Response& res) {

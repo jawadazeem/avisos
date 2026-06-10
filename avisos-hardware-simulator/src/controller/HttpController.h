@@ -1,3 +1,8 @@
+/*
+ * (C) Copyright 2026 Jawad Azeem
+ * Apache 2.0 License
+ */
+
 /**
  * @file HttpController.h
  * @brief HTTP layer that exposes simulator telemetry to the Java node service.
@@ -15,6 +20,7 @@
 #pragma once
 
 #include "../service/Simulator.h"
+#include "../service/FrameProvider.h"
 
 #include <thread>
 
@@ -24,8 +30,8 @@ class HttpController {
 public:
     static constexpr int DEFAULT_PORT = 5000;
 
-    /** @param simulator Reference to the simulator whose snapshots are served. */
-    explicit HttpController(avisos::simulator::Simulator& simulator);
+    HttpController(avisos::simulator::Simulator& simulator,
+                   avisos::service::FrameProvider& frame_provider);
 
     /** Spawns the HTTP server on a background thread. */
     void start(int port = DEFAULT_PORT);
@@ -35,6 +41,7 @@ public:
 
 private:
     avisos::simulator::Simulator& simulator_;
+    avisos::service::FrameProvider& frame_provider_;
     std::thread server_thread_;
 };
 

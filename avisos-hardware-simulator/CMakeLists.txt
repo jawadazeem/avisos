@@ -31,6 +31,7 @@ FetchContent_MakeAvailable(json httplib)
 set(SOURCES
     src/main.cpp
     src/service/Simulator.cpp
+    src/service/FrameProvider.cpp
     src/controller/HttpController.cpp
     src/model/HardwareSnapshot.cpp
     src/model/NodeMetaData.cpp

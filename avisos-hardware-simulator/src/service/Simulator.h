@@ -1,3 +1,8 @@
+/*
+ * (C) Copyright 2026 Jawad Azeem
+ * Apache 2.0 License
+ */
+
 /**
  * @file Simulator.h
  * @brief Core simulation engine that periodically generates hardware telemetry.
