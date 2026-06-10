@@ -33,7 +33,7 @@ export function AboutPage() {
         <p>
           Avisos is a SCADA orchestration platform that combines computer vision
           AI with real-time sensor telemetry for predictive threat modeling.
-          It monitors distributed IoT sensor nodes, processes camera feeds
+          It monitors distributed datacenter sensor nodes, processes camera feeds
           through object detection pipelines, and raises alarms when
           threats are identified.
         </p>

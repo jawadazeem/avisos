@@ -1,6 +1,6 @@
 # AVISOS - Advanced Visual Infrastructure Secure Operational Systems
 
-SCADA orchestration platform with computer vision AI for predictive threat modeling. Multi-module Maven monorepo with two services communicating over MQTT via Protobuf telemetry.
+SCADA orchestration platform with computer vision AI for predictive threat modeling. Multi-module Maven monorepo with Java services communicating over MQTT via Protobuf telemetry, plus a C++ hardware simulator used to feed realistic node vitals during demos and load tests.
 
 ## Build & Test
 
@@ -20,6 +20,12 @@ mvn spotless:apply
 # Run the full stack via Docker
 docker compose up --build
 
+# Build node + C++ hardware simulator images
+./scripts/spawn-test-fleet.sh build
+
+# Spawn simulator+node pairs against the running core stack
+./scripts/spawn-test-fleet.sh 10
+
 # Frontend dev server (hot reload, proxies to backend)
 cd avisos-controller-service/src/main/frontend && npm run dev
 ```
@@ -33,7 +39,9 @@ The React frontend is built automatically during `mvn install` via `frontend-mav
 ```
 avisos-common-lib/          Protobuf definitions + generated code (telemetry.proto)
 avisos-controller-service/  Central orchestration: CLI, DB, alarms, vision, notifications
-avisos-node-service/        Lightweight IoT node: heartbeat, battery, telemetry
+avisos-node-service/        Lightweight datacenter sensor node: heartbeat, battery, telemetry
+avisos-hardware-simulator/  C++17/CMake simulator exposing REST hardware readings for nodes
+avisos-knowledge/           Datacenter runbooks and facility docs for future RAG enrichment
 mosquitto/                  MQTT broker config (Eclipse Mosquitto)
 ```
 
@@ -66,7 +74,7 @@ CLI REPL is optional -- enabled via `avisos.cli.enabled=true` (default `false` i
 
 ### Node Service (`com.azeem.avisos.node`)
 
-Lightweight IoT node with custom DIY IoC framework (no Spring Boot -- edge device footprint).
+Lightweight datacenter sensor node with custom DIY IoC framework (no Spring Boot -- edge device footprint).
 
 | Package | Purpose |
 |---|---|
@@ -78,9 +86,28 @@ Lightweight IoT node with custom DIY IoC framework (no Spring Boot -- edge devic
 
 Entry point: `NodeApplication.main()`
 
+The node can run against local OS hardware providers or a simulator-backed REST provider. In simulator mode, set `HARDWARE_PROVIDER=simulator-rest` and `HARDWARE_SIMULATOR_BASE_URL=http://<simulator-host>:5000`; the node polls simulator readings and preserves the MQTT telemetry contract consumed by the controller.
+
+### Hardware Simulator (`avisos-hardware-simulator`)
+
+C++17 service built with CMake. It models datacenter hardware vitals and exposes them over HTTP so `avisos-node-service` can consume realistic sensor data without needing physical hardware.
+
+| Area | Purpose |
+|---|---|
+| `src/controller/` | HTTP controller for simulator endpoints such as hardware readings |
+| `src/service/` | Simulation runtime and state transitions |
+| `src/model/` | Hardware snapshot and node metadata models |
+| `src/util/` | Supporting utility classes |
+
+Build/runtime notes:
+- Docker image is built from `hardware-simulator.Dockerfile`
+- Local executable target is `avisos_hardware_simulator`
+- Fleet testing is managed by `scripts/spawn-test-fleet.sh`, which starts paired simulator and node containers on the Avisos Docker network
+
 ## Code Style
 
 - **Google Java Format** enforced by Spotless (build fails on violations)
+- **C++ simulator** uses C++17 and CMake; keep it framework-light and service-oriented
 - Run `mvn spotless:apply` before committing
 - `.editorconfig`: UTF-8, LF line endings, 4-space indent, trim trailing whitespace
 - Unused imports are automatically removed by Spotless
@@ -119,15 +146,16 @@ Conventional Commits format:
 | Service | Container | Purpose |
 |---|---|---|
 | `controller` | avisos-controller | Orchestration service (port 8080) |
-| `node-01` | avisos-node-01 | Sample node |
 | `mosquitto` | avisos-broker | MQTT broker (port 1883) |
 | `localstack` | avisos-cloud | AWS SNS emulation (port 4567) |
 | `vision-api` | avisos-VisionRequest | CodeProject.AI detection (port 32168) |
 
+Simulator-backed nodes are not part of the base Compose stack. They are launched on demand by `scripts/spawn-test-fleet.sh`, which builds `avisos-node:latest` and `avisos-hardware-simulator:latest`, then starts paired `node-*` and `sim-*` containers.
+
 ## Environment Variables
 
 **Controller:** `MQTT_BROKER_URL`, `MQTT_TOPIC`, `VISION_API_URL`, `DATABASE_URL`, `AVISOS_CLI_ENABLED`
-**Node:** `MQTT_BROKER_URL`, `MQTT_TOPIC`, `NODE_NAME`, `NODE_TYPE`
+**Node:** `MQTT_BROKER_URL`, `MQTT_TOPIC`, `NODE_NAME`, `NODE_TYPE`, `HARDWARE_PROVIDER`, `HARDWARE_SIMULATOR_BASE_URL`
 
 ## Future Directions
 

@@ -20,17 +20,20 @@ AVISOS is a SCADA orchestration platform that secures and monitors high-reliabil
 | Real-time | STOMP over WebSocket (SockJS) |
 | Database | SQLite + SQLCipher (encrypted), JDBI |
 | Vision AI | CodeProject.AI object detection |
+| Hardware Simulation | C++17, CMake, cpp-httplib, nlohmann/json |
 | Cloud | AWS SNS via LocalStack |
 | Security | Argon2id password hashing, encrypted DB |
 | Build | Maven multi-module, frontend-maven-plugin (Node 22) |
-| Deploy | Docker Compose (5 containers) |
+| Deploy | Docker Compose + on-demand simulator/node fleet containers |
 
 ### Module Structure
 
 ```
 avisos-common-lib/          Protobuf definitions + generated code (telemetry.proto)
 avisos-controller-service/  Central orchestration: REST API, dashboard, alarms, vision, CLI
-avisos-node-service/        Lightweight IoT edge node: heartbeat, battery, telemetry
+avisos-node-service/        Lightweight datacenter sensor node: heartbeat, battery, telemetry
+avisos-hardware-simulator/  C++ hardware simulator: REST readings for node-service polling
+avisos-knowledge/           Datacenter runbooks and facility docs for future RAG enrichment
 mosquitto/                  MQTT broker configuration (Eclipse Mosquitto)
 ```
 
@@ -45,9 +48,17 @@ cd avisos-controller-service/src/main/frontend && npm run dev
 
 # Build all modules
 mvn clean install
+
+# Build node + C++ hardware simulator images for fleet testing
+./scripts/spawn-test-fleet.sh build
+
+# Spawn 10 simulator+node pairs against the running core stack
+./scripts/spawn-test-fleet.sh 10
 ```
 
 Dashboard at `http://localhost:8080` -- pages for system overview, node monitoring, alarm management, and an embedded CLI terminal. All updates stream in real-time over WebSocket.
+
+The C++ hardware simulator runs as a standalone REST process and exposes hardware readings for the Java node service. In simulator mode, each node polls its paired simulator via `HARDWARE_SIMULATOR_BASE_URL`, then publishes the existing MQTT telemetry contract to the controller.
 
 ### API
 
