@@ -5,6 +5,7 @@
 
 package com.azeem.avisos.controller.model.vision;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 
 /**
@@ -12,5 +13,6 @@ import java.util.List;
  * metadata such as bounding boxes. executionProvider indicates whether GPU or CPU was used for
  * inference
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record VisionResponse(
     boolean success, List<Prediction> predictions, int inferenceMs, String executionProvider) {}

@@ -17,8 +17,6 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -32,8 +30,6 @@ class AlarmControllerTest {
 
   @InjectMocks AlarmController alarmController;
 
-  @Captor ArgumentCaptor<AlarmRecord> alarmCaptor;
-
   @Test
   void getActiveAlarms_shouldDelegateToService() {
     AlarmRecord alarm =
@@ -44,6 +40,7 @@ class AlarmControllerTest {
             "threat",
             AlarmStatus.ACTIVE,
             LocalDateTime.now(),
+            null,
             null);
     when(alarmService.loadAllActiveAlarms()).thenReturn(List.of(alarm));
 
@@ -70,22 +67,16 @@ class AlarmControllerTest {
     ResponseEntity<Void> response = alarmController.resolveAlarm(alarmId);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
-    verify(alarmService).resolveAlarm(alarmCaptor.capture());
-    assertEquals(alarmId, alarmCaptor.getValue().id());
+    verify(alarmService).resolveAlarm(alarmId);
   }
 
   @Test
-  void resolveAlarm_shouldPassStubWithNullFieldsExceptId() {
+  void resolveAlarm_shouldNotLoadOrMutateAlarmBeforeResolving() {
     UUID alarmId = UUID.randomUUID();
 
     alarmController.resolveAlarm(alarmId);
 
-    verify(alarmService).resolveAlarm(alarmCaptor.capture());
-    AlarmRecord stub = alarmCaptor.getValue();
-    assertEquals(alarmId, stub.id());
-    assertNull(stub.deviceUuid());
-    assertNull(stub.reason());
-    assertEquals(AlarmSeverity.NONE, stub.severity());
-    assertEquals(AlarmStatus.ACTIVE, stub.status());
+    verify(alarmService).resolveAlarm(alarmId);
+    verifyNoMoreInteractions(alarmService);
   }
 }

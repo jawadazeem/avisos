@@ -26,6 +26,14 @@ All dates use YYYY-MM-DD format. Technician references use role titles only.
 | D-TRANSIT-LEAK-01 | Corridor Low Point | Zone Delta, west section | Corridor floor, lowest grade point | 2022-03-14 | Active |
 | E-ELEC-ENV-01 | UPS Array Center | Zone Echo, UPS bay | Between UPS-A and UPS-B | 2022-03-14 | Active |
 | E-ELEC-LEAK-01 | Echo Exterior Wall | Zone Echo, exterior wall | Floor level, base of exterior wall | 2022-03-14 | Active — monitor |
+| A-A1-ENV-03 | Row One Intake | Zone Alpha, Row A1 | Mid-rack, contained cold aisle | 2022-03-14 | Active |
+| A-A3-ENV-04 | Row Three Return | Zone Alpha, Row A3 | Return-side rack face | 2022-03-14 | Active |
+| A-A4-ENV-05 | Row Four Open | Zone Alpha, Row A4 | Top third, open-frame rack | 2022-03-14 | Active — monitor |
+| A-A6-ENV-06 | Row Six Perimeter | Zone Alpha, Row A6 | South perimeter rack face | 2022-03-14 | Active |
+| B-MECH-ENV-02 | CRAH West Face | Zone Beta, CR9-WEST | CRAH intake face, west unit | 2022-03-14 | Active |
+| D-TRANSIT-ENV-01 | Corridor Midpoint | Zone Delta, midpoint | Ceiling mount near tray turn | 2022-03-14 | Active |
+| D-TRANSIT-ENV-02 | Corridor West End | Zone Delta, west section | Ceiling mount near Zone Echo entry | 2022-03-14 | Active — monitor |
+| E-ELEC-ENV-02 | Panel Ceiling | Zone Echo, main panel bay | Ceiling height above distribution panel | 2022-03-14 | Active |
 
 ---
 
@@ -366,6 +374,208 @@ All dates use YYYY-MM-DD format. Technician references use role titles only.
 **Known issues:** Efflorescence on interior wall face indicating historic moisture migration. Under monitoring since June 2023; no active moisture detected. Stairwell drain cleared April 2024.
 
 **AI analyst note:** This node has never alarmed in service. The efflorescence finding indicates the wall has experienced moisture in the past; this increases the credibility of any future `LEAK_DETECTED` alarm from this node compared to a location with no moisture history. A `LEAK_DETECTED` from this node is mandatory immediate escalation regardless of other conditions. Do not treat as a probable false positive. Check the stairwell drain status and current weather conditions as part of the initial assessment.
+
+---
+
+### A-A1-ENV-03 — Row One Intake
+
+**Zone:** Alpha, Row A1 (contained cold aisle)
+**Node type:** Environmental (temperature, humidity, pressure, battery, signal)
+**Installed:** 2022-03-14
+**Installation notes:** Mounted on the cold-aisle intake side of Row A1 near the first perforated tile group. Baseline temperature established at 67°F, humidity at 46%. This node is a leading indicator for cooling distribution into the north end of Zone Alpha.
+
+**Maintenance history:**
+
+2022-09-05 — Routine inspection. Readings stable. Battery at 98%. Signal quality 92%.
+
+2023-06-21 — Perforated tile alignment checked after a minor rack move. No airflow obstruction found. Temperature remained within contained cold-aisle baseline.
+
+2023-11-14 — Firmware updated to v2.3.0. No issues noted.
+
+2024-04-08 — Pressure reading reviewed against A-A2-ENV-01. Slightly higher positive pressure at Row A1 assessed as normal due to tile placement.
+
+2024-10-02 — Routine inspection. No issues. Battery at 97%.
+
+**Known issues:** None active. This is a stable comparison node for the contained cold aisle.
+
+**AI analyst note:** Use this node as a clean baseline for Zone Alpha north-side cooling. If A-A1-ENV-03 and A-A2-ENV-01 both trend upward, suspect a Zone Beta cooling supply issue rather than an isolated rack airflow problem.
+
+---
+
+### A-A3-ENV-04 — Row Three Return
+
+**Zone:** Alpha, Row A3 (contained cold aisle return boundary)
+**Node type:** Environmental (temperature, humidity, pressure, battery, signal)
+**Installed:** 2022-03-14
+**Installation notes:** Mounted near the return-side boundary between the contained Row A3 cluster and the center subfloor access point. Baseline temperature established at 70°F, humidity at 48%.
+
+**Maintenance history:**
+
+2022-09-05 — Routine inspection. No issues.
+
+2023-01-10 — Pressure sensor compared against reference meter; within 1 hPa. No calibration required.
+
+2023-08-17 — Reviewed after B-MECH-LEAK-01 and A-SF-LEAK-02 alarms. Humidity rose from 48% to 55% during the event but remained below alarm threshold. Node confirmed useful as a supporting signal for condensate migration.
+
+2023-11-14 — Firmware updated to v2.3.0.
+
+2024-10-02 — Routine inspection. Battery at 96%. Signal quality 90%.
+
+**Known issues:** None active. Humidity responds measurably during center subfloor moisture events but has not produced false alarms.
+
+**AI analyst note:** When A-SF-LEAK-02 alarms, check this node's humidity trend. A rising trend here supports the interpretation that moisture is affecting the center subfloor area near Row A3.
+
+---
+
+### A-A4-ENV-05 — Row Four Open
+
+**Zone:** Alpha, Row A4 (open-frame racks)
+**Node type:** Environmental (temperature, humidity, pressure, battery, signal)
+**Installed:** 2022-03-14
+**Installation notes:** Mounted in the upper third of an open-frame rack. Baseline temperature established at 77°F because Row A4 is outside the contained cold aisle and is exposed to mixed room air.
+
+**Maintenance history:**
+
+2022-09-05 — Routine inspection. Temperature at 78°F, within open-frame baseline.
+
+2023-06-21 — `TEMPERATURE_HIGH` warning investigated. Cause traced to a temporary cable bundle blocking side airflow after a maintenance window. Bundle rerouted; temperature returned to 77°F within one hour.
+
+2023-11-14 — Firmware updated to v2.3.0. Signal quality 84%.
+
+2024-04-08 — Temperature baseline reviewed. Row A4 still runs 3–5°F warmer than contained rows; accepted as normal for this location.
+
+2024-10-02 — Routine inspection. Minor dust accumulation cleaned from sensor ports.
+
+**Known issues:** Open-frame thermal variability. Prior airflow obstruction caused a warning in June 2023.
+
+**AI analyst note:** Temperature alarms from this node should be correlated with A-A5-ENV-02 and A-A6-ENV-06. A single alarm here may indicate local rack airflow obstruction; a group trend across rows A4–A6 indicates broader perimeter cooling degradation.
+
+---
+
+### A-A6-ENV-06 — Row Six Perimeter
+
+**Zone:** Alpha, Row A6 (south perimeter open-frame racks)
+**Node type:** Environmental (temperature, humidity, pressure, battery, signal)
+**Installed:** 2022-03-14
+**Installation notes:** Mounted on the south perimeter rack face near the supplemental cooling unit supply path. Baseline temperature established at 75°F, humidity at 50%.
+
+**Maintenance history:**
+
+2022-09-05 — Routine inspection. No issues.
+
+2023-03-28 — Reviewed during Zone Alpha rail voltage sag event. Battery dipped to 79% but did not cross alarm threshold. Recovered after load distribution adjustment.
+
+2023-11-14 — Firmware updated to v2.3.0.
+
+2024-04-08 — Supplemental cooling grille inspected after a mild temperature rise. Dust buildup removed by Facility Lead. Temperature improved by 2°F.
+
+2024-10-02 — Routine inspection. Battery at 95%. Signal quality 86%.
+
+**Known issues:** Sensitive to supplemental cooling grille obstruction. Battery has shown mild response to Zone Alpha rail sag but no direct battery alarm history.
+
+**AI analyst note:** A temperature rise on this node with stable readings on A-A4-ENV-05 and A-A5-ENV-02 points toward the south perimeter supplemental cooling path rather than a zone-wide cooling issue.
+
+---
+
+### B-MECH-ENV-02 — CRAH West Face
+
+**Zone:** Beta, CR9-WEST intake face
+**Node type:** Environmental (temperature, humidity, pressure, battery, signal)
+**Installed:** 2022-03-14
+**Installation notes:** Mounted on the intake face of the CR9-WEST unit. Baseline temperature established at 81°F and humidity at 55%. This node pairs with B-MECH-ENV-01 to compare east and west CRAH behavior.
+
+**Maintenance history:**
+
+2022-09-05 — Routine inspection. Readings consistent with CR9-WEST operating parameters.
+
+2023-01-10 — Signal quality briefly dropped to 72% during CRAH motor service. Recovered after maintenance window.
+
+2023-11-14 — Firmware updated to v2.3.0. Pressure sensor checked; no offset found.
+
+2024-04-08 — Humidity trend stable. No drain issues observed on west unit.
+
+2024-10-02 — Routine inspection. Temperature 82°F, humidity 56%, battery 96%.
+
+**Known issues:** No persistent hardware issues. Temporary signal drop occurred during maintenance activity only.
+
+**AI analyst note:** Compare this node against B-MECH-ENV-01 for cooling plant diagnostics. If both CRAH intake nodes show humidity rise, suspect room-level moisture. If only one rises, investigate the corresponding CRAH drain or coil behavior.
+
+---
+
+### D-TRANSIT-ENV-01 — Corridor Midpoint
+
+**Zone:** Delta, corridor midpoint and cable tray turn
+**Node type:** Environmental (temperature, humidity, pressure, battery, signal)
+**Installed:** 2022-03-14
+**Installation notes:** Ceiling-mounted at the midpoint of the Zone Delta cable corridor where overhead tray density is highest. Baseline temperature established at 76°F, humidity at 49%.
+
+**Maintenance history:**
+
+2022-09-05 — Routine inspection. No issues.
+
+2023-06-21 — Temperature rose to 82°F during cabling work. Assessed as expected due to open access panels and technician presence. Returned to baseline after work completed.
+
+2023-11-14 — Firmware updated to v2.3.0.
+
+2024-04-08 — Cable tray fill reviewed; no new heat concern noted.
+
+2024-10-02 — Routine inspection. Battery at 94%. Signal quality 82%.
+
+**Known issues:** Temperature can rise during cable work or when access panels remain open. No persistent sensor faults.
+
+**AI analyst note:** Use this node to distinguish corridor heat buildup from upstream Zone Alpha or Zone Echo events. A temperature rise here without matching changes in adjacent zones often indicates cable-tray or access-panel conditions.
+
+---
+
+### D-TRANSIT-ENV-02 — Corridor West End
+
+**Zone:** Delta, west section near Zone Echo entry
+**Node type:** Environmental (temperature, humidity, pressure, battery, signal)
+**Installed:** 2022-03-14
+**Installation notes:** Ceiling-mounted near the Zone Echo entry panel. Baseline temperature established at 73°F, humidity at 47%. This node is physically near the downstream path for water migration toward Zone Echo.
+
+**Maintenance history:**
+
+2022-09-05 — Routine inspection. No issues.
+
+2023-08-17 — Reviewed after Zone Beta and Alpha subfloor moisture event. No humidity rise detected at the west corridor end, supporting conclusion that water did not migrate toward Zone Echo.
+
+2023-11-14 — Firmware updated to v2.3.0.
+
+2024-04-08 — Humidity trend showed a 3-point seasonal increase. Assessed as normal due to corridor air exchange with Zone Echo.
+
+2024-10-02 — Routine inspection. No issues. Battery at 95%.
+
+**Known issues:** Seasonal humidity variation near Zone Echo boundary. No alarm history.
+
+**AI analyst note:** If D-TRANSIT-LEAK-01 alarms, check this node's humidity trend. A rising humidity trend here increases concern that moisture is approaching the electrical room boundary.
+
+---
+
+### E-ELEC-ENV-02 — Panel Ceiling
+
+**Zone:** Echo, main distribution panel bay
+**Node type:** Environmental (temperature, humidity, pressure, battery, signal)
+**Installed:** 2022-03-14
+**Installation notes:** Mounted at ceiling height above the main distribution panel bay. Baseline temperature established at 74°F, humidity at 39%. Provides early warning for heat accumulation above the electrical panels.
+
+**Maintenance history:**
+
+2022-09-05 — Routine inspection with Facility Lead present. No issues.
+
+2023-01-10 — Pressure reading compared against E-ELEC-ENV-01; within expected range for ceiling-height placement.
+
+2023-09-04 — Reviewed during E-ELEC-ENV-01 battery event. No battery impact on this node, confirming the breaker issue was limited to the UPS array sensor circuit.
+
+2023-11-14 — Firmware updated to v2.3.0 with Facility Lead present.
+
+2024-04-08 — Temperature stable at 73°F. Humidity 40%. No panel heat concerns.
+
+2024-10-02 — Routine inspection. Battery at 96%. Signal quality 78%, normal for Zone Echo shielding.
+
+**Known issues:** Signal baseline is lower than fleet average due to Zone Echo shielding. No temperature or humidity alarm history.
+
+**AI analyst note:** Treat temperature rise on this node as significant because it monitors heat accumulation above the distribution panel bay. If this node and E-ELEC-ENV-01 both rise, escalate as a potential Zone Echo thermal event.
 
 ---
 

@@ -4,9 +4,9 @@
 #
 # Usage:
 #   ./scripts/spawn-test-fleet.sh build           # build node + simulator images
-#   ./scripts/spawn-test-fleet.sh                  # spawn 10 pairs (default)
-#   ./scripts/spawn-test-fleet.sh 1                # single pair for dev
-#   ./scripts/spawn-test-fleet.sh 100              # load test
+#   ./scripts/spawn-test-fleet.sh                  # spawn deterministic 20-node demo fleet
+#   ./scripts/spawn-test-fleet.sh random 10        # spawn 10 random pairs
+#   ./scripts/spawn-test-fleet.sh 100              # spawn 100 random pairs for load testing
 #   ./scripts/spawn-test-fleet.sh teardown         # remove all pairs
 #   ./scripts/spawn-test-fleet.sh status           # show running pairs
 #
@@ -27,6 +27,52 @@ LABEL="avisos.fleet=test"
 
 MQTT_BROKER="tcp://mosquitto:1883"
 MQTT_TOPIC="avisos/telemetry"
+
+DEMO_NODE_IDS=(
+    "00000000-0000-4000-8000-000000000001"
+    "00000000-0000-4000-8000-000000000002"
+    "00000000-0000-4000-8000-000000000003"
+    "00000000-0000-4000-8000-000000000004"
+    "00000000-0000-4000-8000-000000000005"
+    "00000000-0000-4000-8000-000000000006"
+    "00000000-0000-4000-8000-000000000007"
+    "00000000-0000-4000-8000-000000000008"
+    "00000000-0000-4000-8000-000000000009"
+    "00000000-0000-4000-8000-000000000010"
+    "00000000-0000-4000-8000-000000000011"
+    "00000000-0000-4000-8000-000000000012"
+    "00000000-0000-4000-8000-000000000013"
+    "00000000-0000-4000-8000-000000000014"
+    "00000000-0000-4000-8000-000000000015"
+    "00000000-0000-4000-8000-000000000016"
+    "00000000-0000-4000-8000-000000000017"
+    "00000000-0000-4000-8000-000000000018"
+    "00000000-0000-4000-8000-000000000019"
+    "00000000-0000-4000-8000-000000000020"
+)
+
+DEMO_NODE_NAMES=(
+    "A-A2-ENV-01"
+    "A-A5-ENV-02"
+    "A-SF-LEAK-01"
+    "A-SF-LEAK-02"
+    "B-MECH-ENV-01"
+    "B-MECH-LEAK-01"
+    "G-NET-ENV-01"
+    "G-NET-LEAK-01"
+    "G-PATCH-ENV-01"
+    "D-TRANSIT-LEAK-01"
+    "E-ELEC-ENV-01"
+    "E-ELEC-LEAK-01"
+    "A-A1-ENV-03"
+    "A-A3-ENV-04"
+    "A-A4-ENV-05"
+    "A-A6-ENV-06"
+    "B-MECH-ENV-02"
+    "D-TRANSIT-ENV-01"
+    "D-TRANSIT-ENV-02"
+    "E-ELEC-ENV-02"
+)
 
 # -- helpers --
 
@@ -55,6 +101,10 @@ new_uuid() {
     fail "Cannot generate node UUID: install uuidgen or provide /proc/sys/kernel/random/uuid."
 }
 
+container_safe_name() {
+    printf "%s" "$1" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9_.-' '-'
+}
+
 ensure_network() {
     resolve_network
 
@@ -71,9 +121,7 @@ resolve_network() {
     fi
 
     local compose_env_args=()
-    if [ -f "$PROJECT_ROOT/.env" ]; then
-        compose_env_args=(--env-file "$PROJECT_ROOT/.env")
-    elif [ -f "$PROJECT_ROOT/.env.example" ]; then
+    if [ -f "$PROJECT_ROOT/.env.example" ]; then
         compose_env_args=(--env-file "$PROJECT_ROOT/.env.example")
     fi
 
@@ -144,34 +192,71 @@ cmd_spawn() {
         local sim_name="sim-${id}"
         local node_name="node-${id}"
 
-        # Start simulator (serves GET /readings on :5000)
-        docker run -d \
-            --name "$sim_name" \
-            --network "$NETWORK" \
-            --label "$LABEL" \
-            --restart unless-stopped \
-            "$SIM_IMAGE" > /dev/null
-
-        # Start node (polls simulator, publishes telemetry over MQTT)
-        docker run -d \
-            --name "$node_name" \
-            --network "$NETWORK" \
-            --label "$LABEL" \
-            --restart unless-stopped \
-            -e HARDWARE_PROVIDER=simulator-rest \
-            -e HARDWARE_SIMULATOR_BASE_URL="http://${sim_name}:5000" \
-            -e MQTT_BROKER_URL="$MQTT_BROKER" \
-            -e MQTT_TOPIC="$MQTT_TOPIC" \
-            -e NODE_ID="$node_id" \
-            -e NODE_NAME="$node_name" \
-            -e NODE_TYPE=data-acquisition-device \
-            "$NODE_IMAGE" > /dev/null
-
+        spawn_pair "$node_id" "$node_name" "$sim_name" "$node_name"
         spawned=$((spawned + 1))
         log "  [$spawned/$count] $node_name <-> $sim_name"
     done
 
     log "Done. $spawned pair(s) running."
+}
+
+cmd_spawn_demo() {
+    require_command docker
+
+    ensure_network
+    ensure_images
+
+    local count="${#DEMO_NODE_NAMES[@]}"
+    log "Spawning deterministic $count-node demo fleet..."
+
+    local spawned=0
+    for index in "${!DEMO_NODE_NAMES[@]}"; do
+        local node_id="${DEMO_NODE_IDS[$index]}"
+        local node_name="${DEMO_NODE_NAMES[$index]}"
+        local sim_name
+        sim_name="sim-$(container_safe_name "$node_name")"
+
+        spawn_pair "$node_id" "$node_name" "$sim_name"
+        spawned=$((spawned + 1))
+        log "  [$spawned/$count] $node_name <-> $sim_name"
+    done
+
+    log "Done. $spawned deterministic pair(s) running."
+}
+
+spawn_pair() {
+    local node_id="$1"
+    local node_name="$2"
+    local sim_name="$3"
+    local container_node_name
+    container_node_name="${4:-node-$(container_safe_name "$node_name")}"
+
+    if docker container inspect "$sim_name" &>/dev/null || docker container inspect "$container_node_name" &>/dev/null; then
+        fail "Container '$sim_name' or '$container_node_name' already exists. Run './scripts/spawn-test-fleet.sh teardown' first."
+    fi
+
+    # Start simulator (serves GET /readings on :5000)
+    docker run -d \
+        --name "$sim_name" \
+        --network "$NETWORK" \
+        --label "$LABEL" \
+        --restart unless-stopped \
+        "$SIM_IMAGE" > /dev/null
+
+    # Start node (polls simulator, publishes telemetry over MQTT)
+    docker run -d \
+        --name "$container_node_name" \
+        --network "$NETWORK" \
+        --label "$LABEL" \
+        --restart unless-stopped \
+        -e HARDWARE_PROVIDER=simulator-rest \
+        -e HARDWARE_SIMULATOR_BASE_URL="http://${sim_name}:5000" \
+        -e MQTT_BROKER_URL="$MQTT_BROKER" \
+        -e MQTT_TOPIC="$MQTT_TOPIC" \
+        -e NODE_ID="$node_id" \
+        -e NODE_NAME="$node_name" \
+        -e NODE_TYPE=data-acquisition-device \
+        "$NODE_IMAGE" > /dev/null
 }
 
 cmd_teardown() {
@@ -211,14 +296,17 @@ case "${1:-}" in
     build)    cmd_build ;;
     teardown) cmd_teardown ;;
     status)   cmd_status ;;
+    random)   cmd_spawn "${2:-10}" ;;
     -h|--help)
-        echo "Usage: $0 [build|count|teardown|status]"
+        echo "Usage: $0 [build|random count|count|teardown|status]"
         echo ""
         echo "  build        Build node + simulator Docker images"
-        echo "  (no args)    Spawn 10 simulator+node pairs"
-        echo "  <count>      Spawn N pairs (e.g. 1, 100, 1000)"
+        echo "  (no args)    Spawn deterministic 20-node demo fleet"
+        echo "  random <n>   Spawn N random pairs (default: 10)"
+        echo "  <count>      Spawn N random pairs (e.g. 1, 100, 1000)"
         echo "  teardown     Remove all fleet containers"
         echo "  status       Show running fleet containers"
         ;;
-    *)        cmd_spawn "${1:-10}" ;;
+    "")       cmd_spawn_demo ;;
+    *)        cmd_spawn "$1" ;;
 esac

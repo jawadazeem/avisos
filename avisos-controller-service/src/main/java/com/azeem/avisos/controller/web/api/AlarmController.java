@@ -6,8 +6,6 @@
 package com.azeem.avisos.controller.web.api;
 
 import com.azeem.avisos.controller.model.alarm.AlarmRecord;
-import com.azeem.avisos.controller.model.alarm.AlarmSeverity;
-import com.azeem.avisos.controller.model.alarm.AlarmStatus;
 import com.azeem.avisos.controller.service.alarm.AlarmService;
 import java.util.List;
 import java.util.UUID;
@@ -35,9 +33,7 @@ public class AlarmController {
 
   @PostMapping("/{id}/resolve")
   public ResponseEntity<Void> resolveAlarm(@PathVariable UUID id) {
-    AlarmRecord stub =
-        new AlarmRecord(id, null, AlarmSeverity.NONE, null, AlarmStatus.ACTIVE, null, null);
-    alarmService.resolveAlarm(stub);
+    alarmService.resolveAlarm(id);
     return ResponseEntity.ok().build();
   }
 }

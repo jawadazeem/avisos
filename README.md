@@ -54,11 +54,16 @@ mvn clean install
 
 # Spawn 10 simulator+node pairs against the running core stack
 ./scripts/spawn-test-fleet.sh 10
+
+# Dry-run removal of random/load-test nodes from the encrypted DB
+./scripts/purge-test-nodes.sh
 ```
 
 Dashboard at `http://localhost:8080` -- pages for system overview, node monitoring, alarm management, and an embedded CLI terminal. All updates stream in real-time over WebSocket.
 
 The C++ hardware simulator runs as a standalone REST process and exposes hardware readings for the Java node service. In simulator mode, each node polls its paired simulator via `HARDWARE_SIMULATOR_BASE_URL`, then publishes the existing MQTT telemetry contract to the controller.
+
+`scripts/purge-test-nodes.sh` is an operator-only maintenance helper for demos and load tests. It defaults to dry-run mode and targets random/load-test nodes while preserving the deterministic 20-node demo fleet. Add `--yes` to execute deletion, or `--include-demo --yes` when intentionally resetting the canonical demo fleet.
 
 ### API
 

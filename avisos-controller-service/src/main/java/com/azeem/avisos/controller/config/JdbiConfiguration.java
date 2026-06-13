@@ -55,6 +55,9 @@ public class JdbiConfiguration {
   public AlarmRepository alarmRepository(Jdbi jdbi) {
     AlarmRepository repo = jdbi.onDemand(AlarmRepository.class);
     repo.initAlarmTable();
+    if (repo.countColumn("s3_image_key") == 0) {
+      repo.addS3ImageKeyColumn();
+    }
     return repo;
   }
 

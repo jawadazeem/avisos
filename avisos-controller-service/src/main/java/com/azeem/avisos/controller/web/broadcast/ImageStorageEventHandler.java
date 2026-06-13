@@ -37,7 +37,10 @@ public class ImageStorageEventHandler {
     try {
       String s3Key =
           imageStorageService.store(
-              event.getMqttSource(), event.getNodeId(), event.getImageData(), event.getTimestamp());
+              event.getMqttSource(),
+              event.getNodeId(),
+              event.getImageData(),
+              event.getCapturedAt());
 
       alarmService.attachImage(event.getAlarmId(), s3Key);
     } catch (Exception e) {

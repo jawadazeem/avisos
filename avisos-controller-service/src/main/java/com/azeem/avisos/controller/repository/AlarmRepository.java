@@ -7,7 +7,11 @@ package com.azeem.avisos.controller.repository;
 
 import com.azeem.avisos.controller.model.alarm.AlarmRecord;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.jdbi.v3.sqlobject.config.RegisterConstructorMapper;
+import org.jdbi.v3.sqlobject.customizer.Bind;
+import org.jdbi.v3.sqlobject.customizer.BindMethods;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
@@ -28,6 +32,12 @@ public interface AlarmRepository {
     """)
   void initAlarmTable();
 
+  @SqlQuery("SELECT COUNT(*) FROM pragma_table_info('alarms') WHERE name = :columnName")
+  int countColumn(@Bind("columnName") String columnName);
+
+  @SqlUpdate("ALTER TABLE alarms ADD COLUMN s3_image_key TEXT")
+  void addS3ImageKeyColumn();
+
   @SqlUpdate(
       """
         INSERT INTO alarms (
@@ -37,7 +47,7 @@ public interface AlarmRepository {
             :id, :deviceUuid, :severity, :reason, :status, :triggeredAtTimestamp, :s3ImageKey
         )
     """)
-  void triggerAlarm(AlarmRecord alarm);
+  void triggerAlarm(@BindMethods AlarmRecord alarm);
 
   @SqlUpdate(
       """
@@ -46,7 +56,7 @@ public interface AlarmRepository {
             resolved_at = CURRENT_TIMESTAMP
         WHERE id = :id
     """)
-  void resolveAlarm(java.util.UUID id);
+  void resolveAlarm(@Bind("id") java.util.UUID id);
 
   @SqlUpdate(
       """
@@ -54,7 +64,7 @@ public interface AlarmRepository {
         SET s3_image_key = :s3ImageKey
         WHERE id = :id
     """)
-  void updateS3ImageKey(java.util.UUID id, String s3ImageKey);
+  void updateS3ImageKey(@Bind("id") java.util.UUID id, @Bind("s3ImageKey") String s3ImageKey);
 
   @SqlQuery(
       """
@@ -72,4 +82,21 @@ public interface AlarmRepository {
     """)
   @RegisterConstructorMapper(AlarmRecord.class)
   List<AlarmRecord> getActiveAlarms();
+
+  @SqlQuery(
+      """
+        SELECT
+            id,
+            device_uuid AS deviceUuid,
+            severity,
+            reason,
+            status,
+            triggered_at AS triggeredAtTimestamp,
+            resolved_at AS resolvedAtTimestamp,
+            s3_image_key AS s3ImageKey
+        FROM alarms
+        WHERE id = :id
+    """)
+  @RegisterConstructorMapper(AlarmRecord.class)
+  Optional<AlarmRecord> findById(@Bind("id") UUID id);
 }

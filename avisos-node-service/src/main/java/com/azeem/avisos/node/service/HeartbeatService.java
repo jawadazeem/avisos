@@ -80,12 +80,12 @@ public class HeartbeatService {
   }
 
   private TelemetryPacketDto createPacket(byte[] frameData, int batteryLevel) {
+    PacketTypeDto packetType =
+        frameData != null && frameData.length > 0
+            ? PacketTypeDto.NETWORK_SCAN
+            : PacketTypeDto.HEARTBEAT;
+
     return new TelemetryPacketDto(
-        nodeConfig.nodeId(),
-        batteryLevel,
-        nodeConfig.name(),
-        PacketTypeDto.HEARTBEAT,
-        frameData,
-        Instant.now());
+        nodeConfig.nodeId(), batteryLevel, nodeConfig.name(), packetType, frameData, Instant.now());
   }
 }

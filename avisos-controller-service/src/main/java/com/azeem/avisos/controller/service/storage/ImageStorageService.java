@@ -56,11 +56,7 @@ public class ImageStorageService {
     String s3Key = sanitizedSource + "/" + nodeId + "/" + objectName;
 
     s3Client.putObject(
-        PutObjectRequest.builder()
-            .bucket(bucketName)
-            .key(s3Key)
-            .contentType("image/jpeg")
-            .build(),
+        PutObjectRequest.builder().bucket(bucketName).key(s3Key).contentType("image/jpeg").build(),
         RequestBody.fromBytes(imageData));
 
     log.info("Flagged image stored → s3://{}/{} ({}B)", bucketName, s3Key, imageData.length);

@@ -50,7 +50,7 @@ export function DashboardPage() {
 
   useEffect(() => {
     if (!alarmUpdate) return;
-    setAlarms((prev) => [alarmUpdate, ...prev]);
+    setAlarms((prev) => upsertAlarm(prev, alarmUpdate));
   }, [alarmUpdate]);
 
   if (error) {
@@ -58,8 +58,10 @@ export function DashboardPage() {
   }
 
   const responsive = nodes.filter((n) => n.status === "RESPONSIVE").length;
-  const critical = alarms.filter((a) => a.severity === "CRITICAL" && a.status === "ACTIVE").length;
-  const warnings = alarms.filter((a) => a.severity === "WARNING" && a.status === "ACTIVE").length;
+  const activeAlarms = alarms.filter((a) => a.status === "ACTIVE");
+  const critical = activeAlarms.filter((a) => a.severity === "CRITICAL").length;
+  const warnings = activeAlarms.filter((a) => a.severity === "WARNING").length;
+  const withEvidence = activeAlarms.filter((a) => Boolean(a.s3ImageKey)).length;
 
   return (
     <div className="dashboard">
@@ -114,8 +116,12 @@ export function DashboardPage() {
                 <span className="stat-label">Warnings</span>
               </div>
               <div className="stat-item">
-                <span className="stat-value green">{alarms.filter((a) => a.status === "RESOLVED").length}</span>
-                <span className="stat-label">Resolved</span>
+                <span className="stat-value">{activeAlarms.length}</span>
+                <span className="stat-label">Total Active</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value green">{withEvidence}</span>
+                <span className="stat-label">Images</span>
               </div>
             </div>
             <Link className="alarm-page-link" to="/alarms">
@@ -181,4 +187,12 @@ function formatUptime(seconds: number): string {
   const m = Math.floor((seconds % 3600) / 60);
   const s = Math.floor(seconds % 60);
   return `${h}h ${m}m ${s}s`;
+}
+
+function upsertAlarm(existing: AlarmRecord[], incoming: AlarmRecord): AlarmRecord[] {
+  const index = existing.findIndex((alarm) => alarm.id === incoming.id);
+  if (index < 0) return [incoming, ...existing];
+  const updated = [...existing];
+  updated[index] = incoming;
+  return updated;
 }

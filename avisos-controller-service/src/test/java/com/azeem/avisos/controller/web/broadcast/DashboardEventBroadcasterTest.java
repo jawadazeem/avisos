@@ -45,6 +45,7 @@ class DashboardEventBroadcasterTest {
             "knife detected",
             AlarmStatus.ACTIVE,
             LocalDateTime.now(),
+            null,
             null);
     AlarmCreatedEvent event = new AlarmCreatedEvent(this, alarm);
 

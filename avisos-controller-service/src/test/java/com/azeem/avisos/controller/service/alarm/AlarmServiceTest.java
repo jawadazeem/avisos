@@ -14,6 +14,7 @@ import com.azeem.avisos.controller.model.alarm.AlarmStatus;
 import com.azeem.avisos.controller.repository.AlarmRepository;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,6 +46,7 @@ public class AlarmServiceTest {
             "Test reason",
             AlarmStatus.ACTIVE,
             LocalDateTime.now(),
+            null,
             null);
   }
 
@@ -74,6 +76,17 @@ public class AlarmServiceTest {
     // then
     assertSame(expected, actual, "Should return the exact list provided by repository");
     verify(alarmRepository, times(1)).getActiveAlarms();
+  }
+
+  @Test
+  void loadAlarm_shouldReturnRepositoryResult() {
+    UUID alarmId = sampleAlarm.id();
+    when(alarmRepository.findById(alarmId)).thenReturn(Optional.of(sampleAlarm));
+
+    Optional<AlarmRecord> actual = alarmService.loadAlarm(alarmId);
+
+    assertEquals(Optional.of(sampleAlarm), actual);
+    verify(alarmRepository).findById(alarmId);
   }
 
   @Test

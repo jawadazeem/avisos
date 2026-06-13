@@ -101,6 +101,18 @@ class HeartbeatServiceTest {
   }
 
   @Test
+  void sendTelemetry_shouldUseNetworkScanPacketTypeWhenFrameIsPresent() {
+    when(hardwareTelemetryProvider.readFrame()).thenReturn(new byte[] {1, 2, 3});
+    when(hardwareTelemetryProvider.readSnapshot()).thenReturn(HardwareSnapshot.localBattery(50));
+
+    heartbeatService.sendTelemetry();
+
+    verify(mqttProvider).publish(eq(mqttConfig.topic()), payloadCaptor.capture());
+    String json = new String(payloadCaptor.getValue());
+    assertTrue(json.contains("NETWORK_SCAN"));
+  }
+
+  @Test
   void sendTelemetry_shouldNotThrowOnPublishFailure() {
     when(hardwareTelemetryProvider.readSnapshot()).thenReturn(HardwareSnapshot.localBattery(60));
     doThrow(new RuntimeException("Connection lost"))

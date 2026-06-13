@@ -21,7 +21,11 @@ public class ImageFlaggedEvent extends ApplicationEvent {
   private final Instant timestamp;
 
   public ImageFlaggedEvent(
-      Object source, UUID alarmId, UUID nodeId, String mqttSource, byte[] imageData,
+      Object source,
+      UUID alarmId,
+      UUID nodeId,
+      String mqttSource,
+      byte[] imageData,
       Instant timestamp) {
     super(source);
     this.alarmId = alarmId;
@@ -47,7 +51,7 @@ public class ImageFlaggedEvent extends ApplicationEvent {
     return imageData;
   }
 
-  public Instant getTimestamp() {
+  public Instant getCapturedAt() {
     return timestamp;
   }
 }

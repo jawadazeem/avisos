@@ -8,6 +8,8 @@ package com.azeem.avisos.controller.service.alarm;
 import com.azeem.avisos.controller.model.alarm.AlarmRecord;
 import com.azeem.avisos.controller.repository.AlarmRepository;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -31,9 +33,18 @@ public class AlarmService {
     return alarmRepository.getActiveAlarms();
   }
 
+  public Optional<AlarmRecord> loadAlarm(UUID id) {
+    return alarmRepository.findById(id);
+  }
+
   public void resolveAlarm(AlarmRecord alarm) {
     alarmRepository.resolveAlarm(alarm.id());
     log.info("Alarm ID {} has been marked as RESOLVED", alarm.id());
+  }
+
+  public void resolveAlarm(UUID id) {
+    alarmRepository.resolveAlarm(id);
+    log.info("Alarm ID {} has been marked as RESOLVED", id);
   }
 
   public void attachImage(java.util.UUID alarmId, String s3ImageKey) {

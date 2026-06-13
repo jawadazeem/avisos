@@ -7,18 +7,14 @@ services:
         container_name: avisos-controller
         networks:
             avisos-net:
-            proxy-net:
-                aliases:
-                    - avisos
+            # proxy-net:
+            #     aliases:
+            #         - avisos
         ports:
             - "8083:8083"
+        env_file:
+            - .env.example
         environment:
-            - AVISOS_MQTT_BROKER=${AVISOS_MQTT_BROKER:?Set AVISOS_MQTT_BROKER in .env}
-            - AVISOS_MQTT_TOPIC=${AVISOS_MQTT_TOPIC:?Set AVISOS_MQTT_TOPIC in .env}
-            - AVISOS_VISION_API_URL=${AVISOS_VISION_API_URL:?Set AVISOS_VISION_API_URL in .env}
-            - AVISOS_DATABASE_URL=${AVISOS_DATABASE_URL:?Set AVISOS_DATABASE_URL in .env}
-            - DATABASE_ENCRYPTION_KEY=${DATABASE_ENCRYPTION_KEY:?Set DATABASE_ENCRYPTION_KEY in .env}
-            - AVISOS_CLI_ENABLED=${AVISOS_CLI_ENABLED:-false}
             - AVISOS_AWS_ENDPOINT=http://avisos-cloud:4566
             - AVISOS_AWS_REGION=us-east-1
             - AVISOS_AWS_S3_BUCKET_NAME=avisos-flagged-images
@@ -107,5 +103,5 @@ volumes:
 networks:
     avisos-net:
         driver: bridge
-    proxy-net:
-        external: true
+    # proxy-net:
+    #     external: true
