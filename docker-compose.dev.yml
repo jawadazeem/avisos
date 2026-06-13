@@ -7,9 +7,9 @@ services:
         container_name: avisos-controller
         networks:
             avisos-net:
-            proxy-net:
-                aliases:
-                    - avisos
+            # proxy-net:
+            #     aliases:
+            #         - avisos
         ports:
             - "8083:8083"
         env_file:
@@ -103,5 +103,5 @@ volumes:
 networks:
     avisos-net:
         driver: bridge
-    proxy-net:
-        external: true
+    # proxy-net:
+    #     external: true
