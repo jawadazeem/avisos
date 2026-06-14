@@ -67,7 +67,8 @@ critical:
 
 warning:
   # Unauthorized personnel
-  - "person"
+  # NOTE: Generic object detectors cannot distinguish an authorized technician
+  # from an intruder. Do not alarm on "person" without zone/access context.
   - "crowd"
   - "group of people"
   - "trespasser"
@@ -106,17 +107,14 @@ warning:
 
   # Data center specific
   - "ladder"
-  - "cable"
   - "hard drive"
   - "usb drive"
   - "flash drive"
   - "laptop"
   - "portable device"
-  - "camera"
   - "recording device"
 
   # Perimeter and access
-  - "fence"
   - "broken glass"
   - "open door"
   - "propped door"
@@ -226,8 +224,8 @@ warning:
   - "camera misalignment"
 
   # Maintenance and equipment conditions
-  - "maintenance"
-  - "technician"
+  # "maintenance" and "technician" are intentionally allowed. These words only
+  # become suspicious when paired with authorization, schedule, or zone context.
   - "tool"
   - "tools"
   - "equipment"

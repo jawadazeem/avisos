@@ -10,6 +10,7 @@
 
 #include "FrameProvider.h"
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <spdlog/spdlog.h>
@@ -40,9 +41,16 @@ void FrameProvider::load_directory(const std::string& path,
         return;
     }
 
+    std::vector<fs::directory_entry> entries;
     for (const auto& entry : fs::directory_iterator(path)) {
-        if (!entry.is_regular_file()) continue;
+        if (entry.is_regular_file()) entries.push_back(entry);
+    }
 
+    std::sort(entries.begin(), entries.end(), [](const auto& left, const auto& right) {
+        return left.path().filename().string() < right.path().filename().string();
+    });
+
+    for (const auto& entry : entries) {
         auto ext = entry.path().extension().string();
         if (ext != ".png" && ext != ".jpg" && ext != ".jpeg") continue;
 
@@ -62,23 +70,17 @@ void FrameProvider::load_directory(const std::string& path,
 }
 
 const std::vector<uint8_t>& FrameProvider::pick_frame() {
-    bool use_alarm = false;
+    std::lock_guard<std::mutex> lock(frame_mutex_);
 
-    if (!alarm_frames_.empty() && !normal_frames_.empty()) {
-        int roll = weight_dist_(gen_);
-        use_alarm = (roll <= 10); // 10% alarm, 90% normal
-    } else if (!alarm_frames_.empty()) {
-        use_alarm = true;
+    if (!alarm_frames_.empty()) {
+        const auto& frame = alarm_frames_[next_alarm_index_];
+        next_alarm_index_ = (next_alarm_index_ + 1) % alarm_frames_.size();
+        return frame;
     }
-    // else: normal only (or empty, but caller checks availability)
 
-    if (use_alarm) {
-        std::uniform_int_distribution<size_t> idx(0, alarm_frames_.size() - 1);
-        return alarm_frames_[idx(gen_)];
-    } else {
-        std::uniform_int_distribution<size_t> idx(0, normal_frames_.size() - 1);
-        return normal_frames_[idx(gen_)];
-    }
+    const auto& frame = normal_frames_[next_normal_index_];
+    next_normal_index_ = (next_normal_index_ + 1) % normal_frames_.size();
+    return frame;
 }
 
 } // namespace avisos::service

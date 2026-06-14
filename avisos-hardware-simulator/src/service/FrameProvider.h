@@ -5,8 +5,8 @@
 
 /**
  * @file FrameProvider.h
- * @brief Loads camera frame images from disk and serves them with weighted
- *        random selection (90% normal, 10% alarm).
+ * @brief Loads camera frame images from disk and serves alarm frames in a
+ *        deterministic rotation for repeatable demos.
  *
  * On construction, scans the alarm/ and normal/ subdirectories under the
  * given frames root, reads every file into memory, and stores the raw bytes.
@@ -26,7 +26,7 @@ class FrameProvider {
 public:
     explicit FrameProvider(const std::string& frames_dir);
 
-    /** Returns raw image bytes chosen with 90% normal / 10% alarm weighting. */
+    /** Returns the next alarm frame, falling back to normal frames if none exist. */
     [[nodiscard]] const std::vector<uint8_t>& pick_frame();
 
     [[nodiscard]] size_t alarm_count() const { return alarm_frames_.size(); }
@@ -37,9 +37,9 @@ private:
 
     std::vector<std::vector<uint8_t>> alarm_frames_;
     std::vector<std::vector<uint8_t>> normal_frames_;
-
-    std::mt19937 gen_{std::random_device{}()};
-    std::uniform_int_distribution<int> weight_dist_{1, 100};
+    std::mutex frame_mutex_;
+    size_t next_alarm_index_{0};
+    size_t next_normal_index_{0};
 };
 
 } // namespace avisos::service
