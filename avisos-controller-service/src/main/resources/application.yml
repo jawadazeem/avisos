@@ -33,16 +33,26 @@ avisos:
         access-key-id: "test"
         secret-access-key: "test"
     ai:
-        ollama-base-url: "http://localhost:11434"
-        chat-model: "llama3.2:3b"
-        embedding-model: "nomic-embed-text"
-        knowledge-base-path: "../avisos-knowledge"
+        rag:
+            knowledge-base-dir: "../avisos-knowledge"
 
 spring:
+    datasource:
+        url: "jdbc:postgresql://avisos-pgvector:5432/avisos_vectors"
+        username: "avisos"
+        password: "avisos"
+        driver-class-name: "org.postgresql.Driver"
     ai:
         ollama:
-            base-url: ${avisos.ai.ollama-base-url}
+            base-url: "http://avisos-ollama:11434"
             chat:
-                model: ${avisos.ai.chat-model}
+                model: "llama3.2"
             embedding:
-                model: ${avisos.ai.embedding-model}
+                model: "nomic-embed-text"
+            init:
+                pull-model-strategy: "WHEN_MISSING"
+        vectorstore:
+            pgvector:
+                initialize-schema: "true"
+                index-type: "HNSW"
+                dimensions: "768"

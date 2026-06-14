@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import javax.sql.DataSource;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -16,7 +17,7 @@ public class DatabaseHealthCheck {
 
   private final DataSource dataSource;
 
-  public DatabaseHealthCheck(DataSource dataSource) {
+  public DatabaseHealthCheck(@Qualifier("avisosDataSource") DataSource dataSource) {
     this.dataSource = dataSource;
   }
 

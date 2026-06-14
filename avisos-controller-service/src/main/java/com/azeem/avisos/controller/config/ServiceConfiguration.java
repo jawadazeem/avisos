@@ -34,7 +34,8 @@ import org.springframework.scheduling.annotation.EnableAsync;
   AvisosDatabaseProperties.class,
   AvisosNodeServiceProperties.class,
   AvisosCliProperties.class,
-  AvisosAwsProperties.class
+  AvisosAwsProperties.class,
+  RagProperties.class
 })
 public class ServiceConfiguration {
 

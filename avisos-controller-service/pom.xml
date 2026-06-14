@@ -206,6 +206,13 @@
             <artifactId>postgresql</artifactId>
         </dependency>
 
+
+        <!-- ==================== Markdown Reader ==================== -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-markdown-document-reader</artifactId>
+        </dependency>
+
         <!-- ==================== Utilities ==================== -->
         <dependency>
             <groupId>org.projectlombok</groupId>

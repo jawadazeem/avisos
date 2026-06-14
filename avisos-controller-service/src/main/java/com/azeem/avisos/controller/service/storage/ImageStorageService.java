@@ -13,9 +13,12 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -63,6 +66,18 @@ public class ImageStorageService {
     return s3Key;
   }
 
+  public StoredImage load(String s3Key) {
+    ensureBucketExists();
+
+    ResponseBytes<GetObjectResponse> object =
+        s3Client.getObjectAsBytes(GetObjectRequest.builder().bucket(bucketName).key(s3Key).build());
+
+    String contentType = object.response().contentType();
+    return new StoredImage(
+        object.asByteArray(),
+        contentType == null || contentType.isBlank() ? "image/jpeg" : contentType);
+  }
+
   private void ensureBucketExists() {
     if (bucketVerified) {
       return;
@@ -75,4 +90,6 @@ public class ImageStorageService {
     }
     bucketVerified = true;
   }
+
+  public record StoredImage(byte[] bytes, String contentType) {}
 }

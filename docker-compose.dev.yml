@@ -20,13 +20,21 @@ services:
             - AVISOS_AWS_S3_BUCKET_NAME=avisos-flagged-images
             - AVISOS_AWS_ACCESS_KEY_ID=test
             - AVISOS_AWS_SECRET_ACCESS_KEY=test
-            - AVISOS_AI_OLLAMA_BASE_URL=http://avisos-ollama:11434
+            - AVISOS_AI_RAG_KNOWLEDGE_BASE_DIR=/app/avisos-knowledge
+            - SPRING_AI_OLLAMA_BASE_URL=http://avisos-ollama:11434
+            - SPRING_DATASOURCE_URL=jdbc:postgresql://avisos-pgvector:5432/avisos_vectors
+            - SPRING_DATASOURCE_USERNAME=avisos
+            - SPRING_DATASOURCE_PASSWORD=avisos
         volumes:
+            - ./avisos-knowledge:/app/avisos-knowledge:ro
             - ./data:/app/data
             - ./logs:/app/logs
         depends_on:
             - mosquitto
             - vision-api
+            - localstack
+            - ollama
+            - pgvector
         restart: unless-stopped
 
     mosquitto:

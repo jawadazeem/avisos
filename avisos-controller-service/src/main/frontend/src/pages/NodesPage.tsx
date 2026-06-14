@@ -3,6 +3,7 @@ import { api } from "../api/client";
 import { useSubscription } from "../hooks/useSubscription";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import type { NodeRecord } from "../types/models";
+import { dateTimeMillis, formatDateTime } from "../utils/dateTime";
 import "./NodesPage.css";
 
 const PAGE_SIZE = 20;
@@ -33,7 +34,7 @@ export function NodesPage() {
   const sortedNodes = useMemo(
     () =>
       [...nodes].sort((a, b) => {
-        const seen = new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime();
+        const seen = dateTimeMillis(b.lastSeen) - dateTimeMillis(a.lastSeen);
         if (Number.isFinite(seen) && seen !== 0) return seen;
         return a.name.localeCompare(b.name);
       }),
@@ -99,7 +100,7 @@ export function NodesPage() {
                     </div>
                   </div>
                 </td>
-                <td className="timestamp">{formatTime(node.lastSeen)}</td>
+                <td className="timestamp">{formatDateTime(node.lastSeen)}</td>
                 <td className="uuid">{node.uuid}</td>
               </tr>
             ))}
@@ -143,15 +144,4 @@ function batteryColor(level: number): string {
   if (level > 50) return "battery-green";
   if (level > 20) return "battery-amber";
   return "battery-red";
-}
-
-function formatTime(ts: string): string {
-  if (!ts) return "-";
-  try {
-    const date = new Date(ts);
-    if (Number.isNaN(date.getTime())) return "-";
-    return date.toLocaleString("en-US", { hour12: false });
-  } catch {
-    return "-";
-  }
 }

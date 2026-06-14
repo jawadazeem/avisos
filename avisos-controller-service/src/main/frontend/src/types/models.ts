@@ -1,4 +1,5 @@
 export type NodeStatus = "RESPONSIVE" | "UNRESPONSIVE" | "OFFLINE";
+export type ApiDateTime = string | number[];
 
 export interface NodeRecord {
   uuid: string;
@@ -6,7 +7,7 @@ export interface NodeRecord {
   type: string;
   status: NodeStatus;
   batteryLevel: number;
-  lastSeen: string;
+  lastSeen: ApiDateTime | null;
 }
 
 export type AlarmSeverity = "CRITICAL" | "WARNING" | "NONE";
@@ -18,8 +19,8 @@ export interface AlarmRecord {
   severity: AlarmSeverity;
   reason: string;
   status: AlarmStatus;
-  triggeredAtTimestamp: string;
-  resolvedAtTimestamp: string | null;
+  triggeredAtTimestamp: ApiDateTime;
+  resolvedAtTimestamp: ApiDateTime | null;
   s3ImageKey: string | null;
 }
 

@@ -3,6 +3,7 @@ import { api } from "../api/client";
 import { useSubscription } from "../hooks/useSubscription";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import type { AlarmRecord } from "../types/models";
+import { dateTimeMillis, formatDateTime } from "../utils/dateTime";
 import "./AlarmsPage.css";
 
 export function AlarmsPage() {
@@ -34,7 +35,7 @@ export function AlarmsPage() {
     const sevOrder = { CRITICAL: 0, WARNING: 1, NONE: 2 };
     const severityDelta = sevOrder[a.severity] - sevOrder[b.severity];
     if (severityDelta !== 0) return severityDelta;
-    return new Date(b.triggeredAtTimestamp).getTime() - new Date(a.triggeredAtTimestamp).getTime();
+    return dateTimeMillis(b.triggeredAtTimestamp) - dateTimeMillis(a.triggeredAtTimestamp);
   });
 
   return (
@@ -71,10 +72,10 @@ export function AlarmsPage() {
               <td className="alarm-reason">{alarm.reason}</td>
               <td className="uuid">{alarm.deviceUuid}</td>
               <td>
-                <AlarmEvidence s3ImageKey={alarm.s3ImageKey} />
+                <AlarmEvidence alarmId={alarm.id} s3ImageKey={alarm.s3ImageKey} />
               </td>
-              <td className="timestamp">{formatTime(alarm.triggeredAtTimestamp)}</td>
-              <td className="timestamp">{formatTime(alarm.resolvedAtTimestamp)}</td>
+              <td className="timestamp">{formatDateTime(alarm.triggeredAtTimestamp)}</td>
+              <td className="timestamp">{formatDateTime(alarm.resolvedAtTimestamp)}</td>
               <td>
                 {alarm.status === "ACTIVE" && (
                   <button className="resolve-btn" onClick={() => handleResolve(alarm.id)}>
@@ -97,14 +98,14 @@ export function AlarmsPage() {
   );
 }
 
-function AlarmEvidence({ s3ImageKey }: { s3ImageKey: string | null }) {
+function AlarmEvidence({ alarmId, s3ImageKey }: { alarmId: string; s3ImageKey: string | null }) {
   const [imageUnavailable, setImageUnavailable] = useState(false);
 
   if (!s3ImageKey) {
     return <span className="muted-cell">Pending</span>;
   }
 
-  const imageUrl = api.getAlarmImageUrl(s3ImageKey);
+  const imageUrl = api.getAlarmImageUrl(alarmId);
 
   if (imageUnavailable) {
     return (
@@ -134,15 +135,4 @@ function upsertAlarm(existing: AlarmRecord[], incoming: AlarmRecord): AlarmRecor
   const updated = [...existing];
   updated[index] = incoming;
   return updated;
-}
-
-function formatTime(ts: string | null): string {
-  if (!ts) return "-";
-  try {
-    const date = new Date(ts);
-    if (Number.isNaN(date.getTime())) return "-";
-    return date.toLocaleString("en-US", { hour12: false });
-  } catch {
-    return "-";
-  }
 }

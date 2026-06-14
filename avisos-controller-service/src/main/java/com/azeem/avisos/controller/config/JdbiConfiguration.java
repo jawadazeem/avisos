@@ -16,6 +16,7 @@ import io.github.cdimascio.dotenv.Dotenv;
 import javax.sql.DataSource;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -45,7 +46,7 @@ public class JdbiConfiguration {
   }
 
   @Bean
-  public Jdbi jdbi(DataSource avisosDataSource) {
+  public Jdbi jdbi(@Qualifier("avisosDataSource") DataSource avisosDataSource) {
     Jdbi jdbi = Jdbi.create(avisosDataSource);
     jdbi.installPlugin(new SqlObjectPlugin());
     return jdbi;

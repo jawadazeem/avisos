@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 # -------------------------------------------------------------------
-# purge-test-nodes.sh — Local/operator DB maintenance for demo fleets
+# purge-alarms.sh — Local/operator DB maintenance for alarm rows
 #
 # Dry-run by default. Deletes require --yes.
 #
 # Common usage:
-#   ./scripts/purge-test-nodes.sh
-#   ./scripts/purge-test-nodes.sh --yes
-#   ./scripts/purge-test-nodes.sh --include-demo --yes
-#   ./scripts/purge-test-nodes.sh --name A-A2-ENV-01 --yes
-#   ./scripts/purge-test-nodes.sh --include-related --yes
+#   ./scripts/purge-alarms.sh
+#   ./scripts/purge-alarms.sh --yes
+#   ./scripts/purge-alarms.sh --status RESOLVED --yes
+#   ./scripts/purge-alarms.sh --device 00000000-0000-4000-8000-000000000001 --yes
 # -------------------------------------------------------------------
 
 set -Eeuo pipefail
@@ -22,67 +21,37 @@ DB_KEY=""
 DB_KEY_SOURCE=""
 DB_CLIENT="${AVISOS_DB_CLIENT:-}"
 DRY_RUN=true
-INCLUDE_DEMO=false
-INCLUDE_RELATED=false
-OFFLINE_ONLY=false
-TARGET_UUIDS=()
-TARGET_NAMES=()
+VACUUM_AFTER=false
+TARGET_STATUSES=()
+TARGET_DEVICES=()
 
-DEMO_NODE_IDS=(
-    "00000000-0000-4000-8000-000000000001"
-    "00000000-0000-4000-8000-000000000002"
-    "00000000-0000-4000-8000-000000000003"
-    "00000000-0000-4000-8000-000000000004"
-    "00000000-0000-4000-8000-000000000005"
-    "00000000-0000-4000-8000-000000000006"
-    "00000000-0000-4000-8000-000000000007"
-    "00000000-0000-4000-8000-000000000008"
-    "00000000-0000-4000-8000-000000000009"
-    "00000000-0000-4000-8000-000000000010"
-    "00000000-0000-4000-8000-000000000011"
-    "00000000-0000-4000-8000-000000000012"
-    "00000000-0000-4000-8000-000000000013"
-    "00000000-0000-4000-8000-000000000014"
-    "00000000-0000-4000-8000-000000000015"
-    "00000000-0000-4000-8000-000000000016"
-    "00000000-0000-4000-8000-000000000017"
-    "00000000-0000-4000-8000-000000000018"
-    "00000000-0000-4000-8000-000000000019"
-    "00000000-0000-4000-8000-000000000020"
-)
-
-log()  { echo "[purge-nodes] $*"; }
-fail() { echo "[purge-nodes] ERROR: $*" >&2; exit 1; }
+log()  { echo "[purge-alarms] $*"; }
+fail() { echo "[purge-alarms] ERROR: $*" >&2; exit 1; }
 
 usage() {
     cat <<'EOF'
-Usage: ./scripts/purge-test-nodes.sh [options]
+Usage: ./scripts/purge-alarms.sh [options]
 
 Dry-run by default. Add --yes to delete.
 
 Default target:
-  All non-deterministic nodes, meaning load-test/random fleet nodes whose UUID
-  is not one of the canonical 20 demo fleet UUIDs.
+  All rows in the alarms table.
 
 Options:
-  --yes                  Execute deletion. Without this, only prints matches.
-  --include-demo          Include deterministic 20-node demo fleet in broad purge.
-  --include-related       Also delete matching rows from alarms and telemetry_audit.
-  --offline-only          Only target nodes currently marked OFFLINE.
-  --uuid <uuid>           Target a specific UUID. Can be repeated.
-  --name <name>           Target a specific node name. Can be repeated.
-  --db <path>             Override DB path. Default resolves from env or ./data/avisos.db.
-  --key <key>             Override SQLCipher key. Default reads .env.example, then env.
-  --client <command>      Override DB client. Default prefers sqlcipher, then sqlite3.
-  -h, --help              Show this help.
+  --yes                  Execute deletion. Without this, only prints counts.
+  --status <status>      Target a status, e.g. ACTIVE or RESOLVED. Can be repeated.
+  --device <uuid>        Target alarms for one device UUID. Can be repeated.
+  --vacuum               Run VACUUM after deleting rows.
+  --db <path>            Override DB path. Default resolves from env or ./data/avisos.db.
+  --key <key>            Override SQLCipher key. Default reads .env.example, then env.
+  --client <command>     Override DB client. Default prefers sqlcipher, then sqlite3.
+  -h, --help             Show this help.
 
 Examples:
-  ./scripts/purge-test-nodes.sh
-  ./scripts/purge-test-nodes.sh --yes
-  ./scripts/purge-test-nodes.sh --offline-only --yes
-  ./scripts/purge-test-nodes.sh --include-demo --yes
-  ./scripts/purge-test-nodes.sh --name A-A2-ENV-01 --yes
-  ./scripts/purge-test-nodes.sh --uuid 00000000-0000-4000-8000-000000000001 --yes
+  ./scripts/purge-alarms.sh
+  ./scripts/purge-alarms.sh --yes
+  ./scripts/purge-alarms.sh --status RESOLVED --yes
+  ./scripts/purge-alarms.sh --device 00000000-0000-4000-8000-000000000001 --yes
 EOF
 }
 
@@ -225,24 +194,17 @@ resolve_client() {
 build_target_where() {
     local clauses=()
 
-    if [ "${#TARGET_UUIDS[@]}" -gt 0 ]; then
-        clauses+=("uuid IN ($(csv_quote_array "${TARGET_UUIDS[@]}"))")
+    if [ "${#TARGET_STATUSES[@]}" -gt 0 ]; then
+        clauses+=("status IN ($(csv_quote_array "${TARGET_STATUSES[@]}"))")
     fi
 
-    if [ "${#TARGET_NAMES[@]}" -gt 0 ]; then
-        clauses+=("name IN ($(csv_quote_array "${TARGET_NAMES[@]}"))")
+    if [ "${#TARGET_DEVICES[@]}" -gt 0 ]; then
+        clauses+=("device_uuid IN ($(csv_quote_array "${TARGET_DEVICES[@]}"))")
     fi
 
     if [ "${#clauses[@]}" -eq 0 ]; then
-        if [ "$INCLUDE_DEMO" = true ]; then
-            clauses+=("1 = 1")
-        else
-            clauses+=("uuid NOT IN ($(csv_quote_array "${DEMO_NODE_IDS[@]}"))")
-        fi
-    fi
-
-    if [ "$OFFLINE_ONLY" = true ]; then
-        clauses+=("status = 'OFFLINE'")
+        printf "1 = 1"
+        return
     fi
 
     local first=true
@@ -273,27 +235,19 @@ parse_args() {
                 DRY_RUN=false
                 shift
                 ;;
-            --include-demo)
-                INCLUDE_DEMO=true
-                shift
-                ;;
-            --include-related)
-                INCLUDE_RELATED=true
-                shift
-                ;;
-            --offline-only)
-                OFFLINE_ONLY=true
-                shift
-                ;;
-            --uuid)
-                [ "${2:-}" ] || fail "--uuid requires a value."
-                TARGET_UUIDS+=("$2")
+            --status)
+                [ "${2:-}" ] || fail "--status requires a value."
+                TARGET_STATUSES+=("$(printf "%s" "$2" | tr '[:lower:]' '[:upper:]')")
                 shift 2
                 ;;
-            --name)
-                [ "${2:-}" ] || fail "--name requires a value."
-                TARGET_NAMES+=("$2")
+            --device)
+                [ "${2:-}" ] || fail "--device requires a value."
+                TARGET_DEVICES+=("$2")
                 shift 2
+                ;;
+            --vacuum)
+                VACUUM_AFTER=true
+                shift
                 ;;
             --db)
                 [ "${2:-}" ] || fail "--db requires a value."
@@ -345,58 +299,48 @@ main() {
 .headers on
 .mode column
 
-SELECT uuid, name, status, battery_level, last_seen
-FROM nodes
-WHERE $where_clause
-ORDER BY last_seen DESC, name ASC;
-
-SELECT COUNT(*) AS nodes_targeted
-FROM nodes
-WHERE $where_clause;
-SQL
-        if [ "$INCLUDE_RELATED" = true ]; then
-            cat <<SQL
+SELECT status, COUNT(*) AS alarm_count
+FROM alarms
+GROUP BY status
+ORDER BY status;
 
 SELECT COUNT(*) AS alarms_targeted
 FROM alarms
-WHERE device_uuid IN (SELECT uuid FROM nodes WHERE $where_clause);
-
-SELECT COUNT(*) AS telemetry_rows_targeted
-FROM telemetry_audit
-WHERE device_uuid IN (SELECT uuid FROM nodes WHERE $where_clause);
-SQL
-        fi
-        if [ "$DRY_RUN" = false ]; then
-            if [ "$INCLUDE_RELATED" = true ]; then
-                cat <<SQL
-
-DELETE FROM alarms
-WHERE device_uuid IN (SELECT uuid FROM nodes WHERE $where_clause);
-
-DELETE FROM telemetry_audit
-WHERE device_uuid IN (SELECT uuid FROM nodes WHERE $where_clause);
-SQL
-            fi
-            cat <<SQL
-
-DELETE FROM nodes
 WHERE $where_clause;
 
-SELECT changes() AS nodes_deleted;
+SELECT id, device_uuid, severity, reason, status, triggered_at, s3_image_key
+FROM alarms
+WHERE $where_clause
+ORDER BY triggered_at DESC
+LIMIT 20;
 SQL
+        if [ "$DRY_RUN" = false ]; then
+            cat <<SQL
+
+DELETE FROM alarms
+WHERE $where_clause;
+
+SELECT changes() AS alarms_deleted;
+SQL
+            if [ "$VACUUM_AFTER" = true ]; then
+                cat <<SQL
+
+VACUUM;
+SQL
+            fi
         fi
     } > "$sql_file"
 
     log "DB: $DB_PATH"
     log "Mode: $([ "$DRY_RUN" = true ] && echo dry-run || echo delete)"
-    log "Target: $([ "$INCLUDE_DEMO" = true ] && echo all matching nodes || echo non-demo/load-test nodes by default)"
-    log "Related rows: $([ "$INCLUDE_RELATED" = true ] && echo included || echo left intact)"
+    log "Target: $where_clause"
+    log "Vacuum: $([ "$VACUUM_AFTER" = true ] && echo yes || echo no)"
     log "Encryption key source: ${DB_KEY_SOURCE:-not configured}$([ -n "$DB_KEY" ] && ! uses_sqlcipher && echo ' (not applied by sqlite3)')"
 
     run_sql "$sql_file"
 
     if [ "$DRY_RUN" = true ]; then
-        log "Dry run only. Re-run with --yes to delete these node rows."
+        log "Dry run only. Re-run with --yes to delete these alarm rows."
     else
         log "Deletion complete."
     fi
