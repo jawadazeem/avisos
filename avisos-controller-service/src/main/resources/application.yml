@@ -35,6 +35,10 @@ avisos:
     ai:
         rag:
             knowledge-base-dir: "../avisos-knowledge"
+    notification:
+        email:
+            dry-run: true
+            from: "no-reply@avisos.local"
 
 spring:
     datasource:

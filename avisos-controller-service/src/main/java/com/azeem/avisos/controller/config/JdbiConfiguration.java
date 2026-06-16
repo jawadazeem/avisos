@@ -5,9 +5,11 @@
 
 package com.azeem.avisos.controller.config;
 
+import com.azeem.avisos.controller.repository.AlarmAnalysisRepository;
 import com.azeem.avisos.controller.repository.AlarmRepository;
 import com.azeem.avisos.controller.repository.EncryptingDataSource;
 import com.azeem.avisos.controller.repository.NodeRepository;
+import com.azeem.avisos.controller.repository.StaffRepository;
 import com.azeem.avisos.controller.repository.TelemetryRepository;
 import com.azeem.avisos.controller.security.repository.AuthRepository;
 import com.zaxxer.hikari.HikariConfig;
@@ -63,6 +65,13 @@ public class JdbiConfiguration {
   }
 
   @Bean
+  public AlarmAnalysisRepository alarmAnalysisRepository(Jdbi jdbi) {
+    AlarmAnalysisRepository repo = jdbi.onDemand(AlarmAnalysisRepository.class);
+    repo.initAnalysisTable();
+    return repo;
+  }
+
+  @Bean
   public NodeRepository nodeRepository(Jdbi jdbi) {
     NodeRepository repo = jdbi.onDemand(NodeRepository.class);
     repo.initNodeTable();
@@ -73,6 +82,13 @@ public class JdbiConfiguration {
   public TelemetryRepository telemetryRepository(Jdbi jdbi) {
     TelemetryRepository repo = jdbi.onDemand(TelemetryRepository.class);
     repo.initAuditTable();
+    return repo;
+  }
+
+  @Bean
+  public StaffRepository staffRepository(Jdbi jdbi) {
+    StaffRepository repo = jdbi.onDemand(StaffRepository.class);
+    repo.initStaffTable();
     return repo;
   }
 
