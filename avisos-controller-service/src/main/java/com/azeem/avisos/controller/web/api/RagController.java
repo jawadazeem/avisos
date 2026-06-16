@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** REST API for loading markdown files into the RAG system. */
+/** REST API for loading markdown files into the RAG system and querying it. */
 @RestController
 @RequestMapping("/api/rag")
 public class RagController {
