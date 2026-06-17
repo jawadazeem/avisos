@@ -200,7 +200,7 @@ CREATE TABLE IF NOT EXISTS staff (
 );
 
 INSERT INTO staff (staff_id, name, email, phone, role, jurisdiction, primary_zone, shift_name) VALUES
-('staff-ops-001', 'Jawad Azeem', 'jawad.azeem@outlook.com', '+1-555-0001', 'Operations Supervisor', 'All operations and facility oversight', 'All zones', 'Day'),
+('staff-ops-001', 'Jawad Azeem', 'jawad.azeemc@gmail.com', '+1-555-0001', 'Operations Supervisor', 'All operations and facility oversight', 'All zones', 'Day'),
 ('staff-sec-001', 'Maya Chen', 'maya.chen@avisos.example', '+1-555-0101', 'Security Shift Lead', 'Physical security and access control', 'Lobby, exterior fence, mantrap, loading corridor', 'Day'),
 ('staff-sec-002', 'Omar Patel', 'omar.patel@avisos.example', '+1-555-0102', 'Security Responder', 'Floor security patrol', 'Rack halls A and B, service floor, emergency exits', 'Swing'),
 ('staff-sec-003', 'Lena Brooks', 'lena.brooks@avisos.example', '+1-555-0103', 'Night Security Lead', 'After-hours security response', 'All zones, exterior, electrical rooms', 'Night'),

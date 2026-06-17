@@ -37,10 +37,19 @@ avisos:
             knowledge-base-dir: "../avisos-knowledge"
     notification:
         email:
-            dry-run: true
-            from: "no-reply@avisos.local"
+            dry-run: ${AVISOS_EMAIL_DRY_RUN:true}
+            from: "${MAIL_USERNAME:jawad.azeem@outlook.com}"
 
 spring:
+    mail:
+        host: "${MAIL_HOST:smtp.office365.com}"
+        port: ${MAIL_PORT:587}
+        username: "${MAIL_USERNAME:}"
+        password: "${MAIL_PASSWORD:}"
+        properties:
+            mail.smtp.auth: true
+            mail.smtp.starttls.enable: true
+            mail.smtp.starttls.required: true
     datasource:
         url: "jdbc:postgresql://avisos-pgvector:5432/avisos_vectors"
         username: "avisos"
