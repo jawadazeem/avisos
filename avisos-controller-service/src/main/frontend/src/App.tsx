@@ -5,6 +5,7 @@ import { Footer } from "./components/layout/Footer";
 import { DashboardPage } from "./pages/DashboardPage";
 import { NodesPage } from "./pages/NodesPage";
 import { AlarmsPage } from "./pages/AlarmsPage";
+import { SherwoodPage } from "./pages/SherwoodPage";
 import { CliPage } from "./pages/CliPage";
 import { AboutPage } from "./pages/AboutPage";
 
@@ -18,6 +19,7 @@ export function App() {
           <Route path="/" element={<DashboardPage />} />
           <Route path="/nodes" element={<NodesPage />} />
           <Route path="/alarms" element={<AlarmsPage />} />
+          <Route path="/sherwood" element={<SherwoodPage />} />
           <Route path="/cli" element={<CliPage />} />
           <Route path="/about" element={<AboutPage />} />
         </Routes>

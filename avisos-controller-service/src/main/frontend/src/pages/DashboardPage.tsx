@@ -7,6 +7,7 @@ import { StatusBadge } from "../components/ui/StatusBadge";
 import type {
   NodeRecord,
   AlarmRecord,
+  AlarmAnalysisRecord,
   SystemHealthReport,
   SystemStats,
   VisionEvent,
@@ -18,19 +19,22 @@ export function DashboardPage() {
   const [nodes, setNodes] = useState<NodeRecord[]>([]);
   const [alarms, setAlarms] = useState<AlarmRecord[]>([]);
   const [stats, setStats] = useState<SystemStats | null>(null);
+  const [analyses, setAnalyses] = useState<AlarmAnalysisRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const nodeUpdate = useSubscription<NodeRecord>("/topic/nodes");
   const alarmUpdate = useSubscription<AlarmRecord>("/topic/alarms");
   const visionUpdate = useSubscription<VisionEvent>("/topic/vision");
+  const analysisUpdate = useSubscription<AlarmAnalysisRecord>("/topic/alarm");
 
   useEffect(() => {
-    Promise.all([api.getHealth(), api.getNodes(), api.getAlarms(), api.getStats()])
-      .then(([h, n, a, s]) => {
+    Promise.all([api.getHealth(), api.getNodes(), api.getAlarms(), api.getStats(), api.getAnalyses()])
+      .then(([h, n, a, s, an]) => {
         setHealth(h);
         setNodes(n);
         setAlarms(a);
         setStats(s);
+        setAnalyses(an);
       })
       .catch((e) => setError(e.message));
   }, []);
@@ -52,6 +56,11 @@ export function DashboardPage() {
     if (!alarmUpdate) return;
     setAlarms((prev) => upsertAlarm(prev, alarmUpdate));
   }, [alarmUpdate]);
+
+  useEffect(() => {
+    if (!analysisUpdate) return;
+    setAnalyses((prev) => [analysisUpdate, ...prev]);
+  }, [analysisUpdate]);
 
   if (error) {
     return <div className="dash-error">Error: {error}</div>;
@@ -126,6 +135,29 @@ export function DashboardPage() {
             </div>
             <Link className="alarm-page-link" to="/alarms">
               Open Alarms
+            </Link>
+          </div>
+        </DataCard>
+
+        <DataCard title="Sherwood — AI Analyst" accent="blue">
+          <div className="sherwood-card-content">
+            <div className="stat-grid">
+              <div className="stat-item">
+                <span className="stat-value">{analyses.length}</span>
+                <span className="stat-label">Analyses</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value" style={{ fontSize: 14 }}>
+                  {analyses.length > 0 ? analyses[0].alarmId.substring(0, 8) : "-"}
+                </span>
+                <span className="stat-label">Latest ID</span>
+              </div>
+            </div>
+            {analyses.length > 0 && (
+              <p className="sherwood-preview">{analyses[0].analysisText.substring(0, 120)}...</p>
+            )}
+            <Link className="alarm-page-link" to="/sherwood">
+              Open Sherwood
             </Link>
           </div>
         </DataCard>

@@ -7,6 +7,7 @@ package com.azeem.avisos.controller.web.api;
 
 import com.azeem.avisos.controller.model.alarm.AlarmAnalysisRecord;
 import com.azeem.avisos.controller.service.ai.rag.AlarmAnalystService;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,9 +23,13 @@ public class AlarmAnalystController {
     this.alertAnalystService = alertAnalystService;
   }
 
+  @GetMapping
+  public List<AlarmAnalysisRecord> getAllAnalyses() {
+    return alertAnalystService.getAllAnalyses();
+  }
+
   @GetMapping("/{id}")
   public AlarmAnalysisRecord getAlarmAnalysis(@PathVariable UUID id) {
-    // TODO: be able to view an analsis by its given ID
     return alertAnalystService.getAnalysis(id);
   }
 }

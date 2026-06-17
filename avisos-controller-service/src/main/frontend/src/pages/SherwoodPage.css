@@ -1,0 +1,52 @@
+.sherwood-page {
+  height: 100%;
+  overflow-x: auto;
+}
+
+.sherwood-page .scada-table {
+  min-width: 800px;
+}
+
+.sherwood-row {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.sherwood-row:hover {
+  background: rgba(0, 229, 255, 0.04);
+}
+
+.sherwood-row.expanded {
+  background: rgba(0, 229, 255, 0.06);
+}
+
+.analysis-cell {
+  max-width: 480px;
+}
+
+.analysis-truncated {
+  color: var(--text-secondary);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.analysis-full {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+  margin: 0;
+  padding: 4px 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.prompt-version {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}

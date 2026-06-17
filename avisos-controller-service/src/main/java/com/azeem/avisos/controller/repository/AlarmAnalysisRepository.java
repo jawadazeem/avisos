@@ -6,6 +6,7 @@
 package com.azeem.avisos.controller.repository;
 
 import com.azeem.avisos.controller.model.alarm.AlarmAnalysisRecord;
+import java.util.List;
 import java.util.Optional;
 import org.jdbi.v3.sqlobject.config.RegisterConstructorMapper;
 import org.jdbi.v3.sqlobject.customizer.Bind;
@@ -46,4 +47,17 @@ public interface AlarmAnalysisRepository {
         """)
   @RegisterConstructorMapper(AlarmAnalysisRecord.class)
   Optional<AlarmAnalysisRecord> findByAlarmId(@Bind("alarmId") String alarmId);
+
+  @SqlQuery(
+      """
+            SELECT
+                alarm_id AS alarmId,
+                analysis_text AS analysisText,
+                prompt_version AS promptVersion,
+                created_at AS createdAt
+            FROM alarm_analysis
+            ORDER BY created_at DESC
+        """)
+  @RegisterConstructorMapper(AlarmAnalysisRecord.class)
+  List<AlarmAnalysisRecord> findAll();
 }

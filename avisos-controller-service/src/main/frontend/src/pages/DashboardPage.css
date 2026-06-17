@@ -150,6 +150,25 @@
   text-decoration: none;
 }
 
+.sherwood-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sherwood-preview {
+  color: var(--text-muted);
+  display: -webkit-box;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 0;
+  max-height: 3.6em;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
 @media (max-width: 720px) {
   .stat-grid,
   .alarm-card-content {

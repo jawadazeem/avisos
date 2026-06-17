@@ -16,12 +16,14 @@ AVISOS is a SCADA orchestration platform that secures and monitors high-reliabil
 |---|---|
 | Backend | Java 25 (preview), Spring Boot 3.4.1, Virtual Threads |
 | Frontend | React 19, TypeScript, Vite, xterm.js |
+| AI / RAG | Ollama (llama3.2 + nomic-embed-text), Spring AI, pgvector |
 | Messaging | Eclipse Mosquitto (MQTT), Protobuf telemetry |
 | Real-time | STOMP over WebSocket (SockJS) |
-| Database | SQLite + SQLCipher (encrypted), JDBI |
+| Database | SQLite + SQLCipher (encrypted, JDBI) + PostgreSQL (pgvector) |
 | Vision AI | CodeProject.AI object detection |
 | Hardware Simulation | C++17, CMake, cpp-httplib, nlohmann/json |
-| Cloud | AWS SNS via LocalStack |
+| Cloud | AWS S3 + SNS via LocalStack |
+| Notifications | Spring Mail (JavaMailSender), dry-run safety mode |
 | Security | Argon2id password hashing, encrypted DB |
 | Build | Maven multi-module, frontend-maven-plugin (Node 22) |
 | Deploy | Docker Compose + on-demand simulator/node fleet containers |
@@ -59,7 +61,7 @@ mvn clean install
 ./scripts/purge-test-nodes.sh
 ```
 
-Dashboard at `http://localhost:8080` -- pages for system overview, node monitoring, alarm management, and an embedded CLI terminal. All updates stream in real-time over WebSocket.
+Dashboard at `http://localhost:8083` -- pages for system overview, node monitoring, alarm management, and an embedded CLI terminal. All updates stream in real-time over WebSocket.
 
 The C++ hardware simulator runs as a standalone REST process and exposes hardware readings for the Java node service. In simulator mode, each node polls its paired simulator via `HARDWARE_SIMULATOR_BASE_URL`, then publishes the existing MQTT telemetry contract to the controller.
 
@@ -71,9 +73,14 @@ The C++ hardware simulator runs as a standalone REST process and exposes hardwar
 |---|---|
 | `GET /api/nodes` | List registered edge nodes |
 | `GET /api/alarms` | Active alarms with severity |
+| `POST /api/alarms/{id}/resolve` | Resolve an alarm |
+| `GET /api/alarms/{id}/image` | Retrieve flagged image from S3 |
+| `GET /api/ai/analyses/{id}` | AI-generated incident analysis for an alarm |
+| `GET /api/ai/ask-sme/chat?query=` | RAG-powered Q&A against facility knowledge base |
+| `POST /api/rag/load` | Manually re-ingest knowledge base into vector store |
 | `GET /api/health` | System health report |
 | `GET /api/system/stats` | JVM runtime statistics |
-| `WS /ws` | STOMP WebSocket (topics: `/topic/nodes`, `/topic/alarms`, `/topic/vision`, `/topic/cli`) |
+| `WS /ws` | STOMP WebSocket (topics: `/topic/nodes`, `/topic/alarms`, `/topic/vision`, `/topic/alarm`, `/topic/cli`) |
 
 ### Roadmap
 

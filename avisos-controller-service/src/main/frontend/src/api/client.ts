@@ -1,6 +1,7 @@
 import type {
   NodeRecord,
   AlarmRecord,
+  AlarmAnalysisRecord,
   SystemHealthReport,
   SystemStats,
   SystemAbout,
@@ -24,6 +25,9 @@ export const api = {
   getAlarms: () => fetchJson<AlarmRecord[]>("/api/alarms"),
   resolveAlarm: (id: string) =>
     fetchJson<void>(`/api/alarms/${id}/resolve`, { method: "POST" }),
+
+  getAnalyses: () => fetchJson<AlarmAnalysisRecord[]>("/api/ai/analyses"),
+  getAnalysis: (id: string) => fetchJson<AlarmAnalysisRecord>(`/api/ai/analyses/${id}`),
 
   getHealth: () => fetchJson<SystemHealthReport>("/api/health"),
 

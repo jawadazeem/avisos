@@ -66,3 +66,10 @@ export interface VisionEvent {
     predictions: { label: string; confidence: number }[];
   };
 }
+
+export interface AlarmAnalysisRecord {
+  alarmId: string;
+  analysisText: string;
+  promptVersion: string;
+  createdAt: ApiDateTime;
+}

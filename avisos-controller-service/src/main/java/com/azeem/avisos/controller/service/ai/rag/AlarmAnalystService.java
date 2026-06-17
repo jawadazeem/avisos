@@ -8,6 +8,7 @@ package com.azeem.avisos.controller.service.ai.rag;
 import com.azeem.avisos.controller.exceptions.ResourceNotFoundException;
 import com.azeem.avisos.controller.model.alarm.AlarmAnalysisRecord;
 import com.azeem.avisos.controller.repository.AlarmAnalysisRepository;
+import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,6 +66,10 @@ public class AlarmAnalystService {
               log.warn("No analysis found for alarm ID: {}", uuid);
               return new ResourceNotFoundException("Analysis record not found for: " + uuid);
             });
+  }
+
+  public List<AlarmAnalysisRecord> getAllAnalyses() {
+    return alertAnalysisRepository.findAll();
   }
 
   public String generateAlert(String nodeId, String rawAlarmData, String rekognitionLabels) {
