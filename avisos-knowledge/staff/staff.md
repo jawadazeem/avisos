@@ -14,6 +14,7 @@ dispatch decisions still depend on alarm severity, active shift, and escalation 
 
 | Staff ID       | Name           | Email                         | Phone       | Role                    | Primary Jurisdiction                     | Datacenter Coverage                                        | Shift |
 |----------------|----------------|-------------------------------|-------------|-------------------------|------------------------------------------|------------------------------------------------------------|-------|
+| staff-ops-001  | Jawad Azeem    | jawad.azeem@outlook.com       | +1-555-0001 | Operations Supervisor   | All operations and facility oversight    | All zones                                                  | Day   |
 | staff-sec-001  | Maya Chen      | maya.chen@avisos.example      | +1-555-0101 | Security Shift Lead     | Physical security and access control     | Lobby, exterior fence, mantrap, loading corridor           | Day   |
 | staff-sec-002  | Omar Patel     | omar.patel@avisos.example     | +1-555-0102 | Security Responder      | Floor security patrol                    | Rack halls A and B, service floor, emergency exits         | Swing |
 | staff-sec-003  | Lena Brooks    | lena.brooks@avisos.example    | +1-555-0103 | Night Security Lead     | After-hours security response            | All zones, priority on exterior and electrical rooms       | Night |
@@ -24,6 +25,12 @@ dispatch decisions still depend on alarm severity, active shift, and escalation 
 | staff-elec-001 | Hannah Kim     | hannah.kim@avisos.example     | +1-555-0131 | Electrical Safety Lead  | Electrical rooms and power events        | Electrical room E, UPS area, generator transfer corridor   | Day   |
 
 ## Jurisdiction Notes
+
+### Operations Oversight
+
+The operations supervisor holds facility-wide jurisdiction. All critical alarms (Sev 1) escalate to the operations
+supervisor after the primary zone owner acknowledges. The operations supervisor may override routing decisions and
+reassign incidents across teams.
 
 ### Rack Halls A and B
 

@@ -6,6 +6,7 @@ const navItems = [
   { path: "/nodes", label: "Nodes", icon: "cpu" },
   { path: "/alarms", label: "Alarms", icon: "alert" },
   { path: "/sherwood", label: "Sherwood", icon: "brain" },
+  { path: "/staff", label: "Staff", icon: "staff" },
   { path: "/cli", label: "Terminal", icon: "terminal" },
 ];
 
@@ -14,6 +15,7 @@ const icons: Record<string, string> = {
   cpu: "\u2338",
   alert: "\u26A0",
   brain: "\u25C7",
+  staff: "\u2302",
   terminal: ">_",
 };
 

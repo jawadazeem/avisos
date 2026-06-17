@@ -1,0 +1,46 @@
+.staff-page {
+  height: 100%;
+  overflow-x: auto;
+}
+
+.staff-page .scada-table {
+  min-width: 900px;
+}
+
+.staff-name {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.staff-role {
+  color: var(--text-secondary);
+}
+
+.staff-email a {
+  color: var(--accent-cyan);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-decoration: none;
+}
+
+.staff-email a:hover {
+  text-decoration: underline;
+}
+
+.staff-phone {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.staff-zone {
+  color: var(--text-secondary);
+  max-width: 280px;
+}
+
+.staff-shift {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+}

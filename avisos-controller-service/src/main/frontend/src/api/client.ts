@@ -2,6 +2,7 @@ import type {
   NodeRecord,
   AlarmRecord,
   AlarmAnalysisRecord,
+  StaffRecord,
   SystemHealthReport,
   SystemStats,
   SystemAbout,
@@ -28,6 +29,9 @@ export const api = {
 
   getAnalyses: () => fetchJson<AlarmAnalysisRecord[]>("/api/ai/analyses"),
   getAnalysis: (id: string) => fetchJson<AlarmAnalysisRecord>(`/api/ai/analyses/${id}`),
+
+  getStaff: () => fetchJson<StaffRecord[]>("/api/staff"),
+  getStaffMember: (id: string) => fetchJson<StaffRecord>(`/api/staff/${id}`),
 
   getHealth: () => fetchJson<SystemHealthReport>("/api/health"),
 

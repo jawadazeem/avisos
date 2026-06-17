@@ -67,6 +67,19 @@ export interface VisionEvent {
   };
 }
 
+export interface StaffRecord {
+  staffId: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: string;
+  jurisdiction: string;
+  primaryZone: string;
+  shift: string;
+  createdAt: ApiDateTime;
+  updatedAt: ApiDateTime;
+}
+
 export interface AlarmAnalysisRecord {
   alarmId: string;
   analysisText: string;
