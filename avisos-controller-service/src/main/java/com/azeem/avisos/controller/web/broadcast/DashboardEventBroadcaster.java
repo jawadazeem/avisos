@@ -5,6 +5,7 @@
 
 package com.azeem.avisos.controller.web.broadcast;
 
+import com.azeem.avisos.controller.web.event.AlarmAnalysisCreatedEvent;
 import com.azeem.avisos.controller.web.event.AlarmCreatedEvent;
 import com.azeem.avisos.controller.web.event.NodeHeartbeatEvent;
 import com.azeem.avisos.controller.web.event.VisionAnalysisEvent;
@@ -37,4 +38,10 @@ public class DashboardEventBroadcaster {
     messagingTemplate.convertAndSend(
         "/topic/vision", Map.of("nodeId", event.getNodeId(), "response", event.getResponse()));
   }
+
+  @EventListener
+  public void onAlarmAnalysis(AlarmAnalysisCreatedEvent event) {
+    messagingTemplate.convertAndSend("/topic/alarm", event.getAnalysisRecord());
+  }
+  // TODO: Fix API endpoint
 }
