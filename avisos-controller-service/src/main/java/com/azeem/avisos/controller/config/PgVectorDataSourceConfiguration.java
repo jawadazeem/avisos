@@ -16,8 +16,8 @@ import org.springframework.context.annotation.Primary;
 /**
  * Provides the primary Spring datasource used by Spring AI PgVector auto-configuration.
  *
- * <p>The controller also has an encrypted SQLite datasource named {@code avisosDataSource} for JDBI
- * repositories. Keeping this datasource primary ensures Spring AI never receives SQLite when it
+ * <p>The controller also has a SQLite datasource named {@code avisosDataSource} for JDBI
+ * repositories. Keeping this datasource primary ensures Spring AI receives PostgreSQL when it
  * initializes the PgVector extension and schema.
  */
 @Configuration

@@ -26,7 +26,7 @@ docker compose up --build
 # Spawn simulator+node pairs against the running core stack
 ./scripts/spawn-test-fleet.sh 10
 
-# Dry-run removal of random/load-test node rows from the encrypted DB
+# Dry-run removal of random/load-test node rows from the SQLite DB
 ./scripts/purge-test-nodes.sh
 
 # Frontend dev server (hot reload, proxies to backend)
@@ -155,7 +155,7 @@ Conventional Commits format:
 
 Simulator-backed nodes are not part of the base Compose stack. They are launched on demand by `scripts/spawn-test-fleet.sh`, which builds `avisos-node:latest` and `avisos-hardware-simulator:latest`, then starts paired `node-*` and `sim-*` containers.
 
-`scripts/purge-test-nodes.sh` is an operator-only DB maintenance script for demo/load-test cleanup. It is intentionally outside controller business logic, defaults to dry-run, preserves the deterministic 20-node demo fleet by default, and requires `--yes` before deleting rows. Use `--include-demo --yes` only when deliberately resetting the canonical demo nodes. The encrypted DB requires `sqlcipher` or an equivalent SQLite build with SQLCipher support.
+`scripts/purge-test-nodes.sh` is an operator-only DB maintenance script for demo/load-test cleanup. It is intentionally outside controller business logic, defaults to dry-run, preserves the deterministic 20-node demo fleet by default, and requires `--yes` before deleting rows. Use `--include-demo --yes` only when deliberately resetting the canonical demo nodes. The script uses the local SQLite database through `sqlite3`.
 
 ## Environment Variables
 

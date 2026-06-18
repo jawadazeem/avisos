@@ -56,7 +56,7 @@ AVISOS is a monorepo containing two Java microservices, a C++ hardware simulator
                                  ▼                ▼    │    ▼    ▼              ▼
                            ┌──────────┐  ┌──────────┐ │ ┌────────┐  ┌──────────────┐
                            │  SQLite  │  │ pgvector │ │ │ Ollama │  │ CodeProject  │
-                           │(encrypted)│ │(vectors) │ │ │ (LLM)  │  │   .AI        │
+                           │(JDBI)     │ │(vectors) │ │ │ (LLM)  │  │   .AI        │
                            └──────────┘  └──────────┘ │ └────────┘  │ Vision API   │
                                                       │             └──────────────┘
                                                       ▼
@@ -128,7 +128,7 @@ Responsibilities:
 - **REST API** — endpoints under `/api/` for nodes, alarms, health, system stats, AI analysis, RAG chat, and image retrieval.
 - **CLI** — optional JLine-based REPL (disabled by default in web/Docker mode), also accessible via the WebSocket CLI bridge.
 - **Health monitoring** — periodic database connectivity and disk space checks.
-- **Persistence** — dual-database architecture: SQLite (encrypted, JDBI) for transactional data; PostgreSQL (pgvector) for vector embeddings.
+- **Persistence** — dual-database architecture: SQLite (JDBI) for transactional data; PostgreSQL (pgvector) for vector embeddings.
 
 ### `avisos-knowledge`
 
@@ -262,7 +262,7 @@ AvisosControllerServiceApplication.main()
        │
        ├─ @Configuration classes initialize beans:
        │    ├─ JdbiConfiguration
-       │    │    ├─ DataSource (HikariCP + EncryptingDataSource + SQLCipher)
+       │    │    ├─ DataSource (HikariCP + SQLite JDBC)
        │    │    ├─ Jdbi instance with SqlObjectPlugin
        │    │    └─ Repositories (alarm, node, user, staff, alarm_analysis)
        │    ├─ PgVectorDataSourceConfiguration
@@ -341,7 +341,7 @@ Scheduled every 10 seconds:
 
 ## Data Model
 
-### SQLite Tables (encrypted, JDBI)
+### SQLite Tables (JDBI)
 
 | Table | Primary Key | Purpose |
 |---|---|---|
@@ -352,7 +352,7 @@ Scheduled every 10 seconds:
 | `telemetry_audit` | auto | Audit log of received telemetry packets |
 | `users` | `username` (TEXT) | Operator accounts with Argon2id password hashes |
 
-All timestamps are stored as TEXT in ISO 8601 format. The database is encrypted with SQLCipher — the encryption key is loaded from the `.env` file (`DATABASE_ENCRYPTION_KEY`).
+All timestamps are stored as TEXT in ISO 8601 format. Transactional data is stored in SQLite and accessed through JDBI SQL Object repositories.
 
 ### PostgreSQL Tables (pgvector)
 
@@ -397,7 +397,7 @@ Thread safety considerations:
 
 - **Password hashing** — Argon2id (3 iterations, 64 MB memory, 1 thread).
 - **Session context** — `InheritableThreadLocal<UserRecord>` cleared after use.
-- **Database encryption** — SQLCipher with PRAGMA key applied per connection.
+- **Password hashing** — Argon2id for authentication secrets.
 - **First-run bootstrap** — when no users exist, the CLI prompts to create the initial operator account.
 - **Email dry-run** — `EmailService` defaults to dry-run mode to prevent accidental sends.
 - **Role field** — stored in the database but role-based access control is not yet enforced.
@@ -439,7 +439,6 @@ Spring AI configuration (under `spring.ai.*`):
 | `AVISOS_MQTT_TOPIC` | Telemetry subscription topic |
 | `AVISOS_VISION_API_URL` | CodeProject.AI endpoint |
 | `AVISOS_DATABASE_URL` | SQLite JDBC connection string |
-| `DATABASE_ENCRYPTION_KEY` | SQLCipher encryption key |
 | `AVISOS_CLI_ENABLED` | Enable JLine CLI (default `false`) |
 | `AVISOS_AWS_ENDPOINT` | S3/LocalStack endpoint |
 | `AVISOS_AWS_REGION` | AWS region |
@@ -490,7 +489,7 @@ The controller uses Spring Boot 3.4.1 for auto-configuration, embedded web serve
 
 ### Dual-Database Architecture
 
-**SQLite** (encrypted with SQLCipher) stores transactional data — alarms, nodes, staff, users, audit logs. JDBI SQL Object interfaces provide lightweight, SQL-first access. **PostgreSQL** (pgvector) stores vector embeddings for the RAG knowledge base. A separate `@Primary` DataSource bean (`PgVectorDataSourceConfiguration`) ensures Spring AI auto-configuration uses PostgreSQL while JDBI continues using the SQLite DataSource.
+**SQLite** stores transactional data — alarms, nodes, staff, users, audit logs. JDBI SQL Object interfaces provide lightweight, SQL-first access. **PostgreSQL** (pgvector) stores vector embeddings for the RAG knowledge base. A separate `@Primary` DataSource bean (`PgVectorDataSourceConfiguration`) ensures Spring AI auto-configuration uses PostgreSQL while JDBI continues using the SQLite DataSource.
 
 ### Event-Driven Side Effects
 

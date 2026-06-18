@@ -19,12 +19,12 @@ AVISOS is a SCADA orchestration platform that secures and monitors high-reliabil
 | AI / RAG | Ollama (llama3.2 + nomic-embed-text), Spring AI, pgvector |
 | Messaging | Eclipse Mosquitto (MQTT), Protobuf telemetry |
 | Real-time | STOMP over WebSocket (SockJS) |
-| Database | SQLite + SQLCipher (encrypted, JDBI) + PostgreSQL (pgvector) |
+| Database | SQLite (JDBI) + PostgreSQL (pgvector) |
 | Vision AI | CodeProject.AI object detection |
 | Hardware Simulation | C++17, CMake, cpp-httplib, nlohmann/json |
 | Cloud | AWS S3 + SNS via LocalStack |
 | Notifications | Spring Mail (JavaMailSender), dry-run safety mode |
-| Security | Argon2id password hashing, encrypted DB |
+| Security | Argon2id password hashing |
 | Build | Maven multi-module, frontend-maven-plugin (Node 22) |
 | Deploy | Docker Compose + on-demand simulator/node fleet containers |
 
@@ -57,7 +57,7 @@ mvn clean install
 # Spawn 10 simulator+node pairs against the running core stack
 ./scripts/spawn-test-fleet.sh 10
 
-# Dry-run removal of random/load-test nodes from the encrypted DB
+# Dry-run removal of random/load-test nodes from the SQLite DB
 ./scripts/purge-test-nodes.sh
 ```
 

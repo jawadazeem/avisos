@@ -7,14 +7,12 @@ package com.azeem.avisos.controller.config;
 
 import com.azeem.avisos.controller.repository.AlarmAnalysisRepository;
 import com.azeem.avisos.controller.repository.AlarmRepository;
-import com.azeem.avisos.controller.repository.EncryptingDataSource;
 import com.azeem.avisos.controller.repository.NodeRepository;
 import com.azeem.avisos.controller.repository.StaffRepository;
 import com.azeem.avisos.controller.repository.TelemetryRepository;
 import com.azeem.avisos.controller.security.repository.AuthRepository;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import io.github.cdimascio.dotenv.Dotenv;
 import javax.sql.DataSource;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
@@ -28,23 +26,13 @@ public class JdbiConfiguration {
 
   @Bean
   public DataSource avisosDataSource(AvisosDatabaseProperties dbProps) {
-    Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-    String key = System.getenv("DATABASE_ENCRYPTION_KEY");
-    if (key == null || key.isBlank()) {
-      key = dotenv.get("DATABASE_ENCRYPTION_KEY");
-    }
-    if (key == null || key.isBlank()) {
-      throw new IllegalStateException("DATABASE_ENCRYPTION_KEY must be configured");
-    }
-
     HikariConfig hikariConfig = new HikariConfig();
     hikariConfig.setJdbcUrl(dbProps.url());
     hikariConfig.setMaximumPoolSize(5);
     hikariConfig.setMinimumIdle(1);
     hikariConfig.setPoolName("avisos-sqlite-pool");
 
-    HikariDataSource hikari = new HikariDataSource(hikariConfig);
-    return new EncryptingDataSource(hikari, key);
+    return new HikariDataSource(hikariConfig);
   }
 
   @Bean

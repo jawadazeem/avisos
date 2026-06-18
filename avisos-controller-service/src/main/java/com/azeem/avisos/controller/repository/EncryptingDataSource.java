@@ -12,6 +12,14 @@ import java.sql.Statement;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
 
+/**
+ * Legacy SQLCipher experiment kept for reference only.
+ *
+ * <p>Avisos currently uses a plain SQLite JDBC datasource. Do not wire this class into production
+ * configuration unless the project adopts a SQLCipher-capable JDBC driver and a real encrypted DB
+ * migration path.
+ */
+@Deprecated(forRemoval = false)
 public class EncryptingDataSource implements DataSource {
 
   private final DataSource delegate;

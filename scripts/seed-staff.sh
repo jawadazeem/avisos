@@ -14,17 +14,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 DB_PATH=""
-DB_KEY=""
-DB_KEY_SOURCE=""
-DB_CLIENT="${AVISOS_DB_CLIENT:-}"
-DB_CLIENT_EXPLICIT=false
-DB_IS_PLAIN_SQLITE=false
-DB_KEY_APPLIES=false
+DB_CLIENT="${AVISOS_DB_CLIENT:-sqlite3}"
 DRY_RUN=true
-
-if [ -n "$DB_CLIENT" ]; then
-    DB_CLIENT_EXPLICIT=true
-fi
 
 log() { echo "[seed-staff] $*"; }
 fail() {
@@ -41,8 +32,7 @@ Dry-run by default. Add --yes to write staff records.
 Options:
   --yes                  Execute seed/upsert.
   --db <path>             Override DB path. Default resolves from .env.example.
-  --key <key>             Override SQLCipher key. Default reads .env.example.
-  --client <command>      Override DB client. Default prefers sqlite3, then sqlcipher.
+  --client <command>      Override DB client. Default: sqlite3.
   -h, --help              Show this help.
 EOF
 }
@@ -114,23 +104,6 @@ resolve_db_path() {
     esac
 }
 
-resolve_key() {
-    if [ -n "$DB_KEY" ]; then
-        return
-    fi
-
-    DB_KEY="$(load_dotenv_value DATABASE_ENCRYPTION_KEY || true)"
-    if [ -n "$DB_KEY" ]; then
-        DB_KEY_SOURCE="$PROJECT_ROOT/.env.example"
-        return
-    fi
-
-    DB_KEY="${DATABASE_ENCRYPTION_KEY:-}"
-    if [ -n "$DB_KEY" ]; then
-        DB_KEY_SOURCE="environment:DATABASE_ENCRYPTION_KEY"
-    fi
-}
-
 resolve_client() {
     if [ -n "$DB_CLIENT" ]; then
         command -v "$DB_CLIENT" >/dev/null 2>&1 || fail "Configured DB client '$DB_CLIENT' was not found."
@@ -140,50 +113,7 @@ resolve_client() {
         DB_CLIENT="sqlite3"
         return
     fi
-    if command -v sqlcipher >/dev/null 2>&1; then
-        DB_CLIENT="sqlcipher"
-        return
-    fi
-    fail "Neither sqlite3 nor sqlcipher was found. Install sqlite3 for Avisos DB writes."
-}
-
-uses_sqlcipher() {
-    [ "$(basename "$DB_CLIENT")" = "sqlcipher" ]
-}
-
-db_is_plain_sqlite() {
-    [ -f "$DB_PATH" ] || return 1
-    if [ "$(dd if="$DB_PATH" bs=16 count=1 2>/dev/null)" = "SQLite format 3" ]; then
-        return 0
-    fi
-    command -v sqlite3 >/dev/null 2>&1 || return 1
-    sqlite3 "$DB_PATH" "SELECT COUNT(*) FROM sqlite_master;" >/dev/null 2>&1
-}
-
-configure_db_access() {
-    if db_is_plain_sqlite; then
-        DB_IS_PLAIN_SQLITE=true
-        if [ "$DB_CLIENT_EXPLICIT" = false ]; then
-            DB_CLIENT="sqlite3"
-        fi
-    fi
-
-    if uses_sqlcipher && [ -n "$DB_KEY" ] && [ "$DB_IS_PLAIN_SQLITE" = false ]; then
-        DB_KEY_APPLIES=true
-    fi
-}
-
-key_source_log_suffix() {
-    if [ -z "$DB_KEY" ]; then
-        return
-    fi
-    if [ "$DB_KEY_APPLIES" = true ]; then
-        printf " (applied by sqlcipher)"
-    elif [ "$DB_IS_PLAIN_SQLITE" = true ]; then
-        printf " (plain SQLite DB; key not applied)"
-    else
-        printf " (not applied by %s)" "$(basename "$DB_CLIENT")"
-    fi
+    fail "sqlite3 was not found. Install sqlite3 for Avisos DB writes."
 }
 
 parse_args() {
@@ -198,16 +128,9 @@ parse_args() {
                 DB_PATH="$2"
                 shift 2
                 ;;
-            --key)
-                [ "${2:-}" ] || fail "--key requires a value."
-                DB_KEY="$2"
-                DB_KEY_SOURCE="--key"
-                shift 2
-                ;;
             --client)
                 [ "${2:-}" ] || fail "--client requires a value."
                 DB_CLIENT="$2"
-                DB_CLIENT_EXPLICIT=true
                 shift 2
                 ;;
             -h|--help)
@@ -225,13 +148,6 @@ write_seed_sql() {
     local sql_file="$1"
 
     {
-        if [ "$DB_KEY_APPLIES" = true ]; then
-            if [[ "$DB_KEY" =~ ^[0-9a-fA-F]{64}$ ]]; then
-                printf "PRAGMA key = 'x%s';\n" "$DB_KEY"
-            else
-                printf "PRAGMA key = %s;\n" "$(sql_quote "$DB_KEY")"
-            fi
-        fi
         cat <<'SQL'
 CREATE TABLE IF NOT EXISTS staff (
     staff_id TEXT PRIMARY KEY,
@@ -278,16 +194,13 @@ SQL
 main() {
     parse_args "$@"
     resolve_db_path
-    resolve_key
     resolve_client
-    configure_db_access
 
     mkdir -p "$(dirname "$DB_PATH")"
 
     log "DB: $DB_PATH"
     log "Mode: $([ "$DRY_RUN" = true ] && echo dry-run || echo seed)"
     log "DB client: $DB_CLIENT"
-    log "Encryption key source: ${DB_KEY_SOURCE:-not configured}$(key_source_log_suffix)"
 
     if [ "$DRY_RUN" = true ]; then
         log "Staff records to seed: 9"
