@@ -20,10 +20,17 @@ DB_PATH=""
 DB_KEY=""
 DB_KEY_SOURCE=""
 DB_CLIENT="${AVISOS_DB_CLIENT:-}"
+DB_CLIENT_EXPLICIT=false
+DB_IS_PLAIN_SQLITE=false
+DB_KEY_APPLIES=false
 DRY_RUN=true
 VACUUM_AFTER=false
 TARGET_STATUSES=()
 TARGET_DEVICES=()
+
+if [ -n "$DB_CLIENT" ]; then
+    DB_CLIENT_EXPLICIT=true
+fi
 
 log()  { echo "[purge-alarms] $*"; }
 fail() { echo "[purge-alarms] ERROR: $*" >&2; exit 1; }
@@ -44,7 +51,7 @@ Options:
   --vacuum               Run VACUUM after deleting rows.
   --db <path>            Override DB path. Default resolves from env or ./data/avisos.db.
   --key <key>            Override SQLCipher key. Default reads .env.example, then env.
-  --client <command>     Override DB client. Default prefers sqlcipher, then sqlite3.
+  --client <command>     Override DB client. Default prefers sqlite3, then sqlcipher.
   -h, --help             Show this help.
 
 Examples:
@@ -180,15 +187,50 @@ resolve_client() {
         command -v "$DB_CLIENT" >/dev/null 2>&1 || fail "Configured DB client '$DB_CLIENT' was not found."
         return
     fi
-    if command -v sqlcipher >/dev/null 2>&1; then
-        DB_CLIENT="sqlcipher"
-        return
-    fi
     if command -v sqlite3 >/dev/null 2>&1; then
         DB_CLIENT="sqlite3"
         return
     fi
-    fail "Neither sqlcipher nor sqlite3 was found. Install sqlcipher for the encrypted Avisos DB."
+    if command -v sqlcipher >/dev/null 2>&1; then
+        DB_CLIENT="sqlcipher"
+        return
+    fi
+    fail "Neither sqlite3 nor sqlcipher was found. Install sqlite3 for Avisos DB maintenance."
+}
+
+db_is_plain_sqlite() {
+    [ -f "$DB_PATH" ] || return 1
+    if [ "$(dd if="$DB_PATH" bs=16 count=1 2>/dev/null)" = "SQLite format 3" ]; then
+        return 0
+    fi
+    command -v sqlite3 >/dev/null 2>&1 || return 1
+    sqlite3 "$DB_PATH" "SELECT COUNT(*) FROM sqlite_master;" >/dev/null 2>&1
+}
+
+configure_db_access() {
+    if db_is_plain_sqlite; then
+        DB_IS_PLAIN_SQLITE=true
+        if [ "$DB_CLIENT_EXPLICIT" = false ]; then
+            DB_CLIENT="sqlite3"
+        fi
+    fi
+
+    if uses_sqlcipher && [ -n "$DB_KEY" ] && [ "$DB_IS_PLAIN_SQLITE" = false ]; then
+        DB_KEY_APPLIES=true
+    fi
+}
+
+key_source_log_suffix() {
+    if [ -z "$DB_KEY" ]; then
+        return
+    fi
+    if [ "$DB_KEY_APPLIES" = true ]; then
+        printf " (applied by sqlcipher)"
+    elif [ "$DB_IS_PLAIN_SQLITE" = true ]; then
+        printf " (plain SQLite DB; key not applied)"
+    else
+        printf " (not applied by %s)" "$(basename "$DB_CLIENT")"
+    fi
 }
 
 build_target_where() {
@@ -263,6 +305,7 @@ parse_args() {
             --client)
                 [ "${2:-}" ] || fail "--client requires a value."
                 DB_CLIENT="$2"
+                DB_CLIENT_EXPLICIT=true
                 shift 2
                 ;;
             -h|--help)
@@ -283,6 +326,7 @@ main() {
     resolve_client
 
     [ -f "$DB_PATH" ] || fail "Database file not found: $DB_PATH"
+    configure_db_access
 
     local where_clause
     where_clause="$(build_target_where)"
@@ -292,7 +336,7 @@ main() {
     trap "rm -f $(sql_quote "$sql_file")" EXIT
 
     {
-        if uses_sqlcipher && [ -n "$DB_KEY" ]; then
+        if [ "$DB_KEY_APPLIES" = true ]; then
             if [[ "$DB_KEY" =~ ^[0-9a-fA-F]{64}$ ]]; then
                 printf "PRAGMA key = 'x%s';\n" "$DB_KEY"
             else
@@ -337,9 +381,10 @@ SQL
 
     log "DB: $DB_PATH"
     log "Mode: $([ "$DRY_RUN" = true ] && echo dry-run || echo delete)"
+    log "DB client: $DB_CLIENT"
     log "Target: $where_clause"
     log "Vacuum: $([ "$VACUUM_AFTER" = true ] && echo yes || echo no)"
-    log "Encryption key source: ${DB_KEY_SOURCE:-not configured}$([ -n "$DB_KEY" ] && ! uses_sqlcipher && echo ' (not applied by sqlite3)')"
+    log "Encryption key source: ${DB_KEY_SOURCE:-not configured}$(key_source_log_suffix)"
 
     run_sql "$sql_file"
 
