@@ -29,7 +29,7 @@ public class AlarmAnalystController {
   }
 
   @GetMapping("/{id}")
-  public AlarmAnalysisRecord getAlarmAnalysis(@PathVariable UUID id) {
+  public AlarmAnalysisRecord getAlarmAnalysis(@PathVariable("id") UUID id) {
     return alertAnalystService.getAnalysis(id);
   }
 }

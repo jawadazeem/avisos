@@ -8,6 +8,7 @@ package com.azeem.avisos.controller.service.threat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.azeem.avisos.controller.model.alarm.AlarmSeverity;
+import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -50,5 +51,24 @@ class KeywordThreatDetectorTest {
     AlarmSeverity result = detector.evaluate(List.of("FIRE"));
 
     assertEquals(AlarmSeverity.CRITICAL, result);
+  }
+
+  @Test
+  void shouldNormalizeConfiguredLabelsBeforeMatching() {
+    KeywordThreatDetector detector =
+        new KeywordThreatDetector(List.of(" Fire "), List.of(" Person "));
+
+    AlarmSeverity result = detector.evaluate(List.of("person"));
+
+    assertEquals(AlarmSeverity.WARNING, result);
+  }
+
+  @Test
+  void shouldTolerateNullAndBlankLabels() {
+    KeywordThreatDetector detector = new KeywordThreatDetector(List.of("fire"), List.of("person"));
+
+    AlarmSeverity result = detector.evaluate(Arrays.asList(null, "  "));
+
+    assertEquals(AlarmSeverity.NONE, result);
   }
 }

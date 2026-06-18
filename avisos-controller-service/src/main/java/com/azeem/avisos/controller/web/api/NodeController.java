@@ -36,7 +36,7 @@ public class NodeController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<NodeRecord> getNode(@PathVariable UUID id) {
+  public ResponseEntity<NodeRecord> getNode(@PathVariable("id") UUID id) {
     return nodeService
         .getNode(id)
         .map(ResponseEntity::ok)

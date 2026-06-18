@@ -68,7 +68,10 @@ critical:
 warning:
   # Unauthorized personnel
   # NOTE: Generic object detectors cannot distinguish an authorized technician
-  # from an intruder. Do not alarm on "person" without zone/access context.
+  # from an intruder. "person" is enabled for the current demo because
+  # CodeProject.AI's generic YOLO model emits "person" for most usable security
+  # frames and does not emit datacenter-specific labels such as "intruder".
+  - "person"
   - "crowd"
   - "group of people"
   - "trespasser"

@@ -119,6 +119,7 @@ public class TelemetryIngressHandler implements IngressDataHandler<IngressMessag
           visionResponse.predictions() != null
               ? visionResponse.predictions().stream().map(Prediction::label).toList()
               : List.of();
+      String labelSummary = summarizePredictions(visionResponse);
 
       AlarmSeverity severity = threatDetector.evaluate(labels);
 
@@ -148,10 +149,11 @@ public class TelemetryIngressHandler implements IngressDataHandler<IngressMessag
       }
 
       log.info(
-          "Alarm saved for device {} severity={} labelsCount={}",
+          "Vision processed for device {} severity={} labelsCount={} labels=[{}]",
           packet.nodeId(),
           severity,
-          labels.size());
+          labels.size(),
+          labelSummary);
 
     } catch (Exception e) {
       log.error("Error processing telemetry for device {}: {}", packet.nodeId(), e.getMessage(), e);
@@ -167,5 +169,16 @@ public class TelemetryIngressHandler implements IngressDataHandler<IngressMessag
     String joined = String.join(",", labels);
     int max = 1024;
     return joined.length() <= max ? joined : joined.substring(0, max) + "...";
+  }
+
+  private String summarizePredictions(VisionResponse response) {
+    if (response.predictions() == null || response.predictions().isEmpty()) {
+      return "";
+    }
+    return response.predictions().stream()
+        .map(
+            prediction -> prediction.label() + ":" + String.format("%.2f", prediction.confidence()))
+        .reduce((left, right) -> left + ", " + right)
+        .orElse("");
   }
 }

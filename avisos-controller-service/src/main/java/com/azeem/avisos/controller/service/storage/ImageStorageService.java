@@ -32,10 +32,12 @@ public class ImageStorageService {
   private static final Logger log = LoggerFactory.getLogger(ImageStorageService.class);
   private static final DateTimeFormatter TS_FORMAT =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss-SSS'Z'").withZone(ZoneOffset.UTC);
+  private static final String JPEG_CONTENT_TYPE = "image/jpeg";
+  private static final String PNG_CONTENT_TYPE = "image/png";
 
   private final S3Client s3Client;
   private final String bucketName;
-  private boolean bucketVerified = false;
+  private volatile boolean bucketVerified = false;
 
   public ImageStorageService(S3Client s3Client, AvisosAwsProperties props) {
     this.s3Client = s3Client;
@@ -55,11 +57,16 @@ public class ImageStorageService {
     ensureBucketExists();
 
     String sanitizedSource = source.replace("/", "-");
-    String objectName = TS_FORMAT.format(timestamp) + ".jpg";
+    ImageFormat imageFormat = detectImageFormat(imageData);
+    String objectName = TS_FORMAT.format(timestamp) + imageFormat.extension();
     String s3Key = sanitizedSource + "/" + nodeId + "/" + objectName;
 
     s3Client.putObject(
-        PutObjectRequest.builder().bucket(bucketName).key(s3Key).contentType("image/jpeg").build(),
+        PutObjectRequest.builder()
+            .bucket(bucketName)
+            .key(s3Key)
+            .contentType(imageFormat.contentType())
+            .build(),
         RequestBody.fromBytes(imageData));
 
     log.info("Flagged image stored → s3://{}/{} ({}B)", bucketName, s3Key, imageData.length);
@@ -78,7 +85,7 @@ public class ImageStorageService {
         contentType == null || contentType.isBlank() ? "image/jpeg" : contentType);
   }
 
-  private void ensureBucketExists() {
+  private synchronized void ensureBucketExists() {
     if (bucketVerified) {
       return;
     }
@@ -92,4 +99,26 @@ public class ImageStorageService {
   }
 
   public record StoredImage(byte[] bytes, String contentType) {}
+
+  private static ImageFormat detectImageFormat(byte[] imageData) {
+    if (isPng(imageData)) {
+      return new ImageFormat(PNG_CONTENT_TYPE, ".png");
+    }
+    return new ImageFormat(JPEG_CONTENT_TYPE, ".jpg");
+  }
+
+  private static boolean isPng(byte[] imageData) {
+    return imageData != null
+        && imageData.length >= 8
+        && (imageData[0] & 0xFF) == 0x89
+        && imageData[1] == 0x50
+        && imageData[2] == 0x4E
+        && imageData[3] == 0x47
+        && imageData[4] == 0x0D
+        && imageData[5] == 0x0A
+        && imageData[6] == 0x1A
+        && imageData[7] == 0x0A;
+  }
+
+  private record ImageFormat(String contentType, String extension) {}
 }

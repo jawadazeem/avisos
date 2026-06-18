@@ -26,8 +26,7 @@ public class StaffService {
   public StaffRecord getStaff(String staffId) {
     return staffRepository
         .findByStaffId(staffId)
-        .orElseThrow(
-            () -> new ResourceNotFoundException("Staff record not found for: " + staffId));
+        .orElseThrow(() -> new ResourceNotFoundException("Staff record not found for: " + staffId));
   }
 
   public List<StaffRecord> searchByJurisdiction(String query) {

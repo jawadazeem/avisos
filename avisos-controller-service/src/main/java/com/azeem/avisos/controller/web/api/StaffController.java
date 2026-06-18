@@ -29,7 +29,7 @@ public class StaffController {
   }
 
   @GetMapping("/{id}")
-  public StaffRecord getStaffMember(@PathVariable String id) {
+  public StaffRecord getStaffMember(@PathVariable("id") String id) {
     return staffService.getStaff(id);
   }
 

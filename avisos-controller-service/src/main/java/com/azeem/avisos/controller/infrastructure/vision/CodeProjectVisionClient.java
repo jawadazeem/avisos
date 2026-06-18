@@ -34,6 +34,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class CodeProjectVisionClient implements VisionClient {
   private static final Logger log = LoggerFactory.getLogger(CodeProjectVisionClient.class);
+  private static final String JPEG_CONTENT_TYPE = "image/jpeg";
+  private static final String PNG_CONTENT_TYPE = "image/png";
   private final ObjectMapper jsonMapper;
   private final HttpClient httpClient;
   private final String apiUrl;
@@ -89,13 +91,15 @@ public class CodeProjectVisionClient implements VisionClient {
   private HttpRequest.BodyPublisher buildMultipartBody(
       VisionRequest visionRequest, String boundary) {
     List<byte[]> byteArrays = new ArrayList<>();
+    String contentType = detectContentType(visionRequest.imageData());
+    String fileName = PNG_CONTENT_TYPE.equals(contentType) ? "upload.png" : "upload.jpg";
 
     // Image Part
     byteArrays.add(("--" + boundary + "\r\n").getBytes(StandardCharsets.UTF_8));
     byteArrays.add(
-        ("Content-Disposition: form-data; name=\"image\"; filename=\"upload.jpg\"\r\n")
+        ("Content-Disposition: form-data; name=\"image\"; filename=\"" + fileName + "\"\r\n")
             .getBytes(StandardCharsets.UTF_8));
-    byteArrays.add(("Content-Type: image/jpeg\r\n\r\n").getBytes(StandardCharsets.UTF_8));
+    byteArrays.add(("Content-Type: " + contentType + "\r\n\r\n").getBytes(StandardCharsets.UTF_8));
     byteArrays.add(visionRequest.imageData());
     byteArrays.add(("\r\n").getBytes(StandardCharsets.UTF_8));
 
@@ -123,6 +127,14 @@ public class CodeProjectVisionClient implements VisionClient {
    */
   private VisionResponse parseResponse(HttpResponse<String> response) {
     String body = response.body();
+    if (response.statusCode() < 200 || response.statusCode() >= 300) {
+      log.error(
+          "Vision API returned status={} body={}",
+          response.statusCode(),
+          body == null ? "" : body.substring(0, Math.min(body.length(), 512)));
+      throw new CannotDetectLabelsException(
+          "Vision API returned HTTP status " + response.statusCode());
+    }
     try {
       return jsonMapper.readValue(body, VisionResponse.class);
     } catch (IOException e) {
@@ -141,5 +153,21 @@ public class CodeProjectVisionClient implements VisionClient {
       pos += b.length;
     }
     return result;
+  }
+
+  private static String detectContentType(byte[] imageData) {
+    if (imageData != null
+        && imageData.length >= 8
+        && (imageData[0] & 0xFF) == 0x89
+        && imageData[1] == 0x50
+        && imageData[2] == 0x4E
+        && imageData[3] == 0x47
+        && imageData[4] == 0x0D
+        && imageData[5] == 0x0A
+        && imageData[6] == 0x1A
+        && imageData[7] == 0x0A) {
+      return PNG_CONTENT_TYPE;
+    }
+    return JPEG_CONTENT_TYPE;
   }
 }

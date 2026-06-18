@@ -40,13 +40,13 @@ public class AlarmController {
   }
 
   @PostMapping("/{id}/resolve")
-  public ResponseEntity<Void> resolveAlarm(@PathVariable UUID id) {
+  public ResponseEntity<Void> resolveAlarm(@PathVariable("id") UUID id) {
     alarmService.resolveAlarm(id);
     return ResponseEntity.ok().build();
   }
 
   @GetMapping("/{id}/image")
-  public ResponseEntity<byte[]> getAlarmImage(@PathVariable UUID id) {
+  public ResponseEntity<byte[]> getAlarmImage(@PathVariable("id") UUID id) {
     return alarmService
         .loadAlarm(id)
         .filter(alarm -> alarm.s3ImageKey() != null && !alarm.s3ImageKey().isBlank())

@@ -7,14 +7,20 @@ package com.azeem.avisos.controller.service.threat;
 
 import com.azeem.avisos.controller.model.alarm.AlarmSeverity;
 import java.util.List;
+import java.util.Locale;
 
 public record KeywordThreatDetector(List<String> criticalLabels, List<String> warningLabels)
     implements ThreatDetector {
 
+  public KeywordThreatDetector {
+    criticalLabels = normalize(criticalLabels);
+    warningLabels = normalize(warningLabels);
+  }
+
   @Override
   public AlarmSeverity evaluate(List<String> detectedLabels) {
 
-    List<String> lowerLabels = detectedLabels.stream().map(String::toLowerCase).toList();
+    List<String> lowerLabels = normalize(detectedLabels);
 
     boolean isCritical =
         lowerLabels.stream().anyMatch(label -> criticalLabels.stream().anyMatch(label::contains));
@@ -31,5 +37,15 @@ public record KeywordThreatDetector(List<String> criticalLabels, List<String> wa
     }
 
     return AlarmSeverity.NONE;
+  }
+
+  private static List<String> normalize(List<String> labels) {
+    if (labels == null) {
+      return List.of();
+    }
+    return labels.stream()
+        .filter(label -> label != null && !label.isBlank())
+        .map(label -> label.trim().toLowerCase(Locale.ROOT))
+        .toList();
   }
 }
