@@ -339,7 +339,11 @@ main() {
 
     {
         if uses_sqlcipher && [ -n "$DB_KEY" ]; then
-            printf "PRAGMA key = %s;\n" "$(sql_quote "$DB_KEY")"
+            if [[ "$DB_KEY" =~ ^[0-9a-fA-F]{64}$ ]]; then
+                printf "PRAGMA key = x'%s';\n" "$DB_KEY"
+            else
+                printf "PRAGMA key = %s;\n" "$(sql_quote "$DB_KEY")"
+            fi
         fi
         cat <<SQL
 .headers on
