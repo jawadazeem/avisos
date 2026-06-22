@@ -1,10 +1,10 @@
 from data.repository import UserRepository
 
-class UserService:
+class AnomalyDetectionService:
     def __init__(self, repository: UserRepository):
         self.repository = repository
 
-    def register_user(self, username: str, email: str) -> dict:
+    def detect_anomalies(self, username: str, email: str) -> dict:
         # Enforce business rules
         if len(username) < 3:
             raise ValueError("Username must be at least 3 characters long.")
