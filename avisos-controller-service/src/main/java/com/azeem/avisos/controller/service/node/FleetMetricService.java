@@ -6,34 +6,103 @@
 package com.azeem.avisos.controller.service.node;
 
 import com.azeem.avisos.controller.model.node.FleetMetricRecord;
+import com.azeem.avisos.controller.model.node.FleetMetrics;
+import com.azeem.avisos.controller.model.node.NodeRecord;
+import com.azeem.avisos.controller.model.node.NodeStatus;
 import com.azeem.avisos.controller.repository.NodeFleetMetricRepository;
-import org.springframework.stereotype.Service;
-
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
 
 @Service
 public class FleetMetricService {
 
-    private final NodeFleetMetricRepository repository;
+  private final NodeFleetMetricRepository repository;
+  private final NodeService nodeService;
 
-    public FleetMetricService(NodeFleetMetricRepository repository) {
-        this.repository = repository;
+  public FleetMetricService(NodeFleetMetricRepository repository, NodeService nodeService) {
+    this.repository = repository;
+    this.nodeService = nodeService;
+  }
+
+  // Compute node fleet health metrics every minute
+  @Scheduled(fixedRate = 60000)
+  public void generateLatestMetric() {
+    Instant now = Instant.now();
+
+    List<NodeRecord> nodes =
+        nodeService.getRegisteredNodes().stream()
+            .map(nodeService::getNode)
+            .flatMap(Optional::stream)
+            .toList();
+
+    FleetMetrics metrics =
+        new FleetMetrics(
+            nodes.size(),
+            calculateResponsiveRatio(nodes),
+            calculateBatteryAbove50Ratio(nodes),
+            calculateAverageSecondsSinceLastSeen(nodes, now));
+
+    FleetMetricRecord record = new FleetMetricRecord(now, metrics);
+
+    saveMetric(record);
+  }
+
+  public List<FleetMetricRecord> getMetrics() {
+    return repository.getMetrics();
+  }
+
+  public List<FleetMetricRecord> getMetrics(int limit) {
+    return repository.getMetrics(limit);
+  }
+
+  public Optional<FleetMetricRecord> getLatestMetric() {
+    return repository.getLatestMetric();
+  }
+
+  private void saveMetric(FleetMetricRecord metric) {
+    repository.saveMetric(metric);
+  }
+
+  private double calculateResponsiveRatio(List<NodeRecord> nodes) {
+
+    if (nodes.isEmpty()) {
+      return 0.0;
     }
 
-    public void saveMetric(FleetMetricRecord metric) {
-        repository.saveMetric(metric);
+    long responsiveCount =
+        nodes.stream().filter(node -> node.status() == NodeStatus.RESPONSIVE).count();
+
+    return (double) responsiveCount / nodes.size();
+  }
+
+  private double calculateBatteryAbove50Ratio(List<NodeRecord> nodes) {
+
+    if (nodes.isEmpty()) {
+      return 0.0;
     }
 
-    public List<FleetMetricRecord> getMetrics() {
-        return repository.getMetrics();
+    long count = nodes.stream().filter(node -> node.batteryLevel() > 50.0).count();
+
+    return (double) count / nodes.size();
+  }
+
+  private double calculateAverageSecondsSinceLastSeen(List<NodeRecord> nodes, Instant now) {
+
+    if (nodes.isEmpty()) {
+      return 0.0;
     }
 
-    public List<FleetMetricRecord> getMetrics(int limit) {
-        return repository.getMetrics(limit);
-    }
-
-    public Optional<FleetMetricRecord> getLatestMetric() {
-        return repository.getLatestMetric();
-    }
+    return nodes.stream()
+        .mapToLong(
+            node ->
+                Duration.between(node.lastSeen().atZone(ZoneId.systemDefault()).toInstant(), now)
+                    .getSeconds())
+        .average()
+        .orElse(0.0);
+  }
 }

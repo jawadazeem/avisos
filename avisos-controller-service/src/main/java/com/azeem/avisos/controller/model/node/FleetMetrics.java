@@ -9,5 +9,4 @@ public record FleetMetrics(
     long totalNodesEvaluated,
     double responsiveRatio,
     double batteryAbove50Ratio,
-    double avgSecondsSinceLastSeen) {
-}
+    double avgSecondsSinceLastSeen) {}

@@ -7,8 +7,5 @@ package com.azeem.avisos.controller.model.node;
 
 import java.time.Instant;
 
-public record FleetMetricRecord(
-    Instant timestamp,
-    FleetMetrics fleetMetrics
-) {
-}
+/** Record to send to the anomaly detection microservice */
+public record FleetMetricRecord(Instant timestamp, FleetMetrics fleetMetrics) {}

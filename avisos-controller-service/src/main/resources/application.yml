@@ -59,7 +59,7 @@ spring:
         driver-class-name: "org.postgresql.Driver"
     ai:
         ollama:
-            base-url: "http://avisos-ollama:11434"
+            base-url: "http://host.docker.internal:11434"
             chat:
                 model: "llama3.2"
             embedding:

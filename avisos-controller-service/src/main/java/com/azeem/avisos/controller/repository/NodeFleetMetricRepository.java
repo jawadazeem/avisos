@@ -7,18 +7,20 @@ package com.azeem.avisos.controller.repository;
 
 import com.azeem.avisos.controller.model.node.FleetMetricRecord;
 import com.azeem.avisos.controller.model.node.FleetMetrics;
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import org.jdbi.v3.core.mapper.reflect.ColumnName;
+import org.jdbi.v3.sqlobject.config.RegisterConstructorMapper;
 import org.jdbi.v3.sqlobject.customizer.Bind;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-
+@RegisterConstructorMapper(NodeFleetMetricRepository.NodeFleetMetricRow.class)
 public interface NodeFleetMetricRepository {
 
-    @SqlUpdate(
-        """
+  @SqlUpdate(
+      """
             CREATE TABLE IF NOT EXISTS node_fleet_metrics (
                 timestamp TIMESTAMP PRIMARY KEY,
                 total_nodes_evaluated INTEGER NOT NULL,
@@ -27,10 +29,10 @@ public interface NodeFleetMetricRepository {
                 avg_seconds_since_last_seen REAL NOT NULL
             )
             """)
-    void initNodeFleetMetricTable();
+  void initNodeFleetMetricTable();
 
-    @SqlUpdate(
-        """
+  @SqlUpdate(
+      """
             INSERT INTO node_fleet_metrics (
                 timestamp,
                 total_nodes_evaluated,
@@ -46,26 +48,26 @@ public interface NodeFleetMetricRepository {
                 :avgSecondsSinceLastSeen
             )
             """)
-    void saveMetric(
-        @Bind("timestamp") Instant timestamp,
-        @Bind("totalNodesEvaluated") long totalNodesEvaluated,
-        @Bind("responsiveRatio") double responsiveRatio,
-        @Bind("batteryAbove50Ratio") double batteryAbove50Ratio,
-        @Bind("avgSecondsSinceLastSeen") double avgSecondsSinceLastSeen);
+  void saveMetric(
+      @Bind("timestamp") Instant timestamp,
+      @Bind("totalNodesEvaluated") long totalNodesEvaluated,
+      @Bind("responsiveRatio") double responsiveRatio,
+      @Bind("batteryAbove50Ratio") double batteryAbove50Ratio,
+      @Bind("avgSecondsSinceLastSeen") double avgSecondsSinceLastSeen);
 
-    default void saveMetric(FleetMetricRecord metric) {
-        FleetMetrics fleetMetrics = metric.fleetMetrics();
+  default void saveMetric(FleetMetricRecord metric) {
+    FleetMetrics fleetMetrics = metric.fleetMetrics();
 
-        saveMetric(
-            metric.timestamp(),
-            fleetMetrics.totalNodesEvaluated(),
-            fleetMetrics.responsiveRatio(),
-            fleetMetrics.batteryAbove50Ratio(),
-            fleetMetrics.avgSecondsSinceLastSeen());
-    }
+    saveMetric(
+        metric.timestamp(),
+        fleetMetrics.totalNodesEvaluated(),
+        fleetMetrics.responsiveRatio(),
+        fleetMetrics.batteryAbove50Ratio(),
+        fleetMetrics.avgSecondsSinceLastSeen());
+  }
 
-    @SqlQuery(
-        """
+  @SqlQuery(
+      """
             SELECT
                 timestamp,
                 total_nodes_evaluated,
@@ -75,24 +77,24 @@ public interface NodeFleetMetricRepository {
             FROM node_fleet_metrics
             ORDER BY timestamp DESC
             """)
-    List<NodeFleetMetricRow> getMetricRows();
+  List<NodeFleetMetricRow> getMetricRows();
 
-    default List<FleetMetricRecord> getMetrics() {
-        return getMetricRows().stream()
-            .map(
-                row ->
-                    new FleetMetricRecord(
-                        row.timestamp(),
-                        new FleetMetrics(
-                            row.totalNodesEvaluated(),
-                            row.responsiveRatio(),
-                            row.batteryAbove50Ratio(),
-                            row.avgSecondsSinceLastSeen())))
-            .toList();
-    }
+  default List<FleetMetricRecord> getMetrics() {
+    return getMetricRows().stream()
+        .map(
+            row ->
+                new FleetMetricRecord(
+                    row.timestamp(),
+                    new FleetMetrics(
+                        row.totalNodesEvaluated(),
+                        row.responsiveRatio(),
+                        row.batteryAbove50Ratio(),
+                        row.avgSecondsSinceLastSeen())))
+        .toList();
+  }
 
-    @SqlQuery(
-        """
+  @SqlQuery(
+      """
             SELECT
                 timestamp,
                 total_nodes_evaluated,
@@ -103,23 +105,24 @@ public interface NodeFleetMetricRepository {
             ORDER BY timestamp DESC
             LIMIT :limit
             """)
-    List<NodeFleetMetricRow> getMetricRows(@Bind("limit") int limit);
+  List<NodeFleetMetricRow> getMetricRows(@Bind("limit") int limit);
 
-    default List<FleetMetricRecord> getMetrics(int limit) {
-        return getMetricRows(limit).stream()
-            .map(
-                row ->
-                    new FleetMetricRecord(
-                        row.timestamp(),
-                        new FleetMetrics(
-                            row.totalNodesEvaluated(),
-                            row.responsiveRatio(),
-                            row.batteryAbove50Ratio(),
-                            row.avgSecondsSinceLastSeen())))
-            .toList();
-    }
+  default List<FleetMetricRecord> getMetrics(int limit) {
+    return getMetricRows(limit).stream()
+        .map(
+            row ->
+                new FleetMetricRecord(
+                    row.timestamp(),
+                    new FleetMetrics(
+                        row.totalNodesEvaluated(),
+                        row.responsiveRatio(),
+                        row.batteryAbove50Ratio(),
+                        row.avgSecondsSinceLastSeen())))
+        .toList();
+  }
 
-    @SqlQuery("""
+  @SqlQuery(
+      """
         SELECT
             timestamp,
             total_nodes_evaluated,
@@ -130,30 +133,29 @@ public interface NodeFleetMetricRepository {
         ORDER BY timestamp DESC
         LIMIT 1
         """)
-    NodeFleetMetricRow getLatestMetricRow();
+  NodeFleetMetricRow getLatestMetricRow();
 
-    default Optional<FleetMetricRecord> getLatestMetric() {
-        NodeFleetMetricRow row = getLatestMetricRow();
+  default Optional<FleetMetricRecord> getLatestMetric() {
+    NodeFleetMetricRow row = getLatestMetricRow();
 
-        if (row == null) {
-            return Optional.empty();
-        }
-
-        return Optional.of(
-            new FleetMetricRecord(
-                row.timestamp(),
-                new FleetMetrics(
-                    row.totalNodesEvaluated(),
-                    row.responsiveRatio(),
-                    row.batteryAbove50Ratio(),
-                    row.avgSecondsSinceLastSeen())));
+    if (row == null) {
+      return Optional.empty();
     }
 
-    record NodeFleetMetricRow(
-        Instant timestamp,
-        long totalNodesEvaluated,
-        double responsiveRatio,
-        double batteryAbove50Ratio,
-        double avgSecondsSinceLastSeen) {
-    }
+    return Optional.of(
+        new FleetMetricRecord(
+            row.timestamp(),
+            new FleetMetrics(
+                row.totalNodesEvaluated(),
+                row.responsiveRatio(),
+                row.batteryAbove50Ratio(),
+                row.avgSecondsSinceLastSeen())));
+  }
+
+  record NodeFleetMetricRow(
+      Instant timestamp,
+      @ColumnName("total_nodes_evaluated") long totalNodesEvaluated,
+      @ColumnName("responsive_ratio") double responsiveRatio,
+      @ColumnName("battery_above50_ratio") double batteryAbove50Ratio,
+      @ColumnName("avg_seconds_since_last_seen") double avgSecondsSinceLastSeen) {}
 }
