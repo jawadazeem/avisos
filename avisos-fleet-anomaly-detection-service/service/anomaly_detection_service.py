@@ -1,18 +1,15 @@
-from data.repository import UserRepository
+from data.repository import FleetAnomalyReportRepository
+from controller.fleet import FleetMetrics
+from model.models import FleetAnomalyReport
+from datetime import datetime
 
 class AnomalyDetectionService:
-    def __init__(self, repository: UserRepository):
+    def __init__(self, repository: FleetAnomalyReportRepository):
         self.repository = repository
 
-    def detect_anomalies(self, username: str, email: str) -> dict:
-        # Enforce business rules
-        if len(username) < 3:
-            raise ValueError("Username must be at least 3 characters long.")
-            
-        existing_user = self.repository.get_by_username(username)
-        if existing_user:
-            raise ValueError("Username is already taken.")
-            
-        # Trigger persistence if rules pass
-        user = self.repository.save(username, email)
-        return {"id": user.id, "username": user.username, "status": "ACTIVE"}
+    def detect_anomalies(self, timestamp: datetime, fleet_metrics: FleetMetrics) -> FleetAnomalyReport:
+        # TODO: Use the model to detect whether or not anomalies exist
+        fleet_anomaly_report = None
+        
+        self.repository.save(fleet_anomaly_report)
+        return fleet_anomaly_report

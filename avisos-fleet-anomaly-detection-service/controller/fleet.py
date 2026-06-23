@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from service import AnomalyDetectionService
-import time
+from datetime import datetime
 
-router = APIRouter()
+fleet_router = APIRouter()
 
 class FleetMetrics(BaseModel):
     total_nodes_evaluated: int = Field(alias="totalNodesEvaluated")
@@ -18,16 +18,17 @@ class FleetMetrics(BaseModel):
     }
 
 class FleetMetricRecord(BaseModel):
-    timestamp: time
+    # Deserializes Java's Unix epoch (Instant datatype)
+    timestamp: datetime
     fleet_metrics: FleetMetrics
 
     
 
-@router.post("/fleet-health", status_code=status.HTTP_201_CREATED)
+@fleet_router.post("/fleet-health", status_code=status.HTTP_201_CREATED)
 def ingest_fleet_health_snapshot(payload: FleetMetricRecord, service: AnomalyDetectionService = Depends()):
     try:
         # Pass raw strings down to business logic
-        result = service.detect_anomalies(payload.timestamp, payload.email)
+        result = service.detect_anomalies(payload.timestamp, payload.fleet_metrics)
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
