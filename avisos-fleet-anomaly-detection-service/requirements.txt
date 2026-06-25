@@ -1,3 +1,5 @@
 fastapi[standard]==0.115.0
 pydantic==2.10.0
 sqlalchemy==2.0.30
+pandas==3.0.3
+numpy==1.26.4
