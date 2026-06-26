@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 
 # DTOs
-class FleetMetricsDTO(BaseModel):
+class FleetMetrics(BaseModel):
     total_nodes_evaluated: int = Field(alias="totalNodesEvaluated")
     responsive_ratio: float = Field(alias="responsiveRatio")
     battery_above_50_ratio: float = Field(alias="batteryAbove50Ratio")
@@ -10,13 +10,13 @@ class FleetMetricsDTO(BaseModel):
 
     model_config = {"populate_by_name": True}
 
-class FleetMetricRecordDTO(BaseModel):
+class FleetMetricRecord(BaseModel):
     timestamp: datetime
-    fleet_metrics: FleetMetricsDTO
+    fleet_metrics: FleetMetrics
 
 class FleetAnomalyReport(BaseModel):
     id: int
     timestamp: datetime
     is_anomaly: bool
     diagnostic_reason: str | None
-    raw_payload: FleetMetricRecordDTO
+    raw_payload: FleetMetrics

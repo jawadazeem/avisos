@@ -106,11 +106,6 @@ services:
             - "5434:5432"
         volumes:
             - postgres_data:/var/lib/postgresql/data
-        healthcheck:
-        test: ["CMD-SHELL", "pg_isready -U myuser -d mydatabase"]
-        interval: 10s
-        timeout: 5s
-        retries: 5
 
 volumes:
     ollama-data:

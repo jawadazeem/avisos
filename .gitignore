@@ -48,6 +48,8 @@ mosquitto/log
 data
 .env
 /.idea/
+avisos-fleet-anomaly-detection-service/data/
+*.joblib
 
 ### Frontend (React build artifacts) ###
 avisos-controller-service/src/main/frontend/node_modules/
